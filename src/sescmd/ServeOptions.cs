@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using CommandLine;
+﻿using CommandLine;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -11,6 +8,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     [Verb("serve", HelpText = "Run as a standalone software entitlement server.")]
     public class ServeOptions
     {
+        //TODO: This needs a much better name
         [Option('a', "authority", HelpText = "Certificate thumbprint used to sign the cert used for the HTTPS connection")]
         public string AuthorityThumbprint { get; set; }
 
