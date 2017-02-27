@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using CommandLine;
+﻿using CommandLine;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -10,6 +7,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     {
         [Option("token", HelpText = "The token to verify")]
         public string Token { get; set; }
+
+        [Option("token-file", HelpText = "A text file containing the token to verify")]
+        public string TokenFile { get; set; }
 
         [Option("application-id", HelpText = "Unique identifier for the application")]
         public string ApplicationId { get; set; }
