@@ -1,6 +1,6 @@
 # Software entitlement service testing utility
 
-This command line executable is intended to aid with integration testing of integrations with the Azure Batch Software Entitlement Service.
+This command line executable is intended to aid with testing of integration with the Azure Batch Software Entitlement Service.
 
 **This is draft documentation subject to change.**
 
