@@ -10,7 +10,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     [Verb("generate", HelpText = "Generate a token with specified parameters")]
     public class GenerateOptions
     {
-        [Option("application-id",HelpText = "Unique identifier for the application package")]
+        [Option("application-id",HelpText = "Unique identifier for the application")]
         public string ApplicationId { get; set; }
 
         [Option("vmid", HelpText = "Unique identifier for the azure virtual machine")]

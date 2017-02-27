@@ -39,7 +39,7 @@ ses help verify
 
   --token                The token to verify
 
-  --application-id       Unique identifier for the application package
+  --application-id       Unique identifier for the application
 
   --vmid                 Unique identifier for the azure virtual machine
 
@@ -53,7 +53,7 @@ ses help verify
 ```
 ses help generate
 
-  --application-id    Unique identifier for the application package
+  --application-id    Unique identifier for the application
 
   --vmid              Unique identifier for the azure virtual machine
 

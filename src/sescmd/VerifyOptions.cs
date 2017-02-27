@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option("token", HelpText = "The token to verify")]
         public string Token { get; set; }
 
-        [Option("application-id", HelpText = "Unique identifier for the application package")]
+        [Option("application-id", HelpText = "Unique identifier for the application")]
         public string ApplicationId { get; set; }
 
         [Option("vmid", HelpText = "Unique identifier for the azure virtual machine")]
