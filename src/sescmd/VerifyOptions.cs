@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using CommandLine;
 
-namespace sescmd
+namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
     [Verb("verify", HelpText = "Verify a provided token by calling into the software entitlement service")]
     public class VerifyOptions

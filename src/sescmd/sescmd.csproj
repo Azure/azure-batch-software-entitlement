@@ -6,6 +6,7 @@
     <Company>Microsoft</Company>
     <Authors>Azure Batch</Authors>
     <Product>Azure Batch Software Entitlement Service SDK</Product>
+    <RootNamespace>Microsoft.Azure.Batch.SoftwareEntitlement</RootNamespace>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

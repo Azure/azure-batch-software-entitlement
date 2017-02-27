@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using CommandLine;
 
-namespace sescmd
+namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
     /// <summary>
     /// Options for running as a standalone server

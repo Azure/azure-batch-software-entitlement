@@ -5,7 +5,7 @@ using System.Text;
 using CommandLine;
 using CommandLine.Text;
 
-namespace sescmd
+namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
     [Verb("generate", HelpText = "Generate a token with specified parameters")]
     public class GenerateOptions
