@@ -41,7 +41,7 @@ ses help verify
 
   --application-id       Unique identifier for the application
 
-  --vmid                 Unique identifier for the azure virtual machine
+  --vmid                 Unique identifier for the Azure virtual machine
 
   --batch-account-url    URL of the batch account server
 
@@ -55,7 +55,7 @@ ses help generate
 
   --application-id    Unique identifier for the application
 
-  --vmid              Unique identifier for the azure virtual machine
+  --vmid              Unique identifier for the Azure virtual machine
 
   --not-before        The moment at which the token becomes active and the application is entitled to execute.
 

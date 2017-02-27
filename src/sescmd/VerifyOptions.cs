@@ -14,7 +14,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option("application-id", HelpText = "Unique identifier for the application")]
         public string ApplicationId { get; set; }
 
-        [Option("vmid", HelpText = "Unique identifier for the azure virtual machine")]
+        [Option("vmid", HelpText = "Unique identifier for the Azure virtual machine")]
         public string VirtualMachineId { get; set; }
 
         [Option("batch-account-url", HelpText = "URL of the batch account server")]

@@ -13,7 +13,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option("application-id",HelpText = "Unique identifier for the application")]
         public string ApplicationId { get; set; }
 
-        [Option("vmid", HelpText = "Unique identifier for the azure virtual machine")]
+        [Option("vmid", HelpText = "Unique identifier for the Azure virtual machine")]
         public string VirtualMachineId { get; set; }
 
         [Option("not-before", HelpText = "The moment at which the token becomes active and the application is entitled to execute.")]
