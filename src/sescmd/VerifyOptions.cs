@@ -20,6 +20,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option("batch-account-url", HelpText = "URL of the batch account server")]
         public string BatchAccountServer { get; set; }
 
+        //TODO: Document where this looks to find the certificate (in a cross platform way)
         [Option('a', "authority", HelpText = "Certificate thumbprint used to sign the cert used for the HTTPS connection")]
         public string AuthorityThumbprint { get; set; }
     }

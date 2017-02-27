@@ -17,6 +17,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option('s', "signature", HelpText = "Certificate thumbprint of the certificate used to sign the token")]
         public string SignatureThumbprint { get; set; }
 
+        //TODO: Document where this looks to find the certificate (in a cross platform way)
         [Option('e', "encrypt", HelpText = "Certificate thumbprint of the certificate used to encrypt the token")]
         public string EncryptionThumbprint { get; set; }
 
