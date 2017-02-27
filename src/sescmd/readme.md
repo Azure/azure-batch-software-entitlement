@@ -59,7 +59,7 @@ ses help generate
 
   --not-before        The moment at which the token becomes active and the application is entitled to execute.
 
-  --expires           The moment at which the token expires and the application is no longer entitled to execute.
+  --not-after         The moment at which the token expires and the application is no longer entitled to execute.
 
   --address           The externally visible IP address of the machine entitled to execute the application.
 

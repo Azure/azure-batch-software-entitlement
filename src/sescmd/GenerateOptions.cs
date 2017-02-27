@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
-using System.Text;
 using CommandLine;
-using CommandLine.Text;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -19,8 +16,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option("not-before", HelpText = "The moment at which the token becomes active and the application is entitled to execute.")]
         public DateTimeOffset NotBefore { get; set; }
 
-        [Option("expires", HelpText = "The moment at which the token expires and the application is no longer entitled to execute.")]
-        public DateTimeOffset Expires { get; set; }
+        [Option("not-after", HelpText = "The moment at which the token expires and the application is no longer entitled to execute.")]
+        public DateTimeOffset NotAfter { get; set; }
 
         [Option("address", HelpText = "The externally visible IP address of the machine entitled to execute the application.")]
         public IPAddress Address { get; set; }
