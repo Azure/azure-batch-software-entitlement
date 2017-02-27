@@ -17,7 +17,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option("vmid", HelpText = "Unique identifier for the Azure virtual machine")]
         public string VirtualMachineId { get; set; }
 
-        [Option("batch-account-url", HelpText = "URL of the batch account server")]
+        [Option("batch-account-url", HelpText = "URL of the Azure Batch account server")]
         public string BatchAccountServer { get; set; }
 
         //TODO: Document where this looks to find the certificate (in a cross platform way)

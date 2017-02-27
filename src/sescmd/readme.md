@@ -43,7 +43,7 @@ ses help verify
 
   --vmid                 Unique identifier for the Azure virtual machine
 
-  --batch-account-url    URL of the batch account server
+  --batch-account-url    URL of the Azure Batch account server
 
   -a, --authority        Certificate thumbprint used to sign the cert used for the HTTPS connection
 ```
