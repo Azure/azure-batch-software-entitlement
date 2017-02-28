@@ -1,5 +1,4 @@
-﻿using System;
-using CommandLine;
+﻿using CommandLine;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -28,7 +27,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         public static int Serve(ServeOptions options)
         {
-
             return 0;
         }
     }
