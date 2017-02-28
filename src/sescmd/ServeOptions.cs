@@ -8,10 +8,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     [Verb("serve", HelpText = "Run as a standalone software entitlement server.")]
     public class ServeOptions
     {
-        //TODO: This needs a much better name
-        [Option('a', "authority", HelpText = "Certificate thumbprint used to sign the cert used for the HTTPS connection")]
-        public string AuthorityThumbprint { get; set; }
-
         [Option('s', "signature", HelpText = "Certificate thumbprint of the certificate used to sign the token")]
         public string SignatureThumbprint { get; set; }
 
