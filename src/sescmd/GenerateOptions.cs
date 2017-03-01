@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using CommandLine;
 
@@ -7,8 +8,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     [Verb("generate", HelpText = "Generate a token with specified parameters")]
     public class GenerateOptions
     {
-        [Option("application-id",HelpText = "Unique identifier for the application")]
-        public string ApplicationId { get; set; }
+        [Option("entitlement-id",HelpText = "Unique identifier(s) for the entitlement(s) to include (semicolon separated).", Separator = ';')]
+        public IEnumerable<string> EntitlementIds { get; set; }
 
         [Option("vmid", HelpText = "Unique identifier for the Azure virtual machine")]
         public string VirtualMachineId { get; set; }

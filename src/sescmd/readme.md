@@ -39,11 +39,11 @@ ses help verify
 
   --token                The token to verify
 
-  --application-id       Unique identifier for the application
+  --entitlement-id       Unique identifier for the entitlement to verify
 
   --vmid                 Unique identifier for the Azure virtual machine
 
-  --batch-account-url    URL of the Azure Batch account server
+  --batch-service-url    URL of the Azure Batch account server
 
   -a, --authority        Certificate thumbprint used to sign the cert used for the HTTPS connection
 ```
@@ -53,7 +53,7 @@ ses help verify
 ```
 ses help generate
 
-  --application-id    Unique identifier for the application
+  --entitlement-id    Unique identifier(s) for the entitlement(s) to include (semicolon separated).
 
   --vmid              Unique identifier for the Azure virtual machine
 

@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option("token-file", HelpText = "A text file containing the text of the JWT token to verify.")]
         public string TokenFile { get; set; }
 
-        [Option("application-id", HelpText = "Unique identifier for the application.")]
+        [Option("entitlement-id", HelpText = "Unique identifier for the entitlement to check.")]
         public string ApplicationId { get; set; }
 
         [Option("vmid", HelpText = "Unique identifier for the Azure virtual machine.")]
