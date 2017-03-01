@@ -14,10 +14,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option("vmid", HelpText = "Unique identifier for the Azure virtual machine")]
         public string VirtualMachineId { get; set; }
 
-        [Option("not-before", HelpText = "The moment at which the token becomes active and the application is entitled to execute.")]
+        [Option("not-before", HelpText = "The moment at which the token becomes active and the application is entitled to execute (format 'hh:mm d/mmm/yyyy'; 24 hour clock; local time).")]
         public DateTimeOffset NotBefore { get; set; }
 
-        [Option("not-after", HelpText = "The moment at which the token expires and the application is no longer entitled to execute.")]
+        [Option("not-after", HelpText = "The moment at which the token expires and the application is no longer entitled to execute (format 'hh:mm d/mmm/yyyy'; 24 hour clock; local time).")]
         public DateTimeOffset NotAfter { get; set; }
 
         [Option("address", HelpText = "The externally visible IP address of the machine entitled to execute the application.")]
