@@ -7,11 +7,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         static int Main(string[] args)
         {
             return Parser.Default
-                .ParseArguments<GenerateOptions, VerifyOptions, ServeOptions>(args)
+                .ParseArguments<GenerateOptions, VerifyOptions, ServerOptions>(args)
                 .MapResult(
                     (GenerateOptions options) => Generate(options),
                     (VerifyOptions options) => Verify(options),
-                    (ServeOptions options) => Serve(options),
+                    (ServerOptions options) => Serve(options),
                     errors => 1);
         }
 
@@ -25,7 +25,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return 0;
         }
 
-        public static int Serve(ServeOptions options)
+        public static int Serve(ServerOptions options)
         {
             return 0;
         }
