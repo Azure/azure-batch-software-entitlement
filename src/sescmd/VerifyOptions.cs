@@ -18,7 +18,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public string VirtualMachineId { get; set; }
 
         [Option("batch-service-url", HelpText = "URL of the Azure Batch service endpoint to contact for verification.")]
-        public string BatchServiceUrl{ get; set; }
+        public string BatchServiceUrl { get; set; }
 
         //TODO: This needs a much better name
         //TODO: Document where this looks to find the certificate (in a cross platform way)

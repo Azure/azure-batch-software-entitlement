@@ -8,13 +8,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     [Verb("generate", HelpText = "Generate a token with specified parameters")]
     public class GenerateOptions
     {
-        [Option("entitlement-id",HelpText = "Unique identifier(s) for the entitlement(s) to include (comma separated).", Separator = ',')]
+        [Option("entitlement-id", HelpText = "Unique identifier(s) for the entitlement(s) to include (comma separated).", Separator = ',')]
         public IEnumerable<string> EntitlementIds { get; set; }
 
         [Option("vmid", HelpText = "Unique identifier for the Azure virtual machine")]
         public string VirtualMachineId { get; set; }
 
-        [Option("not-before", 
+        [Option("not-before",
             HelpText = "The moment at which the token becomes active and the application is entitled to execute (format 'hh:mm d-mmm-yyyy'; 24 hour clock; local time; defaults to now).")]
         public string NotBefore { get; set; }
 
