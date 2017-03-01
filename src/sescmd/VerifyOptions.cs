@@ -17,7 +17,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option("vmid", HelpText = "Unique identifier for the Azure virtual machine.")]
         public string VirtualMachineId { get; set; }
 
-        [Option("batch-service-url", HelpText = "URL of the Azure Batch service endpoint to contact for verification.")]
+        [Option("batch-service-url", HelpText = "URL of the Azure Batch service endpoint for a particular account to contact for verification.")]
         public string BatchServiceUrl { get; set; }
 
         //TODO: This needs a much better name

@@ -35,7 +35,7 @@ sescmd help serve
 ## Token Verification
 
 ```
-ses help verify
+sescmd help verify
 
   --token                The token to verify
 
@@ -51,7 +51,7 @@ ses help verify
 ## Token Generation
 
 ```
-ses help generate
+sescmd help generate
 
   --entitlement-id    Unique identifier(s) for the entitlement(s) to include (semicolon separated).
 
