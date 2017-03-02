@@ -32,7 +32,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option("encrypt", HelpText = "Certificate thumbprint of the certificate used to encrypt the token.")]
         public string EncryptionThumbprint { get; set; }
 
-        [Option('f', "--token-file", HelpText = "The name of a file into which the token will be written (token will be written to stdout otherwise).")]
+        [Option('f', "token-file", HelpText = "The name of a file into which the token will be written (token will be written to stdout otherwise).")]
         public string TokenFile { get; set; }
 
     }
