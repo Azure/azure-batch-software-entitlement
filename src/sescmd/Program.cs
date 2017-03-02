@@ -1,4 +1,6 @@
 ﻿using CommandLine;
+using Serilog;
+using Serilog.Events;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -17,16 +19,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         public static int Generate(GenerateOptions options)
         {
+            var logger = CreateLogger(options);
+
             return 0;
         }
 
         public static int Verify(VerifyOptions options)
         {
+            var logger = CreateLogger(options);
             return 0;
         }
 
         public static int Serve(ServerOptions options)
         {
+            var logger = CreateLogger(options);
             return 0;
         }
     }
