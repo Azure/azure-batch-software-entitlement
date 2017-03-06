@@ -1,7 +1,6 @@
 ﻿using System;
 using FluentAssertions;
 using NSubstitute;
-using Serilog;
 using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
@@ -9,7 +8,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
     public class TimestampParserTests
     {
         // Substitute logger used for testing
-        private readonly ILogger _logger = Substitute.For<ILogger>();
+        private readonly ISimpleLogger _logger = Substitute.For<ISimpleLogger>();
 
         public class Constructor : TimestampParserTests
         {
@@ -68,12 +67,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                 var valueToParse = _timestamp.ToString("G");
                 _parser.Parse(valueToParse);
 
-                // Slightly nasty because we need to match argument types to select the right overload
                 _logger.Received().Warning(
                     Arg.Any<string>(),
-                    Arg.Any<string>(),
-                    Arg.Any<string>(),
-                    Arg.Any<DateTimeOffset>());
+                    Arg.Any<object[]>());
             }
         }
     }

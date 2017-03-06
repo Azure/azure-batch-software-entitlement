@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Globalization;
-using Serilog;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
@@ -14,13 +13,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         public const string ExpectedFormat = "HH:mm d-MMM-yyyy";
 
         // Reference to our common logger
-        private readonly ILogger _logger;
+        private readonly ISimpleLogger _logger;
 
         /// <summary>
         /// Initialize a new instance of the <see cref="TimestampParser"/> class
         /// </summary>
         /// <param name="logger">Logger to use for any warnings.</param>
-        public TimestampParser(ILogger logger)
+        public TimestampParser(ISimpleLogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
