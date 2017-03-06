@@ -31,6 +31,17 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public static int Generate(GenerateOptions options)
         {
             var logger = CreateLogger(options);
+            var timestampParser = new TimestampParser(logger);
+            var entitlement = new SoftwareEntitlement(logger)
+                .WithVirtualMachineId(options.VirtualMachineId)
+                .ForTimespan(options.NotBefore, options.NotAfter);
+
+            var generator = new TokenGenerator(logger);
+            var token = generator.Generate(entitlement);
+            if (token == null)
+            {
+                return -1;
+            }
 
             return 0;
         }
