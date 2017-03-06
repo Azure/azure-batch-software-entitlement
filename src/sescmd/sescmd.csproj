@@ -7,14 +7,15 @@
     <Authors>Azure Batch</Authors>
     <Product>Azure Batch Software Entitlement Service SDK</Product>
     <RootNamespace>Microsoft.Azure.Batch.SoftwareEntitlement</RootNamespace>
+    <AssemblyName>sestest</AssemblyName>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>..\..\out\bin\Debug\netcoreapp1.1\</OutputPath>
+    <OutputPath>..\..\out\sestest\Debug\</OutputPath>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>..\..\out\bin\Release\netcoreapp1.1\</OutputPath>
+    <OutputPath>..\..\out\sestest\Release\</OutputPath>
   </PropertyGroup>
 
   <ItemGroup>
@@ -27,6 +28,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.Azure.Batch.SoftwareEntitlement.Common\Microsoft.Azure.Batch.SoftwareEntitlement.Common.csproj" />
+    <ProjectReference Include="..\Microsoft.Azure.Batch.SoftwareEntitlement\Microsoft.Azure.Batch.SoftwareEntitlement.csproj" />
   </ItemGroup>
 
 </Project>
