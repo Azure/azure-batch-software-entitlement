@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.InteropServices.ComTypes;
 using FluentAssertions;
 using NSubstitute;
 using Xunit;
@@ -35,37 +36,35 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             }
 
             [Fact]
-            public void GivenEmptyString_ReturnsNone()
+            public void GivenEmptyString_ReturnsFalse()
             {
-                var result = _parser.Parse(string.Empty);
-                result.HasValue.Should().BeFalse();
+                var valid = _parser.TryParse(string.Empty, out var result);
+                valid.Should().BeFalse();
             }
 
             [Fact]
             public void GivenTimestampInExpectedFormat_ReturnsExpectedValue()
             {
                 var valueToParse = _timestamp.ToString(TimestampParser.ExpectedFormat);
-                var result = _parser.Parse(valueToParse);
-                result.Apply(
-                    whenSome: d => d.Should().Be(_timestamp),
-                    whenNone: () => Assert.True(false, "Expect to have a value"));
+                var valid = _parser.TryParse(valueToParse, out var result);
+                valid.Should().BeTrue();
+                result.Should().Be(_timestamp);
             }
 
             [Fact]
             public void GivenTimestampInDifferentFormat_ReturnsExpectedValue()
             {
                 var valueToParse = _timestamp.ToString("G");
-                var result = _parser.Parse(valueToParse);
-                result.Apply(
-                    whenSome: d => d.Should().Be(_timestamp),
-                    whenNone: () => Assert.True(false, "Expect to have a value"));
+                var valid = _parser.TryParse(valueToParse, out var result);
+                valid.Should().BeTrue();
+                result.Should().Be(_timestamp);
             }
 
             [Fact]
             public void GivenTimestampInDifferentFormat_GeneratesWarning()
             {
                 var valueToParse = _timestamp.ToString("G");
-                _parser.Parse(valueToParse);
+                _parser.TryParse(valueToParse, out var result);
 
                 _logger.Received().Warning(
                     Arg.Any<string>(),

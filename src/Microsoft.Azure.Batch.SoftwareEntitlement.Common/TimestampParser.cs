@@ -29,14 +29,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// </summary>
         /// <param name="value"></param>
         /// <returns></returns>
-        public Option<DateTimeOffset> Parse(string value)
+        public bool TryParse(string value, out DateTimeOffset result)
         {
-            DateTimeOffset result;
             if (DateTimeOffset.TryParseExact(
                 value, ExpectedFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out result))
             {
                 // Correctly parsed in the expected format
-                return Option<DateTimeOffset>.Some(result);
+                return true;
             }
 
             if (DateTimeOffset.TryParse(
@@ -48,10 +47,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                     value, 
                     ExpectedFormat, 
                     result);
-                return Option<DateTimeOffset>.Some(result);
+                return true;
             }
 
-            return Option<DateTimeOffset>.None();
+            result = DateTimeOffset.Now;
+            return false;
         }
     }
 }
