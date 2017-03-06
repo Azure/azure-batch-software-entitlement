@@ -14,8 +14,4 @@
     <DefineConstants>TRACE;RELEASE;NETSTANDARD1_5</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Serilog" Version="2.4.0" />
-  </ItemGroup>
-
 </Project>
