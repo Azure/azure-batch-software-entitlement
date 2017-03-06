@@ -21,12 +21,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <summary>
         /// Gets a value indicating whether this logger has logged any errors
         /// </summary>
-        public bool HaveLoggedErrors => _errorCount > 0;
+        public bool HasErrors => _errorCount > 0;
 
         /// <summary>
         /// Gets a value indicating whether this logger has logged any warnings
         /// </summary>
-        public bool HaveLoggedWarnings => _warningCount > 0;
+        public bool HasWarnings => _warningCount > 0;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MonitoringLogger"/> class

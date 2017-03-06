@@ -25,14 +25,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void WhenNoErrorsLogged_ReturnsFalse()
             {
-                _monitoringLogger.HaveLoggedErrors.Should().BeFalse();
+                _monitoringLogger.HasErrors.Should().BeFalse();
             }
 
             [Fact]
             public void AfterErrorsLogged_ReturnsTrue()
             {
                 _monitoringLogger.Error("Message");
-                _monitoringLogger.HaveLoggedErrors.Should().BeTrue();
+                _monitoringLogger.HasErrors.Should().BeTrue();
             }
         }
 
@@ -41,14 +41,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void WhenNoWarningsLogged_ReturnsFalse()
             {
-                _monitoringLogger.HaveLoggedWarnings.Should().BeFalse();
+                _monitoringLogger.HasWarnings.Should().BeFalse();
             }
 
             [Fact]
             public void AfterWarningsLogged_ReturnsTrue()
             {
                 _monitoringLogger.Warning("Message");
-                _monitoringLogger.HaveLoggedWarnings.Should().BeTrue();
+                _monitoringLogger.HasWarnings.Should().BeTrue();
             }
         }
     }
