@@ -84,15 +84,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns></returns>
         public SoftwareEntitlement ForTimespan(string notBefore, string notAfter)
         {
-            DateTimeOffset start;
-            if (!_timestampParser.TryParse(notBefore, out start))
+            if (!_timestampParser.TryParse(notBefore, out var start))
             {
                 start = NotBefore;
                 _logger.Warning("No valid token start specified; using {NotBefore}", start);
             }
 
-            DateTimeOffset finish;
-            if (!_timestampParser.TryParse(notAfter, out finish))
+            if (!_timestampParser.TryParse(notAfter, out var finish))
             {
                 finish = NotAfter;
                 _logger.Warning("No valid token expiry specified; using {NotAfter}", finish);
