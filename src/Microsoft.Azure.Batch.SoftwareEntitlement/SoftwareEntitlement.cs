@@ -36,6 +36,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         public DateTimeOffset NotAfter { get; private set; }
 
+        /// <summary>
+        /// Gets a value indicating whether this token has fatal errors
+        /// </summary>
+        public bool HasErrors => _logger.HaveLoggedErrors;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SoftwareEntitlement"/> class
