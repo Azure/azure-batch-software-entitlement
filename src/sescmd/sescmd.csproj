@@ -25,4 +25,8 @@
     <PackageReference Include="Serilog.Sinks.Literate" Version="2.1.0" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.Azure.Batch.SoftwareEntitlement.Common\Microsoft.Azure.Batch.SoftwareEntitlement.Common.csproj" />
+  </ItemGroup>
+
 </Project>

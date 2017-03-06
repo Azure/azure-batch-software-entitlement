@@ -1,4 +1,7 @@
-﻿using CommandLine;
+﻿using System;
+using System.Diagnostics;
+using CommandLine;
+using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Serilog;
 using Serilog.Events;
 
@@ -8,13 +11,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     {
         static int Main(string[] args)
         {
-            return Parser.Default
+            var result = Parser.Default
                 .ParseArguments<GenerateOptions, VerifyOptions, ServerOptions>(args)
                 .MapResult(
                     (GenerateOptions options) => Generate(options),
                     (VerifyOptions options) => Verify(options),
                     (ServerOptions options) => Serve(options),
                     errors => 1);
+
+            if (Debugger.IsAttached)
+            {
+                Console.WriteLine("Press enter to exit.");
+                Console.ReadLine();
+            }
+
+            return result;
         }
 
         public static int Generate(GenerateOptions options)
@@ -36,7 +47,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return 0;
         }
 
-        public static ILogger CreateLogger(OptionsBase options)
+        public static ISimpleLogger CreateLogger(OptionsBase options)
         {
             var level = SelectLogEventLevel(options);
             var logger = CreateLogger(level);
@@ -44,15 +55,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return logger;
         }
 
-        private static ILogger CreateLogger(LogEventLevel level)
+        private static ISimpleLogger CreateLogger(LogEventLevel level)
         {
-            var result = new LoggerConfiguration()
+            var serilogLogger = new LoggerConfiguration()
                             .WriteTo.LiterateConsole()
                             .MinimumLevel.Is(level)
                             .CreateLogger();
 
-            result.Information("Software Entitlement Service Command Line Utility");
-            return result;
+            serilogLogger.Information("Software Entitlement Service Command Line Utility");
+            return new SerilogLogger(serilogLogger);
         }
 
         public static LogEventLevel SelectLogEventLevel(OptionsBase options)
@@ -75,7 +86,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return LogEventLevel.Information;
         }
 
-        private static void WarnAboutInactiveOptions(OptionsBase options, LogEventLevel level, ILogger logger)
+        private static void WarnAboutInactiveOptions(OptionsBase options, LogEventLevel level, ISimpleLogger logger)
         {
             if (options.Quiet && level < LogEventLevel.Warning)
             {
