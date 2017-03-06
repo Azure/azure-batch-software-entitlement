@@ -31,7 +31,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public static int Generate(GenerateOptions options)
         {
             var logger = CreateLogger(options);
-            var timestampParser = new TimestampParser(logger);
             var entitlement = new SoftwareEntitlement(logger)
                 .WithVirtualMachineId(options.VirtualMachineId)
                 .ForTimespan(options.NotBefore, options.NotAfter);
@@ -42,6 +41,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             {
                 return -1;
             }
+
+            logger.Information("Token: {JWT}", token);
 
             return 0;
         }
