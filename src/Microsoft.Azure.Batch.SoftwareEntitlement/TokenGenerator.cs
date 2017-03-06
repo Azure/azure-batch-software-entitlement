@@ -4,17 +4,16 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.IdentityModel.Tokens;
-using Serilog;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
+    /// <summary>
+    /// Generator to create a token given a fully configured software entitlement
+    /// </summary>
     public class TokenGenerator
     {
         // Reference to our logger
         private readonly ISimpleLogger _logger;
-
-        // list of claims we'll include in the token
-        private readonly List<Claim> _claims = new List<Claim>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TokenGenerator"/> class
@@ -25,13 +24,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             _logger = logger;
         }
 
-        public SecurityToken Generate(SoftwareEntitlement entitlement)
+        /// <summary>
+        /// Generate a token from a software entitlement
+        /// </summary>
+        /// <param name="entitlement">Software entitlement to use when populating the token.</param>
+        /// <returns></returns>
+        public string Generate(SoftwareEntitlement entitlement)
         {
             _logger.Warning("Incomplete implementation of Generate");
 
-            var claimsIdentity = new ClaimsIdentity(_claims);
-            claimsIdentity.AddClaim(new Claim("vid", entitlement.VirtualMachineId));
+            var claims = new List<Claim>
+            {
+                new Claim("vid", entitlement.VirtualMachineId)
+            };
 
+            var claimsIdentity = new ClaimsIdentity(claims);
             var securityTokenDescriptor = new SecurityTokenDescriptor()
             {
                 //Audience = 
@@ -48,8 +55,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             var handler = new JwtSecurityTokenHandler();
             var token = handler.CreateToken(securityTokenDescriptor);
-            return token;
+            return handler.WriteToken(token);
         }
-
     }
 }
