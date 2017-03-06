@@ -39,6 +39,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         public abstract void Apply(Action<T> whenSome, Action whenNone);
 
         /// <summary>
+        /// Apply a function based on whether we have a value or not
+        /// </summary>
+        /// <typeparam name="R">Type of result to return</typeparam>
+        /// <param name="whenSome">Function to use when we have a value.</param>
+        /// <param name="whenNone">Function to use when we have no value.</param>
+        /// <returns>Result of applying one of the functions.</returns>
+        public abstract R Apply<R>(Func<T, R> whenSome, Func<R> whenNone);
+
+        /// <summary>
         /// Implementation of an option containing a value
         /// </summary>
         private class SomeOption : Option<T>
@@ -69,6 +78,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             {
                 whenSome(_value);
             }
+
+            /// <summary>
+            /// Apply a function based on whether we have a value or not
+            /// </summary>
+            /// <typeparam name="R">Type of result to return</typeparam>
+            /// <param name="whenSome">Function to use when we have a value.</param>
+            /// <param name="whenNone">Function to use when we have no value.</param>
+            /// <returns>Result of applying one of the functions.</returns>
+            public override R Apply<R>(Func<T, R> whenSome, Func<R> whenNone) 
+                => whenSome(_value);
         }
 
         /// <summary>
@@ -97,6 +116,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             {
                 whenNone();
             }
+
+            /// <summary>
+            /// Apply a function based on whether we have a value or not
+            /// </summary>
+            /// <typeparam name="R">Type of result to return</typeparam>
+            /// <param name="whenSome">Function to use when we have a value.</param>
+            /// <param name="whenNone">Function to use when we have no value.</param>
+            /// <returns>Result of applying one of the functions.</returns>
+            public override R Apply<R>(Func<T, R> whenSome, Func<R> whenNone)
+                => whenNone();
         }
     }
 }
