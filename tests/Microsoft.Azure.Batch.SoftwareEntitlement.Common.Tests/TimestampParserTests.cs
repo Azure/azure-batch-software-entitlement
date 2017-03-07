@@ -38,7 +38,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenEmptyString_ReturnsFalse()
             {
-                var valid = _parser.TryParse(string.Empty, out var result);
+                var (valid, timestamp) = _parser.TryParse(string.Empty);
                 valid.Should().BeFalse();
             }
 
@@ -46,25 +46,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             public void GivenTimestampInExpectedFormat_ReturnsExpectedValue()
             {
                 var valueToParse = _timestamp.ToString(TimestampParser.ExpectedFormat);
-                var valid = _parser.TryParse(valueToParse, out var result);
+                var (valid, timestamp) = _parser.TryParse(valueToParse);
                 valid.Should().BeTrue();
-                result.Should().Be(_timestamp);
+                timestamp.Should().Be(_timestamp);
             }
 
             [Fact]
             public void GivenTimestampInDifferentFormat_ReturnsExpectedValue()
             {
                 var valueToParse = _timestamp.ToString("G");
-                var valid = _parser.TryParse(valueToParse, out var result);
+                var (valid, timestamp) = _parser.TryParse(valueToParse);
                 valid.Should().BeTrue();
-                result.Should().Be(_timestamp);
+                timestamp.Should().Be(_timestamp);
             }
 
             [Fact]
             public void GivenTimestampInDifferentFormat_GeneratesWarning()
             {
                 var valueToParse = _timestamp.ToString("G");
-                _parser.TryParse(valueToParse, out var result);
+                _parser.TryParse(valueToParse);
 
                 _logger.Received().Warning(
                     Arg.Any<string>(),

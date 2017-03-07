@@ -88,16 +88,26 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns></returns>
         public SoftwareEntitlement ForTimespan(string notBefore, string notAfter)
         {
-            if (!_timestampParser.TryParse(notBefore, out var start))
+            var start = NotBefore;
+            var finish = NotAfter;
+
+            if (!string.IsNullOrWhiteSpace(notBefore))
             {
-                start = NotBefore;
-                _logger.Warning("No valid token start specified; using {NotBefore}", start);
+                // TryParse will log any errors encountered, so we don't need explicit handling of the failure cases here
+                var (successful, timestamp) = _timestampParser.TryParse(notBefore);
+                if (successful)
+                {
+                    start = timestamp;
+                }
             }
 
-            if (!_timestampParser.TryParse(notAfter, out var finish))
+            if (!string.IsNullOrWhiteSpace(notAfter))
             {
-                finish = NotAfter;
-                _logger.Warning("No valid token expiry specified; using {NotAfter}", finish);
+                var (successful, timestamp) = _timestampParser.TryParse(notAfter);
+                if (successful)
+                {
+                    finish = timestamp;
+                }
             }
 
             return ForTimespan(start, finish);

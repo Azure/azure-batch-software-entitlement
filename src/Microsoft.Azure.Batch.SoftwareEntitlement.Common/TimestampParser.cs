@@ -25,17 +25,17 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         }
 
         /// <summary>
-        /// 
+        /// Try to parse a string into a DateTimeOffset
         /// </summary>
-        /// <param name="value"></param>
-        /// <returns></returns>
-        public bool TryParse(string value, out DateTimeOffset result)
+        /// <param name="value">The string value to parse.</param>
+        /// <returns>A tuple containing either true, and a date; or false and a default date.</returns>
+        public (bool successful, DateTimeOffset timestamp) TryParse(string value)
         {
             if (DateTimeOffset.TryParseExact(
-                value, ExpectedFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out result))
+                value, ExpectedFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var result))
             {
                 // Correctly parsed in the expected format
-                return true;
+                return (true, result);
             }
 
             if (DateTimeOffset.TryParse(
@@ -47,11 +47,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                     value, 
                     ExpectedFormat, 
                     result);
-                return true;
+                return (true, result);
             }
 
-            result = DateTimeOffset.Now;
-            return false;
+            return (false, default(DateTimeOffset));
         }
     }
 }
