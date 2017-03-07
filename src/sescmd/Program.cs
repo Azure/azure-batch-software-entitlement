@@ -14,13 +14,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     {
         static int Main(string[] args)
         {
-            var result = Parser.Default
-                .ParseArguments<GenerateOptions, VerifyOptions, ServerOptions>(args)
-                .MapResult(
-                    (GenerateOptions options) => Generate(options),
-                    (VerifyOptions options) => Verify(options),
-                    (ServerOptions options) => Serve(options),
-                    errors => 1);
+            var parseResult = Parser.Default
+                .ParseArguments<GenerateOptions, VerifyOptions, ServerOptions>(args);
+
+            parseResult.WithParsed((OptionsBase options) => SetupLogging(options));
+
+            var exitCode = parseResult.MapResult(
+                (GenerateOptions options) => Generate(options),
+                (VerifyOptions options) => Verify(options),
+                (ServerOptions options) => Serve(options),
+                errors => 1);
 
             if (Debugger.IsAttached)
             {
@@ -33,14 +36,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         public static int Generate(GenerateOptions options)
         {
-            var logger = CreateLogger(options);
 
             return 0;
         }
 
         public static int Verify(VerifyOptions options)
         {
-            var logger = CreateLogger(options);
 
             var host = new WebHostBuilder()
                 .UseKestrel()
@@ -49,70 +50,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 .Build();
 
             host.Run();
+
             return 0;
         }
 
-        public static int Serve(ServerOptions options)
         {
-            var logger = CreateLogger(options);
-            return 0;
-        }
 
-        public static ISimpleLogger CreateLogger(OptionsBase options)
-        {
-            var level = SelectLogEventLevel(options);
-            var logger = CreateLogger(level);
-            WarnAboutInactiveOptions(options, level, logger);
-            return logger;
-        }
-
-        private static ISimpleLogger CreateLogger(LogEventLevel level)
-        {
-            var serilogLogger = new LoggerConfiguration()
-                            .WriteTo.LiterateConsole()
-                            .MinimumLevel.Is(level)
-                            .CreateLogger();
-
-            serilogLogger.Information("Software Entitlement Service Command Line Utility");
-            return new SerilogLogger(serilogLogger);
-        }
-
-        public static LogEventLevel SelectLogEventLevel(OptionsBase options)
-        {
-            if (options.Debug)
             {
-                return LogEventLevel.Debug;
             }
 
-            if (options.Verbose)
-            {
-                return LogEventLevel.Verbose;
-            }
-
-            if (options.Quiet)
-            {
-                return LogEventLevel.Warning;
-            }
-
-            return LogEventLevel.Information;
-        }
-
-        private static void WarnAboutInactiveOptions(OptionsBase options, LogEventLevel level, ISimpleLogger logger)
-        {
-            if (options.Quiet && level < LogEventLevel.Warning)
-            {
-                logger.Warning("Logging at {Level}; ignoring --quiet", level);
-            }
-
-            if (options.Debug && level > LogEventLevel.Debug)
-            {
-                logger.Warning("Logging at {Level}; ignoring --debug", level);
-            }
-
-            if (options.Verbose && level > LogEventLevel.Verbose)
-            {
-                logger.Warning("Logging at {Level}; ignoring --verbose", level);
-            }
         }
     }
 }

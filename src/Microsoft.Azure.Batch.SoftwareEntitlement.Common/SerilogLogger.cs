@@ -1,7 +1,6 @@
-﻿using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
-using Serilog;
+﻿using Serilog;
 
-namespace Microsoft.Azure.Batch.SoftwareEntitlement
+namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
     /// <summary>
     /// Implementation of logging that uses Serilog
