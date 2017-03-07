@@ -55,8 +55,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             Created = now;
             NotBefore = now;
             NotAfter = now + TimeSpan.FromDays(7);
-
-            _logger.Debug("Token creation {Timestamp:d/mmm/yyyy HH:MM}", now);
         }
 
         /// <summary>
@@ -86,7 +84,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="notBefore">Earliest instant of availability.</param>
         /// <param name="notAfter">Latest instant of availability.</param>
         /// <returns></returns>
-        public SoftwareEntitlement ForTimespan(string notBefore, string notAfter)
+        public SoftwareEntitlement ForTimeRange(string notBefore, string notAfter)
         {
             var start = NotBefore;
             var finish = NotAfter;
@@ -110,7 +108,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 }
             }
 
-            return ForTimespan(start, finish);
+            return ForTimeRange(start, finish);
         }
 
 
@@ -120,7 +118,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="notBefore">Earliest instant of availability.</param>
         /// <param name="notAfter">Latest instant of availability.</param>
         /// <returns></returns>
-        public SoftwareEntitlement ForTimespan(DateTimeOffset notBefore, DateTimeOffset notAfter)
+        public SoftwareEntitlement ForTimeRange(DateTimeOffset notBefore, DateTimeOffset notAfter)
         {
             if (notAfter < notBefore)
             {

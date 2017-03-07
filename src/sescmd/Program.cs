@@ -33,7 +33,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var logger = CreateLogger(options);
             var entitlement = new SoftwareEntitlement(logger)
                 .WithVirtualMachineId(options.VirtualMachineId)
-                .ForTimespan(options.NotBefore, options.NotAfter);
+                .ForTimeRange(options.NotBefore, options.NotAfter);
 
             if (entitlement.HasErrors)
             {
