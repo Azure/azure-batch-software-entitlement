@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
+using System.IO;
 using CommandLine;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
+using Microsoft.Azure.Batch.SoftwareEntitlement.Server;
 using Serilog;
 using Serilog.Events;
 
@@ -38,6 +41,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public static int Verify(VerifyOptions options)
         {
             var logger = CreateLogger(options);
+
+            var host = new WebHostBuilder()
+                .UseKestrel()
+                .UseContentRoot(Directory.GetCurrentDirectory())
+                .UseStartup<Startup>()
+                .Build();
+
+            host.Run();
             return 0;
         }
 
