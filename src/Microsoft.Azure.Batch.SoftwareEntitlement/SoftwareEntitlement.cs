@@ -24,17 +24,17 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// The moment at which the entitlement was created
         /// </summary>
-        public DateTimeOffset Created { get; private set; }
+        public DateTimeOffset Created { get; }
 
         /// <summary>
         /// The earliest moment at which the entitlement is active
         /// </summary>
-        public DateTimeOffset NotBefore { get; private set; }
+        public DateTimeOffset NotBefore { get; }
 
         /// <summary>
         /// The latest moment at which the entitlement is active
         /// </summary>
-        public DateTimeOffset NotAfter { get; private set; }
+        public DateTimeOffset NotAfter { get; }
 
         /// <summary>
         /// Gets a value indicating whether this token has fatal errors
@@ -136,28 +136,28 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 _logger.Information("Token does not become available until {NotBefore}", notBefore);
             }
 
-            var result = new SoftwareEntitlement(this)
-            {
-                NotBefore = notBefore,
-                NotAfter = notAfter
-            };
-
-            return result;
+            return new SoftwareEntitlement(this, notBefore: notBefore, notAfter: notAfter);
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SoftwareEntitlement"/> class
         /// </summary>
         /// <param name="original">Original entitlement to clone.</param>
-        public SoftwareEntitlement(SoftwareEntitlement original)
+        /// <param name="notBefore">Optionally specify a new value for <see cref="NotBefore"/>.</param>
+        /// <param name="notAfter">Optionally specify a new value for <see cref="NotAfter"/>.</param>
+        public SoftwareEntitlement(
+            SoftwareEntitlement original,
+            DateTimeOffset? notBefore = null,
+            DateTimeOffset? notAfter = null)
         {
             _logger = original._logger;
             _timestampParser = original._timestampParser;
 
             VirtualMachineId = original.VirtualMachineId;
             Created = original.Created;
-            NotBefore = original.NotBefore;
-            NotAfter = original.NotAfter;
+
+            NotBefore = notBefore ?? original.NotBefore;
+            NotAfter = notAfter ?? original.NotAfter;
         }
     }
 }
