@@ -19,7 +19,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Gets the virtual machine identifier for the machine entitled to use the specified packages
         /// </summary>
-        public string VirtualMachineId { get; private set; }
+        public string VirtualMachineId { get; }
 
         /// <summary>
         /// The moment at which the entitlement was created
@@ -72,10 +72,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             _logger.Debug("Virtual machine id is {VirtualMachineId}", virtualMachineId);
 
-            return new SoftwareEntitlement(this)
-            {
-                VirtualMachineId = virtualMachineId
-            };
+            return new SoftwareEntitlement(this, virtualMachineId: virtualMachineId);
         }
 
         /// <summary>
@@ -140,24 +137,28 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SoftwareEntitlement"/> class
+        /// Cloning constructor to initialize a new instance of the <see cref="SoftwareEntitlement"/> 
+        /// class as a (near) copy of an existing one.
         /// </summary>
+        /// <remarks>Specify any of the optional parameters to modify the clone from the original.</remarks>
         /// <param name="original">Original entitlement to clone.</param>
         /// <param name="notBefore">Optionally specify a new value for <see cref="NotBefore"/>.</param>
         /// <param name="notAfter">Optionally specify a new value for <see cref="NotAfter"/>.</param>
+        /// <param name="virtualMachineId">Optionally specify a new value for <see cref="VirtualMachineId"/>.</param>
         public SoftwareEntitlement(
             SoftwareEntitlement original,
             DateTimeOffset? notBefore = null,
-            DateTimeOffset? notAfter = null)
+            DateTimeOffset? notAfter = null,
+            string virtualMachineId = null)
         {
             _logger = original._logger;
             _timestampParser = original._timestampParser;
 
-            VirtualMachineId = original.VirtualMachineId;
             Created = original.Created;
 
             NotBefore = notBefore ?? original.NotBefore;
             NotAfter = notAfter ?? original.NotAfter;
+            VirtualMachineId = virtualMachineId ?? original.VirtualMachineId;
         }
     }
 }
