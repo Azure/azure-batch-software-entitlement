@@ -14,8 +14,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         // Reference to our shared logger for global use
         private static ISimpleLogger _logger;
 
-        public static ISimpleLogger Logger 
+        // Reference to the actual serilog logger
+        private static ILogger _serilogger;
+
+        public static ISimpleLogger SimpleLogger 
             => _logger ?? throw new InvalidOperationException("Logging has not been initialized.");
+
+        public static ILogger Serilogger
+            => _serilogger ?? throw new InvalidOperationException("Logging has not been initialized.");
 
         /// <summary>
         /// Creates a configured logger to use within SesTest
@@ -25,12 +31,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <returns>Instance of simple logger.</returns>
         public static ISimpleLogger CreateLogger(LogEventLevel level)
         {
-            var actualLogger = new LoggerConfiguration()
+            _serilogger = new LoggerConfiguration()
                 .WriteTo.LiterateConsole()
                 .MinimumLevel.Is(level)
                 .CreateLogger();
 
-            _logger = new SerilogLogger(actualLogger);
+            _logger = new SerilogLogger(_serilogger);
 
             return _logger;
         }
