@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Net;
 using CommandLine;
+using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -34,6 +35,5 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         [Option('f', "token-file", HelpText = "The name of a file into which the token will be written (token will be written to stdout otherwise).")]
         public string TokenFile { get; set; }
-
     }
 }
