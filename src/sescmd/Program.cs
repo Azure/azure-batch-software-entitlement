@@ -31,6 +31,24 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public static int Generate(GenerateOptions options)
         {
             var logger = CreateLogger(options);
+            var entitlement = new SoftwareEntitlement(logger)
+                .WithVirtualMachineId(options.VirtualMachineId)
+                .ForTimeRange(options.NotBefore, options.NotAfter);
+
+            if (entitlement.HasErrors)
+            {
+                logger.Error("Unable to generate template; please address the reported errors and try again.");
+                return -1;
+            }
+
+            var generator = new TokenGenerator(logger);
+            var token = generator.Generate(entitlement);
+            if (token == null)
+            {
+                return -1;
+            }
+
+            logger.Information("Token: {JWT}", token);
 
             return 0;
         }
