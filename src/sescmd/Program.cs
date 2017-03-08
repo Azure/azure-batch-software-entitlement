@@ -39,14 +39,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return exitCode;
         }
 
-        private static void SetupLogging(OptionsBase options)
-        {
-            var level = options.SelectLogEventLevel();
-            var logger = SimpleLoggerFactory.CreateLogger(level);
-            logger.Information("Software Entitlement Service Command Line Utility");
-            options.WarnAboutInactiveOptions(level, logger);
-        }
-
         public static int Generate(GenerateOptions options)
         {
             return 0;
@@ -79,6 +71,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var hostFileInfo = new FileInfo(hostAssembly.Location);
             var hostDirectory = hostFileInfo.Directory;
             return hostDirectory;
+        }
+
+        private static void SetupLogging(OptionsBase options)
+        {
+            var level = options.SelectLogEventLevel();
+            var logger = SimpleLoggerFactory.CreateLogger(level);
+            logger.Information("Software Entitlement Service Command Line Utility");
+            options.WarnAboutInactiveOptions(level, logger);
         }
     }
 }
