@@ -2,8 +2,11 @@
 using System.Diagnostics;
 using CommandLine;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
+using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
+using Serilog.Extensions.Logging;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -11,8 +14,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     {
         static int Main(string[] args)
         {
-            var result = Parser.Default
-                .ParseArguments<GenerateOptions, VerifyOptions, ServerOptions>(args)
+            var parser = new Parser(settings =>
+            {
+                settings.CaseInsensitiveEnumValues = true;
+                settings.CaseSensitive = false;
+            });
+
+            var result = parser.ParseArguments<GenerateOptions, VerifyOptions, ServerOptions>(args)
                 .MapResult(
                     (GenerateOptions options) => Generate(options),
                     (VerifyOptions options) => Verify(options),
@@ -37,7 +45,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             if (entitlement.HasErrors)
             {
-                logger.Error("Unable to generate template; please address the reported errors and try again.");
+                logger.LogError("Unable to generate template; please address the reported errors and try again.");
                 return -1;
             }
 
@@ -48,7 +56,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 return -1;
             }
 
-            logger.Information("Token: {JWT}", token);
+            logger.LogInformation("Token: {JWT}", token);
 
             return 0;
         }
@@ -65,60 +73,50 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return 0;
         }
 
-        public static ISimpleLogger CreateLogger(OptionsBase options)
+        public static ILogger CreateLogger(OptionsBase options)
         {
-            var level = SelectLogEventLevel(options);
-            var logger = CreateLogger(level);
-            WarnAboutInactiveOptions(options, level, logger);
+            var logger = CreateLogger(options.LogLevel);
             return logger;
         }
 
-        private static ISimpleLogger CreateLogger(LogEventLevel level)
+        private static ILogger CreateLogger(LogLevel level)
         {
             var serilogLogger = new LoggerConfiguration()
                             .WriteTo.LiterateConsole()
-                            .MinimumLevel.Is(level)
+                            .MinimumLevel.Is(ConvertLevel(level))
                             .CreateLogger();
-
-            serilogLogger.Information("Software Entitlement Service Command Line Utility");
-            return new SerilogLogger(serilogLogger);
+            var provider = new SerilogLoggerProvider(serilogLogger);
+            return provider.CreateLogger(string.Empty);
         }
 
-        public static LogEventLevel SelectLogEventLevel(OptionsBase options)
+        /// <summary>
+        /// Convert from LogLevel to LogEventLevel for configuring our log
+        /// </summary>
+        /// <remarks>This should be available from Serilog but it's private.</remarks>
+        /// <param name="level">Log level to convert.</param>
+        /// <returns>Serilog equivalent.</returns>
+        private static LogEventLevel ConvertLevel(LogLevel level)
         {
-            if (options.Debug)
+            switch (level)
             {
-                return LogEventLevel.Debug;
-            }
+                case LogLevel.Critical:
+                    return LogEventLevel.Fatal;
 
-            if (options.Verbose)
-            {
-                return LogEventLevel.Verbose;
-            }
+                case LogLevel.Error:
+                    return LogEventLevel.Error;
 
-            if (options.Quiet)
-            {
-                return LogEventLevel.Warning;
-            }
+                case LogLevel.Warning:
+                    return LogEventLevel.Warning;
 
-            return LogEventLevel.Information;
-        }
+                case LogLevel.Information:
+                    return LogEventLevel.Information;
 
-        private static void WarnAboutInactiveOptions(OptionsBase options, LogEventLevel level, ISimpleLogger logger)
-        {
-            if (options.Quiet && level < LogEventLevel.Warning)
-            {
-                logger.Warning("Logging at {Level}; ignoring --quiet", level);
-            }
+                case LogLevel.Debug:
+                    return LogEventLevel.Debug;
 
-            if (options.Debug && level > LogEventLevel.Debug)
-            {
-                logger.Warning("Logging at {Level}; ignoring --debug", level);
-            }
-
-            if (options.Verbose && level > LogEventLevel.Verbose)
-            {
-                logger.Warning("Logging at {Level}; ignoring --verbose", level);
+                case LogLevel.None:
+                default:
+                    return LogEventLevel.Verbose;
             }
         }
     }

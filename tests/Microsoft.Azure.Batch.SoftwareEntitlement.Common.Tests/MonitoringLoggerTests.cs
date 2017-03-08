@@ -1,23 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using Microsoft.Extensions.Logging;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
 {
     public class MonitoringLoggerTests
     {
-        // Discarding fake logger for testing
-        private readonly ISimpleLogger _nulLogger;
-
         // Monitoring Logger for testing
         private readonly MonitoringLogger _monitoringLogger;
 
         public MonitoringLoggerTests()
         {
-            _nulLogger = new NullLogger();
-            _monitoringLogger = new MonitoringLogger(_nulLogger);
+            _monitoringLogger = new MonitoringLogger(NullLogger.Instance);
         }
 
         public class HaveLoggedErrors : MonitoringLoggerTests
@@ -31,7 +26,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void AfterErrorsLogged_ReturnsTrue()
             {
-                _monitoringLogger.Error("Message");
+                _monitoringLogger.LogError("Message");
                 _monitoringLogger.HasErrors.Should().BeTrue();
             }
         }
@@ -47,7 +42,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void AfterWarningsLogged_ReturnsTrue()
             {
-                _monitoringLogger.Warning("Message");
+                _monitoringLogger.LogWarning("Message");
                 _monitoringLogger.HasWarnings.Should().BeTrue();
             }
         }

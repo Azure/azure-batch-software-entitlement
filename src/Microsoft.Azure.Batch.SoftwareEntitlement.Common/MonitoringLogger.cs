@@ -1,82 +1,62 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
     /// <summary>
     /// A simple logging wrapper that keeps track of whether certain levels of message have been logged.
     /// </summary>
-    public class MonitoringLogger : ISimpleLogger
+    public class MonitoringLogger : ILogger
     {
+        // Gets the counts of different log levels observed
+        private readonly Dictionary<LogLevel, int> _counts
+            = new Dictionary<LogLevel, int>();
+
         // Reference to the actual logger that we wrap
-        private readonly ISimpleLogger _logger;
-
-        // Count of errors we've logged
-        private int _errorCount;
-
-        // Count of warnings we've logged
-        private int _warningCount;
+        private readonly ILogger _logger;
 
         /// <summary>
         /// Gets a value indicating whether this logger has logged any errors
         /// </summary>
-        public bool HasErrors => _errorCount > 0;
+        public bool HasErrors => _counts[LogLevel.Error] > 0;
 
         /// <summary>
         /// Gets a value indicating whether this logger has logged any warnings
         /// </summary>
-        public bool HasWarnings => _warningCount > 0;
+        public bool HasWarnings => _counts[LogLevel.Warning] > 0;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MonitoringLogger"/> class
         /// </summary>
         /// <param name="logger">Original logger that we should wrap.</param>
-        public MonitoringLogger(ISimpleLogger logger)
+        public MonitoringLogger(ILogger logger)
         {
             _logger = logger;
+
+            _counts[LogLevel.None] = 0;
+            _counts[LogLevel.Critical] = 0;
+            _counts[LogLevel.Error] = 0;
+            _counts[LogLevel.Warning] = 0;
+            _counts[LogLevel.Information] = 0;
+            _counts[LogLevel.Debug] = 0;
+            _counts[LogLevel.Trace] = 0;
         }
 
-        /// <summary>
-        /// Log a (fatal) error
-        /// </summary>
-        /// <param name="template">Template to use for the log message.</param>
-        /// <param name="arguments">Arguments to use to fill out the template.</param>
-        public void Error(string template, params object[] arguments)
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            _errorCount++;
-            _logger.Error(template, arguments);
+            _counts[logLevel]++;
+            _logger.Log(logLevel, eventId, state, exception, formatter);
         }
 
-        /// <summary>
-        /// Log a (non fatal) warning
-        /// </summary>
-        /// <param name="template">Template to use for the log message.</param>
-        /// <param name="arguments">Arguments to use to fill out the template.</param>
-        public void Warning(string template, params object[] arguments)
+        public bool IsEnabled(LogLevel logLevel)
         {
-            _warningCount++;
-            _logger.Warning(template, arguments);
+            return _logger.IsEnabled(logLevel);
         }
 
-        /// <summary>
-        /// Log a information
-        /// </summary>
-        /// <param name="template">Template to use for the log message.</param>
-        /// <param name="arguments">Arguments to use to fill out the template.</param>
-        public void Information(string template, params object[] arguments)
+        public IDisposable BeginScope<TState>(TState state)
         {
-            _logger.Information(template, arguments);
-        }
-
-        /// <summary>
-        /// Log debug details
-        /// </summary>
-        /// <param name="template">Template to use for the log message.</param>
-        /// <param name="arguments">Arguments to use to fill out the template.</param>
-        public void Debug(string template, params object[] arguments)
-        {
-            _logger.Debug(template, arguments);
+            return _logger.BeginScope(state);
         }
     }
 }
