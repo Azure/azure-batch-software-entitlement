@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices.ComTypes;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
 
@@ -9,7 +10,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
     public class TimestampParserTests
     {
         // Substitute logger used for testing
-        private readonly ISimpleLogger _logger = Substitute.For<ISimpleLogger>();
+        private readonly ILogger _logger = Substitute.For<ILogger>();
 
         public class Constructor : TimestampParserTests
         {
@@ -66,7 +67,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                 var valueToParse = _timestamp.ToString("G");
                 _parser.TryParse(valueToParse);
 
-                _logger.Received().Warning(
+                _logger.Received().LogWarning(
                     Arg.Any<string>(),
                     Arg.Any<object[]>());
             }

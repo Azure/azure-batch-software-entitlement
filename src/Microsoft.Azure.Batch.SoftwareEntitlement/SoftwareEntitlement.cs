@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -44,7 +45,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Initializes a new instance of the <see cref="SoftwareEntitlement"/> class
         /// </summary>
-        public SoftwareEntitlement(ISimpleLogger logger)
+        public SoftwareEntitlement(ILogger logger)
         {
             var now = DateTimeOffset.Now;
 
@@ -66,11 +67,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (string.IsNullOrWhiteSpace(virtualMachineId))
             {
-                _logger.Error("Virtual Machine ID must be specified");
+                _logger.LogError("Virtual Machine ID must be specified");
                 return this;
             }
 
-            _logger.Debug("Virtual machine id is {VirtualMachineId}", virtualMachineId);
+            _logger.LogDebug("Virtual machine id is {VirtualMachineId}", virtualMachineId);
 
             return new SoftwareEntitlement(this, virtualMachineId: virtualMachineId);
         }
@@ -119,18 +120,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (notAfter < notBefore)
             {
-                _logger.Error("Token expiry of {NotAfter} must be after token becomes active at {NotBefore}.", notAfter, notBefore);
+                _logger.LogError("Token expiry of {NotAfter} must be after token becomes active at {NotBefore}.", notAfter, notBefore);
                 return this;
             }
 
             if (notAfter < DateTimeOffset.Now)
             {
-                _logger.Warning("Token expiry of {NotAfter} has already passed", notAfter);
+                _logger.LogWarning("Token expiry of {NotAfter} has already passed", notAfter);
             }
 
             if (notBefore > DateTimeOffset.Now)
             {
-                _logger.Information("Token does not become available until {NotBefore}", notBefore);
+                _logger.LogInformation("Token does not become available until {NotBefore}", notBefore);
             }
 
             return new SoftwareEntitlement(this, notBefore: notBefore, notAfter: notAfter);

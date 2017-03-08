@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
@@ -13,13 +14,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         public const string ExpectedFormat = "HH:mm d-MMM-yyyy";
 
         // Reference to our common logger
-        private readonly ISimpleLogger _logger;
+        private readonly ILogger _logger;
 
         /// <summary>
         /// Initialize a new instance of the <see cref="TimestampParser"/> class
         /// </summary>
         /// <param name="logger">Logger to use for any warnings.</param>
-        public TimestampParser(ISimpleLogger logger)
+        public TimestampParser(ILogger logger)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -42,7 +43,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out result))
             {
                 // Correctly parsed with detected format
-                _logger.Warning(
+                _logger.LogWarning(
                     "Timestamp {TimeStamp} was not in the expected format {Format}; using {DateTime:F}.", 
                     value, 
                     ExpectedFormat, 

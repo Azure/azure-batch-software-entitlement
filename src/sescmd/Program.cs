@@ -2,8 +2,11 @@
 using System.Diagnostics;
 using CommandLine;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
+using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
+using Serilog.Extensions.Logging;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -37,7 +40,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             if (entitlement.HasErrors)
             {
-                logger.Error("Unable to generate template; please address the reported errors and try again.");
+                logger.LogError("Unable to generate template; please address the reported errors and try again.");
                 return -1;
             }
 
@@ -48,7 +51,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 return -1;
             }
 
-            logger.Information("Token: {JWT}", token);
+            logger.LogInformation("Token: {JWT}", token);
 
             return 0;
         }
@@ -65,7 +68,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return 0;
         }
 
-        public static ISimpleLogger CreateLogger(OptionsBase options)
+        public static ILogger CreateLogger(OptionsBase options)
         {
             var level = SelectLogEventLevel(options);
             var logger = CreateLogger(level);
@@ -73,15 +76,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return logger;
         }
 
-        private static ISimpleLogger CreateLogger(LogEventLevel level)
+        private static ILogger CreateLogger(LogEventLevel level)
         {
             var serilogLogger = new LoggerConfiguration()
                             .WriteTo.LiterateConsole()
                             .MinimumLevel.Is(level)
                             .CreateLogger();
-
-            serilogLogger.Information("Software Entitlement Service Command Line Utility");
-            return new SerilogLogger(serilogLogger);
+            var provider = new SerilogLoggerProvider(serilogLogger);
+            return provider.CreateLogger(string.Empty);
         }
 
         public static LogEventLevel SelectLogEventLevel(OptionsBase options)
@@ -104,21 +106,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return LogEventLevel.Information;
         }
 
-        private static void WarnAboutInactiveOptions(OptionsBase options, LogEventLevel level, ISimpleLogger logger)
+        private static void WarnAboutInactiveOptions(OptionsBase options, LogEventLevel level, ILogger logger)
         {
             if (options.Quiet && level < LogEventLevel.Warning)
             {
-                logger.Warning("Logging at {Level}; ignoring --quiet", level);
+                logger.LogWarning("Logging at {Level}; ignoring --quiet", level);
             }
 
             if (options.Debug && level > LogEventLevel.Debug)
             {
-                logger.Warning("Logging at {Level}; ignoring --debug", level);
+                logger.LogWarning("Logging at {Level}; ignoring --debug", level);
             }
 
             if (options.Verbose && level > LogEventLevel.Verbose)
             {
-                logger.Warning("Logging at {Level}; ignoring --verbose", level);
+                logger.LogWarning("Logging at {Level}; ignoring --verbose", level);
             }
         }
     }
