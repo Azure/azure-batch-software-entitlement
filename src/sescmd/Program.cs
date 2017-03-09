@@ -1,20 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using CommandLine;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.DependencyInjection;
-using Serilog;
-using Serilog.Events;
-using Serilog.Extensions.Logging;
-using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -44,6 +36,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return exitCode;
         }
 
+        /// <summary>
+        /// Generation mode - create a new token for testing
+        /// </summary>
+        /// <param name="options">Options from the command line.</param>
+        /// <returns>Exit code to return from this process.</returns>
         public static int Generate(GenerateOptions options)
         {
             var logger = GlobalLogger.Logger;
@@ -68,11 +65,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return 0;
         }
 
+        /// <summary>
+        /// Verify mode - check that a token is valid
+        /// </summary>
+        /// <param name="options">Options from the command line.</param>
+        /// <returns>Exit code to return from this process.</returns>
         public static int Verify(VerifyOptions options)
         {
             return 0;
         }
 
+        /// <summary>
+        /// Serve mode - run as a standalone webapp 
+        /// </summary>
+        /// <param name="options">Options from the commandline.</param>
+        /// <returns>Exit code to return from this process.</returns>
         public static int Serve(ServerOptions options)
         {
             var contentDirectory = FindContentDirectory();
@@ -89,6 +96,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return 0;
         }
 
+        /// <summary>
+        /// Find our content directory for static content
+        /// </summary>
+        /// <remarks>Does not include the wwwroot part of the path.</remarks>
+        /// <returns>Information about the directory to use.</returns>
         private static DirectoryInfo FindContentDirectory()
         {
             var hostAssembly = typeof(Startup).GetTypeInfo().Assembly;
@@ -97,6 +109,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return hostDirectory;
         }
 
+        /// <summary>
+        /// Ensure our logging is properly initialized
+        /// </summary>
+        /// <param name="options">Options selected by the user (if any).</param>
         private static void SetupLogging(OptionsBase options)
         {
             var logger = GlobalLogger.CreateLogger(options.LogLevel);
