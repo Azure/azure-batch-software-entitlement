@@ -36,7 +36,6 @@
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Serilog.Extensions.Logging">
-      <HintPath>C:\Users\bearps\.nuget\packages\serilog.extensions.logging\1.4.0\lib\netstandard1.3\Serilog.Extensions.Logging.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
