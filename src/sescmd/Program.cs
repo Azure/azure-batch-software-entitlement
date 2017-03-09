@@ -22,14 +22,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     {
         static int Main(string[] args)
         {
-            var parser = new Parser(settings =>
-            {
-                settings.CaseInsensitiveEnumValues = true;
-                settings.CaseSensitive = false;
-                settings.EnableDashDash = true;
-                settings.IgnoreUnknownArguments = false;
-                settings.HelpWriter = Console.Error;
-            });
+            var parser = new Parser(ConfigureParser);
 
             var parseResult = parser
                 .ParseArguments<GenerateOptions, VerifyOptions, ServerOptions>(args);
@@ -109,5 +102,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var logger = GlobalLogger.CreateLogger(options.LogLevel);
             logger.LogInformation("Software Entitlement Service Command Line Utility");
         }
+
+        /// <summary>
+        /// Configure parsing of our commandline options
+        /// </summary>
+        /// <param name="settings">Settings instance to update.</param>
+        private static void ConfigureParser(ParserSettings settings)
+        {
+            settings.CaseInsensitiveEnumValues = true;
+            settings.CaseSensitive = false;
+            settings.EnableDashDash = true;
+            settings.IgnoreUnknownArguments = false;
+            settings.HelpWriter = Console.Error;
+        }
+
+
     }
 }
