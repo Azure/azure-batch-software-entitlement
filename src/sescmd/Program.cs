@@ -53,7 +53,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         public static int Generate(GenerateOptions options)
         {
-            var logger = SimpleLoggerFactory.Logger;
+            var logger = GlobalLogger.Logger;
             var entitlement = new SoftwareEntitlement(logger)
                 .WithVirtualMachineId(options.VirtualMachineId)
                 .ForTimeRange(options.NotBefore, options.NotAfter);
@@ -106,7 +106,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         private static void SetupLogging(OptionsBase options)
         {
-            var logger = SimpleLoggerFactory.CreateLogger(options.LogLevel);
+            var logger = GlobalLogger.CreateLogger(options.LogLevel);
             logger.LogInformation("Software Entitlement Service Command Line Utility");
         }
     }

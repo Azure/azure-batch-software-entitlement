@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
     /// <summary>
     /// Static factory for creating a logger
     /// </summary>
-    public static class SimpleLoggerFactory
+    public static class GlobalLogger
     {
         // Reference to our shared logger for global use
         private static ILogger _logger;
