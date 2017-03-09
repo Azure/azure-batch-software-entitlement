@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
     public class TimestampParserTests
     {
         // Substitute logger used for testing
-        private readonly MonitoringLogger _logger = new MonitoringLogger(NullLogger.Instance);
+        private readonly ValidationLogger _logger = new ValidationLogger(NullLogger.Instance);
 
         public class Constructor : TimestampParserTests
         {

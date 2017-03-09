@@ -5,9 +5,9 @@ using Microsoft.Extensions.Logging;
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
     /// <summary>
-    /// A simple logging wrapper that keeps track of whether certain levels of message have been logged.
+    /// A logger used when validating so that we can tell if there were any errors
     /// </summary>
-    public class MonitoringLogger : ILogger
+    public class ValidationLogger : ILogger
     {
         // Gets the counts of different log levels observed
         private readonly Dictionary<LogLevel, int> _counts
@@ -27,10 +27,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         public bool HasWarnings => _counts[LogLevel.Warning] > 0;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MonitoringLogger"/> class
+        /// Initializes a new instance of the <see cref="ValidationLogger"/> class
         /// </summary>
         /// <param name="logger">Original logger that we should wrap.</param>
-        public MonitoringLogger(ILogger logger)
+        public ValidationLogger(ILogger logger)
         {
             _logger = logger;
 
