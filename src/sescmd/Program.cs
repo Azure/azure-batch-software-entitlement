@@ -19,7 +19,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var parseResult = parser
                 .ParseArguments<GenerateOptions, VerifyOptions, ServerOptions>(args);
 
-            parseResult.WithParsed((OptionsBase options) => SetupLogging(options));
+            parseResult.WithParsed((OptionsBase options) => SetUpLogging(options));
 
             var exitCode = parseResult.MapResult(
                 (GenerateOptions options) => Generate(options),
@@ -113,7 +113,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Ensure our logging is properly initialized
         /// </summary>
         /// <param name="options">Options selected by the user (if any).</param>
-        private static void SetupLogging(OptionsBase options)
+        private static void SetUpLogging(OptionsBase options)
         {
             var logger = GlobalLogger.CreateLogger(options.LogLevel);
             logger.LogInformation("Software Entitlement Service Command Line Utility");
