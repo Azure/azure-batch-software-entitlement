@@ -5,45 +5,45 @@ using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
 {
-    public class MonitoringLoggerTests
+    public class ValidationLoggerTests
     {
         // Monitoring Logger for testing
-        private readonly MonitoringLogger _monitoringLogger;
+        private readonly ValidationLogger _validationLogger;
 
-        public MonitoringLoggerTests()
+        public ValidationLoggerTests()
         {
-            _monitoringLogger = new MonitoringLogger(NullLogger.Instance);
+            _validationLogger = new ValidationLogger(NullLogger.Instance);
         }
 
-        public class HaveLoggedErrors : MonitoringLoggerTests
+        public class HaveLoggedErrors : ValidationLoggerTests
         {
             [Fact]
             public void WhenNoErrorsLogged_ReturnsFalse()
             {
-                _monitoringLogger.HasErrors.Should().BeFalse();
+                _validationLogger.HasErrors.Should().BeFalse();
             }
 
             [Fact]
             public void AfterErrorsLogged_ReturnsTrue()
             {
-                _monitoringLogger.LogError("Message");
-                _monitoringLogger.HasErrors.Should().BeTrue();
+                _validationLogger.LogError("Message");
+                _validationLogger.HasErrors.Should().BeTrue();
             }
         }
 
-        public class HaveLoggedWarnings : MonitoringLoggerTests
+        public class HaveLoggedWarnings : ValidationLoggerTests
         {
             [Fact]
             public void WhenNoWarningsLogged_ReturnsFalse()
             {
-                _monitoringLogger.HasWarnings.Should().BeFalse();
+                _validationLogger.HasWarnings.Should().BeFalse();
             }
 
             [Fact]
             public void AfterWarningsLogged_ReturnsTrue()
             {
-                _monitoringLogger.LogWarning("Message");
-                _monitoringLogger.HasWarnings.Should().BeTrue();
+                _validationLogger.LogWarning("Message");
+                _validationLogger.HasWarnings.Should().BeTrue();
             }
         }
     }

@@ -19,6 +19,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Include="appsettings.Development.json">
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.1.1-beta" />
     <PackageReference Include="dotnet-test-nunit" Version="3.4.0-beta-3" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="1.1.1" />
@@ -31,7 +37,14 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.Azure.Batch.SoftwareEntitlement.Common\Microsoft.Azure.Batch.SoftwareEntitlement.Common.csproj" />
+    <ProjectReference Include="..\Microsoft.Azure.Batch.SoftwareEntitlement.Server\Microsoft.Azure.Batch.SoftwareEntitlement.Server.csproj" />
     <ProjectReference Include="..\Microsoft.Azure.Batch.SoftwareEntitlement\Microsoft.Azure.Batch.SoftwareEntitlement.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.AspNetCore.Hosting">
+      <HintPath>C:\Users\bearps\.nuget\packages\microsoft.aspnetcore.hosting\1.0.1\lib\netstandard1.3\Microsoft.AspNetCore.Hosting.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

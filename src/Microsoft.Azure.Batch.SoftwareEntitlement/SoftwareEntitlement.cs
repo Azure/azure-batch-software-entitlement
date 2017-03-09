@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     public class SoftwareEntitlement
     {
         // Reference to the logger we use for reporting activity
-        private readonly MonitoringLogger _logger;
+        private readonly ValidationLogger _logger;
 
         // Parser used to convert from text into instants of time
         private readonly TimestampParser _timestampParser;
@@ -49,7 +49,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             var now = DateTimeOffset.Now;
 
-            _logger = new MonitoringLogger(logger);
+            _logger = new ValidationLogger(logger);
             _timestampParser = new TimestampParser(_logger);
 
             VirtualMachineId = string.Empty;
