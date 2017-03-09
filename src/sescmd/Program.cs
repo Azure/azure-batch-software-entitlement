@@ -9,9 +9,12 @@ using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.DependencyInjection;
 using Serilog;
 using Serilog.Events;
+using Serilog.Extensions.Logging;
+using ILogger = Microsoft.Extensions.Logging.ILogger;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -19,7 +22,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     {
         static int Main(string[] args)
         {
-            var parseResult = Parser.Default
+            var parser = new Parser(settings =>
+            {
+                settings.CaseInsensitiveEnumValues = true;
+                settings.CaseSensitive = false;
+                settings.EnableDashDash = true;
+                settings.IgnoreUnknownArguments = false;
+                settings.HelpWriter = Console.Error;
+            });
+
+            var parseResult = parser
                 .ParseArguments<GenerateOptions, VerifyOptions, ServerOptions>(args);
 
             parseResult.WithParsed((OptionsBase options) => SetupLogging(options));
@@ -41,14 +53,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         public static int Generate(GenerateOptions options)
         {
-            var logger = CreateLogger(options);
+            var logger = SimpleLoggerFactory.Logger;
             var entitlement = new SoftwareEntitlement(logger)
                 .WithVirtualMachineId(options.VirtualMachineId)
                 .ForTimeRange(options.NotBefore, options.NotAfter);
 
             if (entitlement.HasErrors)
             {
-                logger.Error("Unable to generate template; please address the reported errors and try again.");
+                logger.LogError("Unable to generate template; please address the reported errors and try again.");
                 return -1;
             }
 
@@ -59,7 +71,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 return -1;
             }
 
-            logger.Information("Token: {JWT}", token);
+            logger.LogInformation("Token: {JWT}", token);
             return 0;
         }
 
@@ -94,10 +106,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         private static void SetupLogging(OptionsBase options)
         {
-            var level = options.SelectLogEventLevel();
-            var logger = SimpleLoggerFactory.CreateLogger(level);
-            logger.Information("Software Entitlement Service Command Line Utility");
-            options.WarnAboutInactiveOptions(level, logger);
+            var logger = SimpleLoggerFactory.CreateLogger(options.LogLevel);
+            logger.LogInformation("Software Entitlement Service Command Line Utility");
         }
     }
 }
