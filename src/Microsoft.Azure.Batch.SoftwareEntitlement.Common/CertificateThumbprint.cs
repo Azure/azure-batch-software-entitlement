@@ -22,6 +22,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         }
 
         /// <summary>
+        /// Return the string representation of the thumbprint
+        /// </summary>
+        /// <returns>The wrapped thumbprint.</returns>
+        public override string ToString() => _thumbprint;
+
+        /// <summary>
         /// Is this thumbprint equal to another thumbprint
         /// </summary>
         /// <param name="other"></param>
