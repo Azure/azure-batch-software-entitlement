@@ -59,6 +59,27 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         }
 
         /// <summary>
+        /// Find all certificates by looking in the specified location
+        /// </summary>
+        /// <param name="storeName">Name of the store to search within.</param>
+        /// <param name="storeLocation">Location within the store to check.</param>
+        /// <returns>Certificate, if found; null otherwise.</returns>
+        private IList<X509Certificate2> FindAll(StoreName storeName, StoreLocation storeLocation)
+        {
+            using (var store = new X509Store(storeName, storeLocation))
+            {
+                store.Open(OpenFlags.ReadOnly);
+                var found = store.Certificates.Cast<X509Certificate2>().ToList();
+                _logger.LogDebug(
+                    "Found {0} certificates in certificate store {StoreName}/{StoreLocation}",
+                    found.Count,
+                    storeName,
+                    storeLocation);
+                return found;
+            }
+        }
+
+        /// <summary>
         /// Find a certificate based on the provided thumbprint
         /// </summary>
         /// <param name="thumbprint">Thumbprint of the certificate we need.</param>
@@ -72,11 +93,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 select FindByThumbprint(thumbprint, name, location);
 
            var result =  query.FirstOrDefault(cert => cert != null);
-            if (result == null)
-            {
-                _logger.LogWarning("Did not find certificate {Thumbprint}", thumbprint);
-            }
-            else
+            if (result != null)
             {
                 _logger.LogInformation("Found certificate {Thumbprint}", thumbprint);
                 _logger.LogDebug("Friendly name {FriendlyName}", result.FriendlyName);
@@ -100,32 +117,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 store.Open(OpenFlags.ReadOnly);
                 var found = store.Certificates.Find(thumbprint);
                 _logger.LogDebug(
-                    "Found {0} certificates in certificate store {StoreName}/{StoreLocation}",
+                    "Found {0} certificates in store {StoreName}/{StoreLocation}",
                     found.Count,
                     storeName,
                     storeLocation);
                 return found.SingleOrDefault();
-            }
-        }
-
-        /// <summary>
-        /// Find all certificates by looking in the specified location
-        /// </summary>
-        /// <param name="storeName">Name of the store to search within.</param>
-        /// <param name="storeLocation">Location within the store to check.</param>
-        /// <returns>Certificate, if found; null otherwise.</returns>
-        private IList<X509Certificate2> FindAll(StoreName storeName, StoreLocation storeLocation)
-        {
-            using (var store = new X509Store(storeName, storeLocation))
-            {
-                store.Open(OpenFlags.ReadOnly);
-                var found = store.Certificates.Cast<X509Certificate2>().ToList();
-                _logger.LogDebug(
-                    "Found {0} certificates in certificate store {StoreName}/{StoreLocation}",
-                    found.Count,
-                    storeName,
-                    storeLocation);
-                return found;
             }
         }
     }

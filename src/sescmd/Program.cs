@@ -2,8 +2,11 @@
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using CommandLine;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Server.Kestrel;
+using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server;
 using Microsoft.Extensions.Logging;
@@ -17,7 +20,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var parser = new Parser(ConfigureParser);
 
             var parseResult = parser
-                .ParseArguments<GenerateOptions, VerifyOptions, ServerOptions>(args);
+                .ParseArguments<GenerateOptions, VerifyOptions, ServerOptions, ListCertificatesOptions, FindCertificateOptions>(args);
 
             parseResult.WithParsed((OptionsBase options) => SetUpLogging(options));
 
@@ -25,6 +28,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 (GenerateOptions options) => Generate(options),
                 (VerifyOptions options) => Verify(options),
                 (ServerOptions options) => Serve(options),
+                (ListCertificatesOptions options) => ListCertificates(options),
+                (FindCertificateOptions options) => FindCertificate(options),
                 errors => 1);
 
             if (Debugger.IsAttached)
@@ -76,37 +81,69 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
-        /// Serve mode - run as a standalone webapp 
+        /// Serve mode - run as a standalone webapp  
         /// </summary>
         /// <param name="options">Options from the commandline.</param>
         /// <returns>Exit code to return from this process.</returns>
         public static int Serve(ServerOptions options)
         {
-            var contentDirectory = FindContentDirectory();
-            var host = new WebHostBuilder()
-                .UseKestrel()
-                .UseContentRoot(contentDirectory.FullName)
-                .UseStartup<Startup>()
-                .Build();
-
-            // This sends output directly to the console which is a bit naff
-            // but avoiding it would probably be brittle.
-            host.Run();
+            var server = new SoftwareEntitlementServer(options, GlobalLogger.Logger);
+            server.Run();
 
             return 0;
         }
 
         /// <summary>
-        /// Find our content directory for static content
+        /// List available certificates
         /// </summary>
-        /// <remarks>Does not include the wwwroot part of the path.</remarks>
-        /// <returns>Information about the directory to use.</returns>
-        private static DirectoryInfo FindContentDirectory()
+        /// <param name="options">Options from the command line.</param>
+        /// <returns>Exit code for process.</returns>
+        private static int ListCertificates(ListCertificatesOptions options)
         {
-            var hostAssembly = typeof(Startup).GetTypeInfo().Assembly;
-            var hostFileInfo = new FileInfo(hostAssembly.Location);
-            var hostDirectory = hostFileInfo.Directory;
-            return hostDirectory;
+            var logger = GlobalLogger.Logger;
+            var certificateStore = new CertificateStore(logger);
+            foreach (var cert in certificateStore.FindAll())
+            {
+                var name
+                    = string.IsNullOrEmpty(cert.FriendlyName)
+                        ? cert.SubjectName.Name
+                        : cert.FriendlyName;
+
+                logger.LogInformation(
+                    "{Name} - {Thumbprint}",
+                    name,
+                    cert.Thumbprint);
+            }
+
+            return 0;
+        }
+
+        /// <summary>
+        /// Show details of one particular certificate
+        /// </summary>
+        /// <param name="options">Options from the command line.</param>
+        /// <returns>Exit code for process.</returns>
+
+        private static int FindCertificate(FindCertificateOptions options)
+        {
+            var logger = GlobalLogger.Logger;
+            var thumbprint = new CertificateThumbprint(options.Thumbprint);
+            var certificateStore = new CertificateStore(logger);
+            var certificate = certificateStore.FindByThumbprint(thumbprint);
+            if (certificate == null)
+            {
+                return -1;
+            }
+
+            var certDetails
+                = certificate.ToString()
+                    .Split(new[] {Environment.NewLine, "\r\n", "\n"}, StringSplitOptions.None);
+            foreach (var line in certDetails)
+            {
+                logger.LogInformation(line);
+            }
+
+            return 0;
         }
 
         /// <summary>
