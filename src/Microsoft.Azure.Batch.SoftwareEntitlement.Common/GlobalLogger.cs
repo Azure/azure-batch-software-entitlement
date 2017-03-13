@@ -34,7 +34,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         public static ILogger CreateLogger(LogLevel level)
         {
             var serilogger = new Serilog.LoggerConfiguration()
-                .WriteTo.LiterateConsole()
+                .WriteTo.ColoredConsole()
                 .MinimumLevel.Is(ConvertLevel(level))
                 .CreateLogger();
 
