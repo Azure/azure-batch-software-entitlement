@@ -16,7 +16,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="thumbprint">Thumbprint to find.</param>
         public static IList<X509Certificate2> Find(this X509Certificate2Collection collection, CertificateThumbprint thumbprint)
         {
-            return collection.Find(X509FindType.FindByThumbprint, thumbprint.ToString(), true)
+            return collection.Find(X509FindType.FindByThumbprint, thumbprint.ToString(), false)
                 .Cast<X509Certificate2>()
                 .ToList();
         }
