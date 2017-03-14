@@ -72,7 +72,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <remarks>Formatting of the thumbprints (e.g. whitespace) is ignored.</remarks>
         /// <param name="thumbprint">String to compare</param>
         /// <returns>True if the thumbprints match, false otherwise.</returns>
-        public bool HasThumbprint(string thumbprint)
+        public bool Matches(string thumbprint)
         {
             var t = SanitizeThumbprint(thumbprint ?? string.Empty);
             return string.Equals(_thumbprint, t, StringComparison.OrdinalIgnoreCase);
