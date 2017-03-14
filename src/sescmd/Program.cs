@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using CommandLine;
@@ -20,14 +21,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var parser = new Parser(ConfigureParser);
 
             var parseResult = parser
-                .ParseArguments<GenerateOptions, VerifyOptions, ServerOptions, ListCertificatesOptions, FindCertificateOptions>(args);
+                .ParseArguments<GenerateOptions, VerifyOptions, ServerCommandLine, ListCertificatesOptions, FindCertificateOptions>(args);
 
             parseResult.WithParsed((OptionsBase options) => SetUpLogging(options));
 
             var exitCode = parseResult.MapResult(
                 (GenerateOptions options) => Generate(options),
                 (VerifyOptions options) => Verify(options),
-                (ServerOptions options) => Serve(options),
+                (ServerCommandLine options) => Serve(options),
                 (ListCertificatesOptions options) => ListCertificates(options),
                 (FindCertificateOptions options) => FindCertificate(options),
                 errors => 1);
@@ -83,14 +84,27 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Serve mode - run as a standalone webapp  
         /// </summary>
-        /// <param name="options">Options from the commandline.</param>
+        /// <param name="commandLine">Options from the commandline.</param>
         /// <returns>Exit code to return from this process.</returns>
-        public static int Serve(ServerOptions options)
+        public static int Serve(ServerCommandLine commandLine)
         {
-            var server = new SoftwareEntitlementServer(options, GlobalLogger.Logger);
-            server.Run();
+            var logger = GlobalLogger.Logger;
+            var builder = new ServerOptionBuilder(commandLine);
+            var options = builder.Build();
 
-            return 0;
+            if (options.HasValue)
+            {
+                var server = new SoftwareEntitlementServer(options.Value, GlobalLogger.Logger);
+                server.Run();
+                return 0;
+            }
+
+            foreach (var e in options.Errors)
+            {
+                logger.LogError(e);
+            }
+
+            return 1;
         }
 
         /// <summary>
@@ -101,8 +115,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         private static int ListCertificates(ListCertificatesOptions options)
         {
             var logger = GlobalLogger.Logger;
-            var certificateStore = new CertificateStore(logger);
-            foreach (var cert in certificateStore.FindAll())
+            var certificateStore = new CertificateStore();
+            var allCertificates = certificateStore.FindAll();
+            var withPrivateKey = allCertificates.Where(c => c.HasPrivateKey).ToList();
+            logger.LogInformation("Found {count} certificates with private keys", withPrivateKey.Count);
+
+            foreach (var cert in withPrivateKey)
             {
                 var name
                     = string.IsNullOrEmpty(cert.FriendlyName)
@@ -123,15 +141,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="options">Options from the command line.</param>
         /// <returns>Exit code for process.</returns>
-
         private static int FindCertificate(FindCertificateOptions options)
         {
             var logger = GlobalLogger.Logger;
             var thumbprint = new CertificateThumbprint(options.Thumbprint);
-            var certificateStore = new CertificateStore(logger);
-            var certificate = certificateStore.FindByThumbprint(thumbprint);
+            var certificateStore = new CertificateStore();
+            var certificate = certificateStore.FindByThumbprint("cert", thumbprint);
             if (certificate == null)
             {
+                logger.LogError("Failed to find certificate {Thumbprint}", thumbprint);
                 return -1;
             }
 

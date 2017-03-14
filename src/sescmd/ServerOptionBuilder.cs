@@ -38,9 +38,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
-        /// Find the server url for our hosting
+        /// Find the server URL for our hosting
         /// </summary>
-        /// <returns>An <see cref="Errorable{Uri}"/> containing either the url to use or any 
+        /// <returns>An <see cref="Errorable{Uri}"/> containing either the URL to use or any 
         /// relevant errors.</returns>
         private Errorable<Uri> FindServerUrl()
         {

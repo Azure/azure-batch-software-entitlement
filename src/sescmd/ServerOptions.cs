@@ -83,9 +83,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
-        /// Create a modified <see cref="ServerOptions"/> with the specified server url
+        /// Create a modified <see cref="ServerOptions"/> with the specified server URL
         /// </summary>
-        /// <param name="url">Hosting url to use (may not be null).</param>
+        /// <param name="url">Hosting URL to use (may not be null).</param>
         /// <returns>New instance of <see cref="ServerOptions"/>.</returns>
         public ServerOptions WithServerUrl(Uri url)
         {

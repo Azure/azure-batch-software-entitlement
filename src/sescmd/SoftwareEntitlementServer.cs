@@ -14,16 +14,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     /// <summary>
     /// Runs a local software entitlement server
     /// </summary>
-    public class SoftwareEntitlementServer
+    public sealed class SoftwareEntitlementServer
     {
         // Reference to a logger for output of activity and diagnostics
         private readonly ValidationLogger _logger;
 
-        // Reference to a checker used to sanitize our configuration
-        private readonly ServerOptionChecker _checker;
-
-        // Store from which to load certificates
-        private readonly CertificateStore _certificateStore;
+        // Reference to the options that configure our operation
+        private ServerOptions _options;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SoftwareEntitlementServer"/> class
@@ -33,9 +30,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public SoftwareEntitlementServer(ServerOptions options, ILogger logger)
         {
             _logger = new ValidationLogger(logger);
-
-            _checker = new ServerOptionChecker(options, _logger);
-            _certificateStore = new CertificateStore(_logger);
+            _options = options;
         }
 
         /// <summary>
@@ -43,65 +38,29 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         public void Run()
         {
-            if (!_checker.IsFullyConfigured)
-            {
-                // Not fully configured; errors have already been logged
-                return;
-            }
-
             var contentDirectory = FindContentDirectory();
-            var builder = new WebHostBuilder()
+            var host = new WebHostBuilder()
                 .UseKestrel(ConfigureKestrel)
                 .UseContentRoot(contentDirectory.FullName)
                 .UseStartup<Startup>()
-                .UseUrls(_checker.ServerUrl.ToString());
+                .UseUrls(_options.ServerUrl.ToString())
+                .Build();
 
-            var host = builder.Build();
-
-            // Only run if we initialized without errors
-            if (!_logger.HasErrors)
-            {
-                // This sends output directly to the console which is a bit naff
-                // but avoiding it would probably be brittle.
-                host.Run();
-            }
+            // This sends output directly to the console which is a bit naff
+            // but avoiding it would probably be brittle.
+            host.Run();
         }
 
-        /// <summary>
-        /// Configure the kestrel standalone server
-        /// </summary>
-        /// <param name="options">Options for configuration.</param>
         private void ConfigureKestrel(KestrelServerOptions options)
         {
-            var connectionCertificate = FindCertificate("connection", _checker.ConnectionThumbprint);
-            if (connectionCertificate != null)
+            var httpsOptions = new HttpsConnectionFilterOptions()
             {
-                var httpsOptions = new HttpsConnectionFilterOptions()
-                {
-                    CheckCertificateRevocation = true,
-                    ClientCertificateMode = ClientCertificateMode.AllowCertificate,
-                    ServerCertificate = connectionCertificate
-                };
+                CheckCertificateRevocation = true,
+                ClientCertificateMode = ClientCertificateMode.AllowCertificate,
+                ServerCertificate = _options.ConnectionCertificate
+            };
 
-                options.UseHttps(httpsOptions);
-            }
-        }
-
-        /// <summary>
-        /// Find a certificate from a thumbprint
-        /// </summary>
-        /// <param name="kind">Kind of certificate we need (used for logging).</param>
-        /// <param name="thumbprint">Thumbprint of the desired certificate.</param>
-        /// <returns></returns>
-        private X509Certificate2 FindCertificate(string kind, CertificateThumbprint thumbprint)
-        {
-            var connectionCertificate = _certificateStore.FindByThumbprint(_checker.ConnectionThumbprint);
-            if (connectionCertificate == null)
-            {
-                _logger.LogError($"Failed to find {kind} certificate for thumbprint '{thumbprint}'");
-            }
-
-            return connectionCertificate;
+            options.UseHttps(httpsOptions);
         }
 
         /// <summary>
