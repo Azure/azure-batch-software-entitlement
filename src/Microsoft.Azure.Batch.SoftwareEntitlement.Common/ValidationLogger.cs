@@ -10,8 +10,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
     public class ValidationLogger : ILogger
     {
         // Gets the counts of different log levels observed
-        private readonly Dictionary<LogLevel, int> _counts
-            = new Dictionary<LogLevel, int>();
+        private readonly Dictionary<LogLevel, int> _counts =
+            new Dictionary<LogLevel, int>();
 
         // Reference to the actual logger that we wrap
         private readonly ILogger _logger;

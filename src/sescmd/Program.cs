@@ -122,8 +122,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             foreach (var cert in withPrivateKey)
             {
-                var name
-                    = string.IsNullOrEmpty(cert.FriendlyName)
+                var name = string.IsNullOrEmpty(cert.FriendlyName)
                         ? cert.SubjectName.Name
                         : cert.FriendlyName;
 
@@ -153,9 +152,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 return -1;
             }
 
-            var certDetails
-                = certificate.ToString()
-                    .Split(new[] {Environment.NewLine, "\r\n", "\n"}, StringSplitOptions.None);
+            var certDetails = certificate.ToString()
+                    .Split(new[] { Environment.NewLine, "\r\n", "\n" }, StringSplitOptions.None);
             foreach (var line in certDetails)
             {
                 logger.LogInformation(line);

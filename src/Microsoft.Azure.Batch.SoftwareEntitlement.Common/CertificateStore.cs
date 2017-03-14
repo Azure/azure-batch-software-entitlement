@@ -46,8 +46,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <returns>Sequence of certificates (possibly empty).</returns>
         public IEnumerable<X509Certificate2> FindAll()
         {
-            var query
-                = from name in _storeNames
+            var query =
+                from name in _storeNames
                 from location in _storeLocations
                 from cert in FindAll(name, location)
                 select cert;
@@ -79,8 +79,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <returns>Certificate, if found; null otherwise.</returns>
         public Errorable<X509Certificate2> FindByThumbprint(string purpose, CertificateThumbprint thumbprint)
         {
-            var query
-                = from name in _storeNames
+            var query =
+                from name in _storeNames
                 from location in _storeLocations
                 select FindByThumbprint(thumbprint, name, location);
 

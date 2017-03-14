@@ -11,8 +11,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
     public class FakeLogger : ILogger
     {
         // Gets the counts of different log levels observed
-        private readonly Dictionary<LogLevel, int> _counts
-            = new Dictionary<LogLevel, int>();
+        private readonly Dictionary<LogLevel, int> _counts =
+            new Dictionary<LogLevel, int>();
 
         /// <summary>
         /// Gets a value indicating whether this logger has logged any errors
