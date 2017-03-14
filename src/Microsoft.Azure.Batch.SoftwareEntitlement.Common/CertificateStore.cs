@@ -8,11 +8,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
     /// <summary>
     /// A simple abstraction over the framework supplied store classes
     /// </summary>
-    public class CertificateStore
+    public sealed class CertificateStore
     {
-        // Reference to a logger used for activity and diagnostics
-        private readonly ILogger _logger;
-
         // A list of placenames where we should look when finding certificates
         private readonly List<StoreName> _storeNames;
 
@@ -22,12 +19,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <summary>
         /// Initialize a new instance of the <see cref="CertificateStore"/> class
         /// </summary>
-        /// <param name="logger">Logger to use during use.</param>
-        public CertificateStore(ILogger logger)
+        public CertificateStore()
         {
-            _logger = logger;
             _storeNames = new List<StoreName>
             {
+                StoreName.My,
+                StoreName.TrustedPeople,
+                StoreName.AddressBook,
+                StoreName.AuthRoot,
                 StoreName.TrustedPublisher,
                 StoreName.CertificateAuthority,
                 StoreName.Root
@@ -36,7 +35,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             // Prefer user cert to machine cert
             _storeLocations = new List<StoreLocation>
             {
-                StoreLocation.CurrentUser, 
+                StoreLocation.CurrentUser,
                 StoreLocation.LocalMachine
             };
         }
@@ -47,14 +46,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <returns>Sequence of certificates (possibly empty).</returns>
         public IEnumerable<X509Certificate2> FindAll()
         {
-            _logger.LogDebug("Searching for all certificates");
             var query
                 = from name in _storeNames
                 from location in _storeLocations
                 from cert in FindAll(name, location)
                 select cert;
-              var result = query.ToList();
-            _logger.LogInformation("Found {Count} certificates", result.Count);
+            var result = query.ToList();
             return result;
         }
 
@@ -70,11 +67,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             {
                 store.Open(OpenFlags.ReadOnly);
                 var found = store.Certificates.Cast<X509Certificate2>().ToList();
-                _logger.LogDebug(
-                    "Found {0} certificates in certificate store {StoreName}/{StoreLocation}",
-                    found.Count,
-                    storeName,
-                    storeLocation);
                 return found;
             }
         }
@@ -82,25 +74,23 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <summary>
         /// Find a certificate based on the provided thumbprint
         /// </summary>
+        /// <param name="purpose">A use for which the certificate is needed (for human consumption).</param>
         /// <param name="thumbprint">Thumbprint of the certificate we need.</param>
         /// <returns>Certificate, if found; null otherwise.</returns>
-        public X509Certificate2 FindByThumbprint(CertificateThumbprint thumbprint)
+        public Errorable<X509Certificate2> FindByThumbprint(string purpose, CertificateThumbprint thumbprint)
         {
-            _logger.LogDebug("Searching for certificate {Thumbprint}", thumbprint);
             var query
                 = from name in _storeNames
                 from location in _storeLocations
                 select FindByThumbprint(thumbprint, name, location);
 
-           var result =  query.FirstOrDefault(cert => cert != null);
-            if (result != null)
+            var certificate = query.FirstOrDefault(cert => cert != null);
+            if (certificate == null)
             {
-                _logger.LogInformation("Found certificate {Thumbprint}", thumbprint);
-                _logger.LogDebug("Friendly name {FriendlyName}", result.FriendlyName);
-                _logger.LogDebug("Issued By {IssuedBy}", result.IssuerName);
+                return Errorable<X509Certificate2>.Failure($"Did not find {purpose} certificate {thumbprint}");
             }
 
-            return result;
+            return Errorable<X509Certificate2>.Success(certificate);
         }
 
         /// <summary>
@@ -116,11 +106,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             {
                 store.Open(OpenFlags.ReadOnly);
                 var found = store.Certificates.Find(thumbprint);
-                _logger.LogDebug(
-                    "Found {0} certificates in store {StoreName}/{StoreLocation}",
-                    found.Count,
-                    storeName,
-                    storeLocation);
                 return found.SingleOrDefault();
             }
         }
