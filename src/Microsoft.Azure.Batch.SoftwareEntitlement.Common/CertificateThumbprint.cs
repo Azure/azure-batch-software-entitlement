@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
 
@@ -20,7 +21,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         {
             if (string.IsNullOrWhiteSpace(thumbprint))
             {
-                throw new ArgumentNullException(nameof(thumbprint));
+                throw new ArgumentException(nameof(thumbprint));
             }
 
             _thumbprint = SanitizeThumbprint(thumbprint);
@@ -61,6 +62,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
+        [Pure]
         public bool Equals(CertificateThumbprint other)
         {
             return string.Equals(_thumbprint, other._thumbprint, StringComparison.OrdinalIgnoreCase);
@@ -72,6 +74,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <remarks>Formatting of the thumbprints (e.g. whitespace) is ignored.</remarks>
         /// <param name="thumbprint">String to compare</param>
         /// <returns>True if the thumbprints match, false otherwise.</returns>
+        [Pure]
         public bool Matches(string thumbprint)
         {
             var t = SanitizeThumbprint(thumbprint ?? string.Empty);
@@ -81,7 +84,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <summary>
         /// Filter out any unsafe characters from a potential thumbprint
         /// </summary>
-        /// <remarks>When copying a thumbprint from MMC, it ends up with a zero wdith uncode 
+        /// <remarks>When copying a thumbprint from MMC, it ends up with a zero width unicode 
         /// character (actually, a "left-to-right indicator") which can get in the way of finding a 
         /// certificate. Filtering the string works to avoid this problem. 
         /// See http://stackoverflow.com/a/14852713/30280 for more.</remarks>

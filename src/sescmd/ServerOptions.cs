@@ -4,7 +4,7 @@ using System.Security.Cryptography.X509Certificates;
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
     /// <summary>
-    /// Immutable options for running as a standalone server
+    /// Options for running as a standalone server
     /// </summary>
     /// <remarks>Built by a <see cref="ServerOptionBuilder"/> from an instance of 
     /// <see cref="ServerCommandLine"/> and only used if all validation passes.</remarks>
@@ -98,7 +98,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
-        /// Internal constructor used to create variations of an existing set of options
+        /// Mutating constructor used to create variations of an existing set of options
         /// </summary>
         /// <param name="original">Original server options to copy.</param>
         /// <param name="signingCertificate">Certificate to use for signing tokens (optional).</param>
