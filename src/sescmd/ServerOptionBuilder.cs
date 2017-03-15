@@ -46,7 +46,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (string.IsNullOrWhiteSpace(_commandLine.ServerUrl))
             {
-                return Errorable<Uri>.Failure("No server endpoint url specified.");
+                return Errorable.Failure<Uri>("No server endpoint URL specified.");
             }
 
             try
@@ -54,14 +54,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 var result = new Uri(_commandLine.ServerUrl);
                 if (!result.HasScheme("https"))
                 {
-                    return Errorable<Uri>.Failure("Server endpoint url must specify https://");
+                    return Errorable.Failure<Uri>("Server endpoint URL must specify https://");
                 }
 
-                return Errorable<Uri>.Success(result);
+                return Errorable.Success(result);
             }
             catch (Exception e)
             {
-                return Errorable<Uri>.Failure($"Invalid server endpoint url specified ({e.Message})");
+                return Errorable.Failure<Uri>($"Invalid server endpoint URL specified ({e.Message})");
             }
         }
 
@@ -84,7 +84,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (string.IsNullOrWhiteSpace(thumbprint))
             {
-                return Errorable<X509Certificate2>.Failure($"No thumbprint supplied; unable to find a {purpose} certificate.");
+                return Errorable.Failure<X509Certificate2>($"No thumbprint supplied; unable to find a {purpose} certificate.");
             }
 
             var certificateThumbprint = new CertificateThumbprint(thumbprint);

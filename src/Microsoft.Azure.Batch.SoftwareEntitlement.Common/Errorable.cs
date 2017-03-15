@@ -2,46 +2,52 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Text;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
     /// <summary>
-    /// A container that either contains a value or a set or errors
+    /// Factory methods for instances of <see cref="Errorable{T}"/>
     /// </summary>
-    public abstract class Errorable<T>
+    public static class Errorable
     {
         /// <summary>
         /// Create a value that represents a successful operation with a result
         /// </summary>
         /// <param name="value">Result value to wrap.</param>
-        public static Errorable<T> Success(T value)
+        public static Errorable<T> Success<T>(T value)
         {
-            return new SuccessImplementation(value);
+            return new Errorable<T>.SuccessImplementation(value);
         }
 
         /// <summary>
         /// Create a value that represents a failed operation
         /// </summary>
         /// <param name="errors">Sequence of error messages.</param>
-        public static Errorable<T> Failure(IEnumerable<string> errors)
+        public static Errorable<T> Failure<T>(IEnumerable<string> errors)
         {
             var errorSet = errors.Aggregate(
                 ImmutableHashSet<string>.Empty,
                 (s, e) => s.Add(e));
-            return new FailureImplementation(errorSet);
+            return new Errorable<T>.FailureImplementation(errorSet);
         }
 
         /// <summary>
         /// Create a value that represents a failed operation
         /// </summary>
         /// <param name="error">Sequence of error messages.</param>
-        public static Errorable<T> Failure(string error)
+        public static Errorable<T> Failure<T>(string error)
         {
             var errors = ImmutableHashSet<string>.Empty.Add(error);
-            return new FailureImplementation(errors);
+            return new Errorable<T>.FailureImplementation(errors);
         }
 
+    }
+
+    /// <summary>
+    /// A container that either contains a value or a set of errors
+    /// </summary>
+    public abstract class Errorable<T>
+    {
         /// <summary>
         /// Gets a value indicating if we have a value
         /// </summary>
@@ -100,7 +106,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             public override Errorable<R> Apply<X, R>(Errorable<X> parameter, Func<T, X, R> transform)
             {
                 return parameter.HasValue
-                    ? Errorable<R>.Success(transform(Value, parameter.Value))
+                    ? Errorable.Success(transform(Value, parameter.Value))
                     : new Errorable<R>.FailureImplementation(Errors.Union(parameter.Errors));
             }
         }

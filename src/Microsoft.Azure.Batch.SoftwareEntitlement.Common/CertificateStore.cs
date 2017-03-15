@@ -87,10 +87,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             var certificate = query.FirstOrDefault(cert => cert != null);
             if (certificate == null)
             {
-                return Errorable<X509Certificate2>.Failure($"Did not find {purpose} certificate {thumbprint}");
+                return Errorable.Failure<X509Certificate2>($"Did not find {purpose} certificate {thumbprint}");
             }
 
-            return Errorable<X509Certificate2>.Success(certificate);
+            return Errorable.Success(certificate);
         }
 
         /// <summary>

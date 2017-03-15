@@ -13,14 +13,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenValue_ReturnsResultWithValue()
             {
-                var result = Errorable<int>.Success(42);
+                var result = Errorable.Success(42);
                 result.HasValue.Should().BeTrue();
             }
 
             [Fact]
             public void GivenValue_ReturnsResultWithNoErrors()
             {
-                var result = Errorable<int>.Success(42);
+                var result = Errorable.Success(42);
                 result.Errors.Should().HaveCount(0);
             }
         }
@@ -30,28 +30,28 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenSingleValue_ReturnsResultWithoutValue()
             {
-                var result = Errorable<int>.Failure("Error");
+                var result = Errorable.Failure<int>("Error");
                 result.HasValue.Should().BeFalse();
             }
 
             [Fact]
             public void GivenSingleValue_ReturnsResultWithOneError()
             {
-                var result = Errorable<int>.Failure("Error");
+                var result = Errorable.Failure<int>("Error");
                 result.Errors.Should().HaveCount(1);
             }
 
             [Fact]
             public void GivenListOfSingleValue_ReturnsResultWithoutValue()
             {
-                var result = Errorable<int>.Failure(new List<string> {"Error"});
+                var result = Errorable.Failure<int>(new List<string> { "Error" });
                 result.HasValue.Should().BeFalse();
             }
 
             [Fact]
             public void GivenListOfSingleValue_ReturnsResultWithOneError()
             {
-                var result = Errorable<int>.Failure(new List<string> { "Error" });
+                var result = Errorable.Failure<int>(new List<string> { "Error" });
                 result.Errors.Should().HaveCount(1);
             }
         }
@@ -59,10 +59,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
         public class AddErrorMethod : ErrorableTests
         {
             // Reference to a success to use for testing
-            private readonly Errorable<int> _success = Errorable<int>.Success(42);
+            private readonly Errorable<int> _success = Errorable.Success(42);
 
             // Reference to a failure to use for testing
-            private readonly Errorable<int> _failure = Errorable<int>.Failure("Error");
+            private readonly Errorable<int> _failure = Errorable.Failure<int>("Error");
 
             [Fact]
             public void WhenSuccess_DiscardsValue()
@@ -81,10 +81,28 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
 
             [Fact]
             public void WhenFailure_IncludesError()
-            { 
+            {
                 var errorMessage = "Not the answer";
                 var result = _failure.AddError(errorMessage);
                 result.Errors.Should().Contain(errorMessage);
+            }
+        }
+
+        public class ValueProperty : ErrorableTests
+        {
+            [Fact]
+            public void WhenSuccess_ReturnsExpectedValue()
+            {
+                var result = Errorable.Success(42);
+                result.Value.Should().Be(42);
+            }
+
+            [Fact]
+            public void WhenFailure_ThrowsInvalidOperationException()
+            {
+                var result = Errorable.Failure<int>("Error");
+                Assert.Throws<InvalidOperationException>(
+                    () => result.Value);
             }
         }
     }
