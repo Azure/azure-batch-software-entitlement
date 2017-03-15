@@ -72,19 +72,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <returns>A new instance with the error included.</returns>
         public abstract Errorable<T> AddError(string error);
 
+        public abstract void Match(Action<T> whenSuccessful, Action<IEnumerable<string>> whenFailure);
+
         /// <summary>
-        /// Apply a transformation to our wrapped value, using another <see cref="Errorable{T}"/> 
-        /// as a parameter
+        /// Private constructor to prevent other subclasses
         /// </summary>
-        /// <param name="parameter">Parameter value to use in the transformation.</param>
-        /// <param name="transform">The transformation to apply.</param>
-        /// <returns></returns>
-        public abstract Errorable<R> Apply<X, R>(Errorable<X> parameter, Func<T, X, R> transform);
+        private Errorable()
+        {
+        }
 
         /// <summary>
         /// An implementation of <see cref="Errorable{T}"/> that represents an actual value
         /// </summary>
-        private class SuccessImplementation : Errorable<T>
+        internal class SuccessImplementation : Errorable<T>
         {
             public SuccessImplementation(T value)
             {
@@ -103,11 +103,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 return new FailureImplementation(errors);
             }
 
-            public override Errorable<R> Apply<X, R>(Errorable<X> parameter, Func<T, X, R> transform)
+            public override void Match(Action<T> whenSuccessful, Action<IEnumerable<string>> whenFailure)
             {
-                return parameter.HasValue
-                    ? Errorable.Success(transform(Value, parameter.Value))
-                    : new Errorable<R>.FailureImplementation(Errors.Union(parameter.Errors));
+                whenSuccessful(Value);
             }
         }
 
@@ -115,7 +113,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// An implementation of <see cref="Errorable{T}"/> that represents a set of errors from a 
         /// failed operation
         /// </summary>
-        private sealed class FailureImplementation : Errorable<T>
+        internal sealed class FailureImplementation : Errorable<T>
         {
             public FailureImplementation(ImmutableHashSet<string> errors)
             {
@@ -133,9 +131,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 return new FailureImplementation(Errors.Add(error));
             }
 
-            public override Errorable<R> Apply<X, R>(Errorable<X> parameter, Func<T, X, R> transform)
+            public override void Match(Action<T> whenSuccessful, Action<IEnumerable<string>> whenFailure)
             {
-                return new Errorable<R>.FailureImplementation(Errors.Union(parameter.Errors));
+                whenFailure(Errors);
             }
         }
     }
