@@ -1,20 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
 
-namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
+namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 {
     /// <summary>
     /// A logger used when validating so that we can tell if there were any errors
     /// </summary>
-    public class ValidationLogger : ILogger
+    public class FakeLogger : ILogger
     {
         // Gets the counts of different log levels observed
         private readonly Dictionary<LogLevel, int> _counts =
             new Dictionary<LogLevel, int>();
-
-        // Reference to the actual logger that we wrap
-        private readonly ILogger _logger;
 
         /// <summary>
         /// Gets a value indicating whether this logger has logged any errors
@@ -29,11 +27,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <summary>
         /// Initializes a new instance of the <see cref="ValidationLogger"/> class
         /// </summary>
-        /// <param name="logger">Original logger that we should wrap.</param>
-        public ValidationLogger(ILogger logger)
+        public FakeLogger()
         {
-            _logger = logger;
-
             _counts[LogLevel.None] = 0;
             _counts[LogLevel.Critical] = 0;
             _counts[LogLevel.Error] = 0;
@@ -46,17 +41,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
             _counts[logLevel]++;
-            _logger.Log(logLevel, eventId, state, exception, formatter);
         }
 
-        public bool IsEnabled(LogLevel logLevel)
-        {
-            return _logger.IsEnabled(logLevel);
-        }
+        public bool IsEnabled(LogLevel logLevel) => true;
 
-        public IDisposable BeginScope<TState>(TState state)
-        {
-            return _logger.BeginScope(state);
-        }
+        public IDisposable BeginScope<TState>(TState state) 
+            => throw new NotImplementedException("Fake!");
     }
 }

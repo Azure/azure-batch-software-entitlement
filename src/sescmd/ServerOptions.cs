@@ -1,21 +1,126 @@
-﻿using CommandLine;
+﻿using System;
+using System.Security.Cryptography.X509Certificates;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
     /// <summary>
     /// Options for running as a standalone server
     /// </summary>
-    [Verb("server", HelpText = "Run as a standalone software entitlement server.")]
-    public class ServerOptions : OptionsBase
+    /// <remarks>Built by a <see cref="ServerOptionBuilder"/> from an instance of 
+    /// <see cref="ServerCommandLine"/> and only used if all validation passes.</remarks>
+    public class ServerOptions
     {
-        [Option('s', "signature", HelpText = "Certificate thumbprint of the certificate used to sign the token.")]
-        public string SignatureThumbprint { get; set; }
+        /// <summary>
+        /// Gets the certificate to use when checking the signature of a token
+        /// </summary>
+        public X509Certificate2 SigningCertificate { get; }
 
-        //TODO: Document where this looks to find the certificate (in a cross platform way)
-        [Option('e', "encrypt", HelpText = "Certificate thumbprint of the certificate used to encrypt the token.")]
-        public string EncryptionThumbprint { get; set; }
+        /// <summary>
+        /// Gets the certificate to use when decrypting a token
+        /// </summary>
+        public X509Certificate2 EncryptionCertificate { get; }
 
-        [Option('x', "exit-after-request", HelpText = "Request the server exits after serving one request.")]
-        public bool ExitAfterRequest { get; set; }
+        /// <summary>
+        /// Gets the certificate to use with our HTTPS connections
+        /// </summary>
+        public X509Certificate2 ConnectionCertificate { get; }
+
+        /// <summary>
+        /// Gets the host URL for our server
+        /// </summary>
+        public Uri ServerUrl { get; }
+
+        /// <summary>
+        /// Initialize a blank set of server options
+        /// </summary>
+        public ServerOptions()
+        {
+        }
+
+        /// <summary>
+        /// Create a modified <see cref="ServerOptions"/> with the specified signing certificate
+        /// </summary>
+        /// <param name="certificate">Signing certificate to use (may not be null).</param>
+        /// <returns>New instance of <see cref="ServerOptions"/>.</returns>
+        public ServerOptions WithSigningCertificate(X509Certificate2 certificate)
+        {
+            if (certificate == null)
+            {
+                throw new ArgumentNullException(nameof(certificate));
+            }
+
+            return new ServerOptions(this, signingCertificate: certificate);
+        }
+
+        /// <summary>
+        /// Create a modified <see cref="ServerOptions"/> with the specified encryption certificate
+        /// </summary>
+        /// <param name="certificate">Signing certificate to use (may not be null).</param>
+        /// <returns>New instance of <see cref="ServerOptions"/>.</returns>
+        public ServerOptions WithEncryptionCertificate(X509Certificate2 certificate)
+        {
+            if (certificate == null)
+            {
+                throw new ArgumentNullException(nameof(certificate));
+            }
+
+            return new ServerOptions(this, encryptionCertificate: certificate);
+        }
+
+        /// <summary>
+        /// Create a modified <see cref="ServerOptions"/> with the specified connection certificate
+        /// </summary>
+        /// <param name="certificate">Signing certificate to use (may not be null).</param>
+        /// <returns>New instance of <see cref="ServerOptions"/>.</returns>
+        public ServerOptions WithConnectionCertificate(X509Certificate2 certificate)
+        {
+            if (certificate == null)
+            {
+                throw new ArgumentNullException(nameof(certificate));
+            }
+
+            return new ServerOptions(this, connectionCertificate: certificate);
+        }
+
+        /// <summary>
+        /// Create a modified <see cref="ServerOptions"/> with the specified server URL
+        /// </summary>
+        /// <param name="url">Hosting URL to use (may not be null).</param>
+        /// <returns>New instance of <see cref="ServerOptions"/>.</returns>
+        public ServerOptions WithServerUrl(Uri url)
+        {
+            if (url == null)
+            {
+                throw new ArgumentNullException(nameof(url));
+            }
+
+            return new ServerOptions(this, serverUrl: url);
+        }
+
+        /// <summary>
+        /// Mutating constructor used to create variations of an existing set of options
+        /// </summary>
+        /// <param name="original">Original server options to copy.</param>
+        /// <param name="signingCertificate">Certificate to use for signing tokens (optional).</param>
+        /// <param name="encryptionCertificate">Certificate to use for encrypting tokens (optional).</param>
+        /// <param name="connectionCertificate">Certificate to use for our HTTPS connection (optional).</param>
+        /// <param name="serverUrl">Server host URL (optional).</param>
+        private ServerOptions(
+            ServerOptions original,
+            X509Certificate2 signingCertificate = null,
+            X509Certificate2 encryptionCertificate = null,
+            X509Certificate2 connectionCertificate = null,
+            Uri serverUrl = null)
+        {
+            if (original == null)
+            {
+                throw new ArgumentNullException(nameof(original));
+            }
+
+            SigningCertificate = signingCertificate ?? original.SigningCertificate;
+            EncryptionCertificate = encryptionCertificate ?? original.EncryptionCertificate;
+            ConnectionCertificate = connectionCertificate ?? original.ConnectionCertificate;
+            ServerUrl = serverUrl ?? original.ServerUrl;
+        }
     }
 }

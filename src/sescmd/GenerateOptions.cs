@@ -7,7 +7,7 @@ using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
     [Verb("generate", HelpText = "Generate a token with specified parameters")]
-    public class GenerateOptions : OptionsBase
+    public sealed class GenerateOptions : OptionsBase
     {
         [Option("entitlement-id", HelpText = "Unique identifier(s) for the entitlement(s) to include (comma separated).", Separator = ',')]
         public IEnumerable<string> EntitlementIds { get; set; }
