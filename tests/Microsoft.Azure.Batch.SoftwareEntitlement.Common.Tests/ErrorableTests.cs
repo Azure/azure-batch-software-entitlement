@@ -105,5 +105,27 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     () => result.Value);
             }
         }
+
+        public class MatchMethod
+        {
+            [Fact]
+            public void WhenSuccess_CallsActionWithExpectedValue()
+            {
+                var errorable = Errorable.Success(43);
+                errorable.Match(
+                    v => v.Should().Be(43),
+                    errors => throw new InvalidOperationException("Should not be called"));
+            }
+
+            [Fact]
+            public void WhenFailure_CallsActionWithExpectedErrors()
+            {
+                var error = "Error";
+                var errorable = Errorable.Failure<int>(error);
+                errorable.Match(
+                    v => throw new InvalidOperationException("Should not be called"),
+                    errors => errors.Should().Contain(error));
+            }
+        }
     }
 }
