@@ -89,22 +89,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public static int Serve(ServerCommandLine commandLine)
         {
             var logger = GlobalLogger.Logger;
-            var builder = new ServerOptionBuilder(commandLine);
-            var options = builder.Build();
+            var options = ServerOptionBuilder.Build(commandLine);
 
-            if (options.HasValue)
+            if (!options.HasValue)
             {
-                var server = new SoftwareEntitlementServer(options.Value, GlobalLogger.Logger);
-                server.Run();
-                return 0;
+                foreach (var e in options.Errors)
+                {
+                    logger.LogError(e);
+                }
+
+                return -1;
             }
 
-            foreach (var e in options.Errors)
-            {
-                logger.LogError(e);
-            }
-
-            return 1;
+            var server = new SoftwareEntitlementServer(options.Value, GlobalLogger.Logger);
+            server.Run();
+            return 0;
         }
 
         /// <summary>
