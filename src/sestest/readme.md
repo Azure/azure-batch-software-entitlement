@@ -21,7 +21,7 @@ These parameters are available for every mode
 
 | Parameter                        | Required  | Definition                                                                                                           |
 | -------------------------------- | --------- | -------------------------------------------------------------------------------------------------------------------- |
-| --log-level                      | Optional  | Specify the level of logging output (one of error, warning, information or debug). <p/> Default value: Information.  |
+| --log-level                      | Optional  | Specify the level of logging output (one of error, warning, information or debug). <p/> **Default**: Information.    |
 | --help                           | Optional  | Display this help screen.                                                                                            |
 | --version                        | Optional  | Display version information.                                                                                         |
 
@@ -47,7 +47,7 @@ The `server` mode runs as a standalone software entitlement server for test purp
 | Parameter                      | Required  | Definition                                                                                                                               |
 | ------------------------------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | --connection-cert              | Mandatory | Thumbprint of the certificate to pin for use with HTTPS                                                                                  |
-| --url                          | Optional  | The URL at which the server should process requests (defaults to https://localhost:4443). <p/> **Validation**: must start with 'https:'. |
+| --url                          | Optional  | The URL at which the server should process requests (defaults to https://localhost:4443). <p/> **Validation**: must start with `https:`. |
 | --signing-cert                 | Optional  | Certificate thumbprint of the certificate used to sign the token                                                                         |
 | --encryption-cert              | Optional  | Certificate thumbprint of the certificate used to encrypt the token                                                                      |
 
