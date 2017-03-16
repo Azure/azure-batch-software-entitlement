@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -145,13 +146,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var thumbprint = new CertificateThumbprint(options.Thumbprint);
             var certificateStore = new CertificateStore();
             var certificate = certificateStore.FindByThumbprint("cert", thumbprint);
-            if (certificate == null)
+            if (!certificate.HasValue)
             {
                 logger.LogError("Failed to find certificate {Thumbprint}", thumbprint);
+                foreach (var error in certificate.Errors)
+                {
+                    logger.LogError(error);
+                }
+
                 return -1;
             }
 
-            var certDetails = certificate.ToString()
+            var certDetails = certificate.Value.ToString()
                     .Split(new[] { Environment.NewLine, "\r\n", "\n" }, StringSplitOptions.None);
             foreach (var line in certDetails)
             {
