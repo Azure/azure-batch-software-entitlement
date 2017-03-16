@@ -109,7 +109,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return ForTimeRange(start, finish);
         }
 
-
         /// <summary>
         /// Specify the time frame for which the token will be valid
         /// </summary>
