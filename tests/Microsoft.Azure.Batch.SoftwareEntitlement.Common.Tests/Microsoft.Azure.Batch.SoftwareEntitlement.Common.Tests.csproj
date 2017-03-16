@@ -17,6 +17,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="1.1.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
     <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="15.0.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="NSubstitute" Version="2.0.2" />
     <PackageReference Include="Roslynator.Analyzers" Version="1.2.0" />
     <PackageReference Include="Serilog.Extensions.Logging" Version="1.4.0" />

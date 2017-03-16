@@ -21,7 +21,7 @@ This command line executable is intended to aid with testing of integration with
 ## Standalone server
 
 ```
-sescmd help serve
+sestest help serve
 
   -a, --authority             Certificate thumbprint used to sign the cert used for the HTTPS connection
 
@@ -35,7 +35,7 @@ sescmd help serve
 ## Token Verification
 
 ```
-sescmd help verify
+sestest help verify
 
   --token                The token to verify
 
@@ -51,7 +51,7 @@ sescmd help verify
 ## Token Generation
 
 ```
-sescmd help generate
+sestest help generate
 
   --entitlement-id    Unique identifier(s) for the entitlement(s) to include (semicolon separated).
 
