@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
+﻿namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
     /// <summary>
     /// A request for a software entitlement
@@ -14,5 +10,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// The actual software entitlement token
         /// </summary>
         public string Token { get; set; }
+
+        /// <summary>
+        /// Unique identifier for the application for which an entitlement is sought
+        /// </summary>
+        public string ApplicationId { get; set; }
     }
 }
