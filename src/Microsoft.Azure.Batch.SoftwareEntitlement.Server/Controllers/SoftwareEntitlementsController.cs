@@ -28,7 +28,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         }
 
         [HttpPost]
-        public object RequestEntitlement(
+        public IActionResult RequestEntitlement(
             [FromBody]SoftwareEntitlementRequest entitlementRequest)
         {
             _logger.LogInformation($"Request entitlement for {entitlementRequest.ApplicationId}");
@@ -40,25 +40,34 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
              */
             if (!string.Equals(entitlementRequest.ApplicationId, "maya", StringComparison.OrdinalIgnoreCase))
             {
-                return new SoftwareEntitlementFailureResponse
+                var error = new SoftwareEntitlementFailureResponse
                 {
                     Code = "EntitlementDenied",
-                    Message = new ErrorMessage($"Entitlements for ${entitlementRequest.ApplicationId} not currently supported.")
+                    Message = new ErrorMessage($"Entitlements for {entitlementRequest.ApplicationId} not currently supported.")
                 };
+
+                return StatusCode(403, error);
             }
 
-            var request = HttpContext.Request;
-            var entitlementId = request.GetEncodedUrl() + "/" + Guid.NewGuid().ToString("D");
+            var entitlementId = entitlementRequest.ApplicationId + "-" + Guid.NewGuid().ToString("D");
+            var entitlementUrl = UriHelper.BuildAbsolute(
+                Request.Scheme,
+                Request.Host,
+                Request.PathBase,
+                Request.Path.Add("/" + entitlementId));
 
-            return new SoftwareEntitlementSuccessfulResponse
+            var response = new SoftwareEntitlementSuccessfulResponse
             {
                 EntitlementId = entitlementId,
+                EntitlementUrl = entitlementUrl,
                 VirtualMachineId = Guid.NewGuid().ToString("B")
             };
+
+            return Ok(response);
         }
 
         [HttpDelete("{applicationId}/{entitlementId}")]
-        public void ReleaseEntitlement(
+        public void DeleteEntitlement(
             [FromRoute] string applicationId,
             [FromRoute] string entitlementId)
         {
