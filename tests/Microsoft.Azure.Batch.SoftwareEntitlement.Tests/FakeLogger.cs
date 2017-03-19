@@ -45,7 +45,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
         public bool IsEnabled(LogLevel logLevel) => true;
 
-        public IDisposable BeginScope<TState>(TState state) 
+        public IDisposable BeginScope<TState>(TState state)
             => throw new NotImplementedException("Fake!");
     }
 }

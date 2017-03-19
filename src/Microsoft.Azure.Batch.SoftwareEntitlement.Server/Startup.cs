@@ -1,10 +1,11 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
-using Serilog;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server
 {
@@ -25,8 +26,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-            // Add framework services.
             services.AddMvc();
+            services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+            services.TryAddSingleton(GlobalLogger.Logger);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -35,8 +37,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server
             loggerFactory.AddProvider(GlobalLogger.Provider);
             app.UseDefaultFiles();
             app.UseStaticFiles();
-
-            //app.UseMvc(); // TODO: Turn this on later
+            app.UseMvc();
         }
     }
 }

@@ -135,7 +135,5 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                 other.GetHashCode().Should().Be(_testThumbprint.GetHashCode());
             }
         }
-
-
     }
 }
