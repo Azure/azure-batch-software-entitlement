@@ -1,8 +1,21 @@
-# Software entitlement service testing utility (sestest)
+# sestest Command Line utility
 
 This command line executable is intended to aid with testing of integration with the Azure Batch Software Entitlement Service.
 
-**This is draft documentation subject to change.**
+To test that integration between an ISV application and Azure Batch software entitlement service is working correctly, run a local test as follows:
+
+* Create a new token using `sestest generate` and store the generated token string as the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN`.
+* Start `sestest server` in a separate console window to host a local software entitlement server. Keep this window visible so you can monitor the log output for diagnostic information.
+* Set the environment variable `AZ_BATCH_ACCOUNT_URL` to `https://localhost:4443/`.
+* Run the application requiring entitlement.
+
+You should observe the request for entitlement being processed by the window running `sestest server`.
+
+| Scenario                           | Notes                                                                                                                                                                                                                                                                                                                |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hosting `sestest server` elsewhere | You can host the diagnostic software entitlement server anywhere on your network if the AZ_BATCH_ACCOUNT environment variable on your test machine is updated to match. <p/> Note that doing this will make it harder to observe the diagnostic logging of the tool.                                                 |
+| Generating an invalid token        | For testing purposes, you can use `sestest generate` to create a token that is not valid. <p/> For example, you could create a token that is not yet valid, one that is already expired, or one for a different application. In all cases, attempting to use an invalid token should result in a denied entitlement. |
+| Automated testing                  | Passing the `--exit-after-request` parameter to `sestest server` will cause the server to cleanly exit after processing one request; this enables an automated integration test with your application.                                                                                                               |
 
 ## Available Modes
 
