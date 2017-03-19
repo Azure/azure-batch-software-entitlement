@@ -12,10 +12,10 @@ The software package will contact the Azure Batch Software Entitlement Service, 
 
 Sample: `https://{myaccount}.{region}.batch.azure.com/softwareEntitlements/?api-version={version}`
 
-| Placeholder    | Type     | Description                                                                                                                                                                                                                                       | 
-| -------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | 
-| endpoint       | string   | The batch account endpoint supplied by Azure Batch via environment variable                                                                                                                                                                       |
-| version        | string   | The API version of the request <p/> **Sample**: 2017-01-01.3.1                                                                                                                                                                                    |                                                                            
+| Placeholder | Type           | Description                                                                 |
+| ----------- | -------------- | --------------------------------------------------------------------------- |
+| endpoint    | string         | The batch account endpoint supplied by Azure Batch via environment variable |
+| version     | string         | The API version of the request <p/> **Sample**: 2017-01-01.3.1              |
 
 The following shows a sample JSON payload for the request:
 ```
@@ -43,10 +43,11 @@ The following example shows a sample JSON response:
 }
 ```
 
-| Element name   | Required  | Type   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| -------------- | --------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| entitlement-id | Mandatory | string | A unique URI for the specific entitlement issued to the application. <p/> Multiple entitlement requests for the same application from the same compute node may (but are not required to) return the same identifier. <p/> Entitlement requests from different compute nodes will not return duplicate identifiers. </p> Clients should make no assumptions about the structure of the entitlement-id as it may change from release to release. |
-| vmid           | Mandatory | string | The unique identifier of the entitled azure virtual machine. <p/> Clients may optionally check this matches the actual virtual machine identifier for the host machine.                                                                                                                                                                                                                                                                         |
+| Element | Required  | Type   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------- | --------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id      | Mandatory | string | A unique identifier for the specific entitlement issued to the application. <p/> Multiple entitlement requests for the same application from the same compute node may (but are not required to) return the same identifier. <p/> Entitlement requests from different compute nodes will not return duplicate identifiers. </p> Clients should make no assumptions about the structure of the `id` as it may change from release to release. |
+| url     | Mandatory | string | A unique URI for the specific entitlement issued to the application. <p/> This URI will be correctly formulated for use with with the *Token Release* method described below.                                                                                                                                                                                                                                                                |
+| vmid    | Mandatory | string | The unique identifier of the entitled azure virtual machine. <p/> Clients may optionally check this matches the actual virtual machine identifier for the host machine.                                                                                                                                                                                                                                                                      |
 
 Future versions of the service may extend this response with additional information, perhaps including an expiry timestamp.
 
@@ -79,18 +80,18 @@ When the entitlement is no longer required, it may be released by another REST A
 
 ### Request
 
-| Method | Request URI                                                                                               |
-| ------ | --------------------------------------------------------------------------------------------------------- |
-| DELETE | https://{myaccount}.{region}.batch.azure.com/software.entitlements/{entitlement-id}?api-version={version} |
+| Method | Request URI                                                                                   |
+| ------ | --------------------------------------------------------------------------------------------- |
+| DELETE | https://{myaccount}.{region}.batch.azure.com/software.entitlements/{id}?api-version={version} |
 
 There is no body to the request. Deletion must be requested from the same IP address as the original entitlement request.
 
-| Placeholder    | Type   | Description                                                       |
-| -------------- | ------ | ----------------------------------------------------------------- |
-| myaccount      | string | Unique name of the batch account                                  |
-| region         | string | Region in which the job is running                                |
-| entitlement-id | string | A unique identifier for the specific entitlement that was granted |
-| api-version    | string | A date and version string specifying the expected API version     |
+| Placeholder | Type   | Description                                                       |
+| ----------- | ------ | ----------------------------------------------------------------- |
+| myaccount   | string | Unique name of the batch account                                  |
+| region      | string | Region in which the job is running                                |
+| id          | string | A unique identifier for the specific entitlement that was granted |
+| api-version | string | A date and version string specifying the expected API version     |
 
 Note that the uri returned in response to the *Token Verification* request will be preformatted with exactly the required URI for this request; clients **will not need** to directly construct the URI following the above specification.
 

@@ -1,6 +1,15 @@
 # sestest Command Line utility
 
-This command line executable is intended to aid with testing of integration with the Azure Batch Software Entitlement Service.
+This commandline utility is provided to ease the task of integrating a software package with the Software Entitlement Service.
+
+The `sestest` command line tool has multiple modes, as follows:
+
+| Mode     | Use                                                                                                                                                                                                                                         |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| server   | Run a standalone software entitlement server, able to accept and verify tokens submitted by either the ISV application or `sestest verify`. This allows full testing of the ISV integration.                                                |
+| generate | Generate a software entitlement token to enable the use of a specific package. This allows an ISV to generate a token for use during testing that conforms to the expected format and that will be correctly processed by `sestest server`. |
+
+### Workflow
 
 To test that integration between an ISV application and Azure Batch software entitlement service is working correctly, run a local test as follows:
 
