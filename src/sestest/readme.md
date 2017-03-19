@@ -4,10 +4,16 @@ This commandline utility is provided to ease the task of integrating a software 
 
 The `sestest` command line tool has multiple modes, as follows:
 
-| Mode     | Use                                                                                                                                                                                                                                         |
-| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| server   | Run a standalone software entitlement server, able to accept and verify tokens submitted by either the ISV application or `sestest verify`. This allows full testing of the ISV integration.                                                |
-| generate | Generate a software entitlement token to enable the use of a specific package. This allows an ISV to generate a token for use during testing that conforms to the expected format and that will be correctly processed by `sestest server`. |
+| Mode              | Use                                                                                                                                                                                                                                         |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| server            | Run a standalone software entitlement server, able to accept and verify tokens submitted by either the ISV application or `sestest verify`. This allows full testing of the ISV integration.                                                |
+| generate          | Generate a software entitlement token to enable the use of a specific package. This allows an ISV to generate a token for use during testing that conforms to the expected format and that will be correctly processed by `sestest server`. |
+| list-certificates | List candidate certificates to use for testing <p/> This lists certificates that have private keys that may be suitable for use with HTTPS.                                                                                                 |
+| find-certificate  | Find a specific certificate and show details                                                                                                                                                                                                |
+| help              | Display more information on a specific command                                                                                                                                                                                              |
+| version           | Show version information                                                                                                                                                                                                                    |
+
+## Working with sestest
 
 To test that integration between an ISV application and Azure Batch software entitlement service is working correctly, you can run a local test as follows:
 
@@ -24,16 +30,6 @@ You should observe the request for entitlement being processed by the window run
 | Generating an invalid token        | For testing purposes, you can use `sestest generate` to create a token that is not valid. <p/> For example, you could create a token that is not yet valid, one that is already expired, or one for a different application. In all cases, attempting to use an invalid token should result in a denied entitlement. |
 | Automated testing                  | Passing the `--exit-after-request` parameter to `sestest server` will cause the server to cleanly exit after processing one request; this enables an automated integration test with your application.                                                                                                               |
 
-## Available Modes
-
-| Mode                | Description                                                                 |
-| ------------------- | --------------------------------------------------------------------------- |
-| generate            | Generate a test software entitlement token with specified parameters        |
-| server              | Run as a standalone software entitlement server for testing ISV integration |
-| list-certificates   | List candidate certificates to use for testing                              |
-| find-certificate    | Find a specific certificate and show details                                |
-| help                | Display more information on a specific command                              |
-| version             | Show version information                                                    |
 
 ## Common parameters
 
@@ -45,7 +41,18 @@ These parameters are available for every mode
 | --help                           | Optional  | Display this help screen.                                                                                            |
 | --version                        | Optional  | Display version information.                                                                                         |
 
-## Token Generation 
+## Standalone server
+
+Run `sestest` as a standalone software entitlement server, able to accept and verify tokens submitted by either the ISV application or sestest verify. This allows full testing of the ISV integration.
+
+| Parameter                      | Required  | Definition                                                                                                                               |
+| ------------------------------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| --connection-cert              | Mandatory | Thumbprint of the certificate to pin for use with HTTPS                                                                                  |
+| --url                          | Optional  | The URL at which the server should process requests (defaults to https://localhost:4443). <p/> **Validation**: must start with `https:`. |
+| --signing-cert                 | Optional  | ***PLANNED*** Certificate thumbprint of the certificate used to sign the token                                                                         |
+| --encryption-cert              | Optional  | ***PLANNED*** Certificate thumbprint of the certificate used to encrypt the token                                                                      |
+
+## Token generation 
 
 The `generate` mode allows you to generate a software entitlement token with the details required for your test scenario.
 
@@ -55,38 +62,21 @@ The `generate` mode allows you to generate a software entitlement token with the
 | --vmid            | Mandatory | Unique identifier for the Azure virtual machine                                                                                                                                                                                   |
 | --not-before      | Optional  | The moment at which the token becomes active and the application is entitled to execute. <p/> **Format**: `hh:mm d-mmm-yyyy`; 24 hour clock; local time. <br/> **Default**: Now.                                                  |
 | --not-after       | Optional  | The moment at which the token expires and the application is no longer entitled to execute. <p/> **Format**: `hh:mm d-mmm-yyyy`; 24 hour clock; local time. <br/> **Default**: 7 days (168 hours) after **--not-before**.         |
-| --address         | Optional  | The externally visible IP address of the machine entitled to execute the application.                                                                                                                                             |
-| --sign            | Optional  | Certificate thumbprint of the certificate that should be used to sign the token.                                                                                                                                                  |
-| --encrypt         | Optional  | Certificate thumbprint of the certificate that should be used to encrypt the token.                                                                                                                                               |
-| --token-file      | Optional  | The name of a file into which the token will be written (token will be written to stdout otherwise).                                                                                                                              |
+| --address         | Optional  | ***PLANNED*** The externally visible IP address of the machine entitled to execute the application.                                                                                                                                             |
+| --sign            | Optional  | ***PLANNED*** Certificate thumbprint of the certificate that should be used to sign the token.                                                                                                                                                  |
+| --encrypt         | Optional  | ***PLANNED*** Certificate thumbprint of the certificate that should be used to encrypt the token.                                                                                                                                               |
+| --token-file      | Optional  | ***PLANNED***The name of a file into which the token will be written (token will be written to stdout otherwise).                                                                                                                              |
 
-## Standalone server
+## List certificates
 
-Run `sestest` as a standalone software entitlement server, able to accept and verify tokens submitted by either the ISV application or sestest verify. This allows full testing of the ISV integration.
+Dumps a list of available certificates that have private keys; these keys *may* be usable for testing.
 
-| Parameter                      | Required  | Definition                                                                                                                               |
-| ------------------------------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| --connection-cert              | Mandatory | Thumbprint of the certificate to pin for use with HTTPS                                                                                  |
-| --url                          | Optional  | The URL at which the server should process requests (defaults to https://localhost:4443). <p/> **Validation**: must start with `https:`. |
-| --signing-cert                 | Optional  | Certificate thumbprint of the certificate used to sign the token                                                                         |
-| --encryption-cert              | Optional  | Certificate thumbprint of the certificate used to encrypt the token                                                                      |
+This mode has no additional options.
 
+## Find certificate
 
+Find a given certificate given a thumbprint and show some details of that certificate.
 
-## Token Verification
-
-```
-sestest help verify
-
-  --token                The token to verify
-
-  --entitlement-id       Unique identifier for the entitlement to verify
-
-  --vmid                 Unique identifier for the Azure virtual machine
-
-  --batch-service-url    URL of the Azure Batch account server
-
-  -a, --authority        Certificate thumbprint used to sign the cert used for the HTTPS connection
-```
-
-
+| Parameter    | Required  | Definition                                         |
+| ------------ | --------- | -------------------------------------------------- |
+| --thumbprint | Mandatory | Thumbprint of the certificate to find and display. |
