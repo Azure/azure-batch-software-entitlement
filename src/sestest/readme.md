@@ -1,4 +1,4 @@
-# sestest Command Line utility
+# Sestest command line utility
 
 This commandline utility is provided to ease the task of integrating a software package with the Software Entitlement Service.
 
@@ -9,9 +9,7 @@ The `sestest` command line tool has multiple modes, as follows:
 | server   | Run a standalone software entitlement server, able to accept and verify tokens submitted by either the ISV application or `sestest verify`. This allows full testing of the ISV integration.                                                |
 | generate | Generate a software entitlement token to enable the use of a specific package. This allows an ISV to generate a token for use during testing that conforms to the expected format and that will be correctly processed by `sestest server`. |
 
-### Workflow
-
-To test that integration between an ISV application and Azure Batch software entitlement service is working correctly, run a local test as follows:
+To test that integration between an ISV application and Azure Batch software entitlement service is working correctly, you can run a local test as follows:
 
 * Create a new token using `sestest generate` and store the generated token string as the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN`.
 * Start `sestest server` in a separate console window to host a local software entitlement server. Keep this window visible so you can monitor the log output for diagnostic information.
@@ -64,7 +62,7 @@ The `generate` mode allows you to generate a software entitlement token with the
 
 ## Standalone server
 
-The `server` mode runs as a standalone software entitlement server for test purposes.
+Run `sestest` as a standalone software entitlement server, able to accept and verify tokens submitted by either the ISV application or sestest verify. This allows full testing of the ISV integration.
 
 | Parameter                      | Required  | Definition                                                                                                                               |
 | ------------------------------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
