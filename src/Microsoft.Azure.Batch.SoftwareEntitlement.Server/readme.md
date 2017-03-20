@@ -21,14 +21,14 @@ The following shows a sample JSON payload for the request:
 ```
 {
     "token": "...",
-    "applicationId": "maya"
+    "applicationId": "contosoapp"
 }
 ```
 
 | Element       | Required  | Type   | Description                                                                                                                                                                                                                                                                     |
 | ------------- | --------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | token         | Mandatory | string | The software entitlement authentication token supplied to the software package via environment variable from Azure Batch                                                                                                                                                        |
-| applicationId | Mandatory | string | The previously agreed unique identifier for the application requesting an entitlement to run. <p/> **Samples**: maya, arnold <p/> Application identifiers are lowercase (though comparisons will be case-insensitive), with no punctuation, whitespace or non-alpha characters. |
+| applicationId | Mandatory | string | The previously agreed unique identifier for the application requesting an entitlement to run. <p/> **Samples**: contosoapp, application <p/> Application identifiers are lowercase (though comparisons will be case-insensitive), with no punctuation, whitespace or non-alpha characters. |
 
 ### RESPONSE 200 - OK
 
@@ -37,8 +37,8 @@ Verification of the token results in approval of the entitlement.
 The following example shows a sample JSON response:
 ```
 {
-    "id": "maya-24223578-1CE8-4168-91E0-126C2D5EAA0B",
-    "url": "https://demo.westus.batch.azure.com/software.entitlements/maya-24223578-1CE8-4168-91E0-126C2D5EAA0B?api-version=2017-03-01.4.0",
+    "id": "contosoapp-24223578-1CE8-4168-91E0-126C2D5EAA0B",
+    "url": "https://demo.westus.batch.azure.com/software.entitlements/contosoapp-24223578-1CE8-4168-91E0-126C2D5EAA0B?api-version=2017-03-01.4.0",
     "vmid": "..."
 }
 ```
@@ -62,7 +62,7 @@ The following example shows a sample JSON response:
     "message":
     {
         "lang": "en-us",
-        "value": "Application 'maya' is not entitled to execute"
+        "value": "Application 'contosoapp' is not entitled to execute"
     }
 }
 ```
