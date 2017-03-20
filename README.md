@@ -22,7 +22,7 @@ The Batch service provides two pieces of information to a metered software appli
 
 | Variable                              | Definition                                                                                                        |
 | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `AZ_BATCH_ACCOUNT_URL`                | The uri of an endpoint for the batch service account. <p/> Sample: `https://{myaccount}.{region}.batch.azure.com` |
+| `AZ_BATCH_ACCOUNT_URL`                | The URI of an endpoint for the batch service account. <p/> Sample: `https://demo.westus.batch.azure.com` |
 | `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN` | An encoded string containing the actual software entitlement token.                                               |
 
 The software package will check that the provided batch account endpoint specifies a *known host* (such as `*.batch.azure.com` or one of the equivalents for national clouds); if it does not, the software package should not consider itself entitled. If the endpoint is known, the software application will request a software entitlement from the specified server over a secured HTTPS/TLS connection.
@@ -36,6 +36,12 @@ The software entitlement token will be an encrypted and signed JWT token contain
 The software application will authenticate the software entitlement server by only contacting known hosts and by pinning the HTTPS/TLS connection to a certificate chain known to be issued by Microsoft Azure. 
 
 The software entitlement server will authenticate the software package by comparing the request with details found inside the encrypted and signed entitlement token, including the application id, network address, and current time.
+
+# Prerequisites
+
+The `sestest` command line application and associated assemblies are written in C#7 and require version 1.1 or higher of [.NET Core](https://www.microsoft.com/net/core#windowsvs2017) to be pre-installed. The tool was written with Visual Studio 2017; it should compile with just the .NET Core installation.
+
+The C++ source for the client library requires [libcurl](https://curl.haxx.se/libcurl/) and [OpenSSL](https://www.openssl.org/) libraries as packaged by [vcpkg](https://blogs.msdn.microsoft.com/vcblog/2016/09/19/vcpkg-a-tool-to-acquire-and-build-c-open-source-libraries-on-windows/). The library was also written with Visual Studio 2017l; it should compile with any modern C++ compiler.
 
 # Contributing
 
