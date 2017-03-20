@@ -38,7 +38,7 @@ The following example shows a sample JSON response:
 ```
 {
     "id": "maya-24223578-1CE8-4168-91E0-126C2D5EAA0B",
-    "url": "https://demo.westus.batch.azure.com/software.entitlements/maya-24223578-1CE8-4168-91E0-126C2D5EAA0B?api-version=2017-03-01-4.0",
+    "url": "https://demo.westus.batch.azure.com/software.entitlements/maya-24223578-1CE8-4168-91E0-126C2D5EAA0B?api-version=2017-03-01.4.0",
     "vmid": "..."
 }
 ```

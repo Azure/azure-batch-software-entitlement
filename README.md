@@ -4,7 +4,7 @@ This SDK provides tooling and documentation to support ISV integration with the 
 
 * The [software entitlement library code](src/Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native) is provided for integration into applications.  The interface is native C++, and depends on the openssl SDK for cross-platform support when communicating with the software entitlement server. 
 
-* [sestest](src/sestest) command line utility is provided to assist with testing of the integration. This utility supports token generation and can run as a standalone software entitlement server for testing.
+* The [sestest](src/sestest) command line utility is provided to assist with testing of the integration. This utility supports token generation and can run as a standalone software entitlement server for testing.
 
 * The [REST API](src/Microsoft.Azure.Batch.SoftwareEntitlement.Server) details the interaction between the software application and the software entitlement server.
 

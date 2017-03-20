@@ -45,12 +45,15 @@ These parameters are available for every mode
 
 Run `sestest` as a standalone software entitlement server, able to accept and verify tokens submitted by either the ISV application or sestest verify. This allows full testing of the ISV integration.
 
-| Parameter                      | Required  | Definition                                                                                                                               |
-| ------------------------------ | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| --connection-cert              | Mandatory | Thumbprint of the certificate to pin for use with HTTPS                                                                                  |
-| --url                          | Optional  | The URL at which the server should process requests (defaults to https://localhost:4443). <p/> **Validation**: must start with `https:`. |
-| --signing-cert                 | Optional  | ***PLANNED*** Certificate thumbprint of the certificate used to sign the token                                                                         |
-| --encryption-cert              | Optional  | ***PLANNED*** Certificate thumbprint of the certificate used to encrypt the token                                                                      |
+| Parameter            | Required  | Definition                                                                                                                               |
+| -------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| --connection-cert    | Mandatory | Thumbprint of the certificate to pin for use with HTTPS                                                                                  |
+| --url                | Optional  | The URL at which the server should process requests (defaults to https://localhost:4443). <p/> **Validation**: must start with `https:`. |
+| --signing-cert       | Optional  | ***PLANNED*** Certificate thumbprint of the certificate used to sign the token                                                           |
+| --encryption-cert    | Optional  | ***PLANNED*** Certificate thumbprint of the certificate used to encrypt the token                                                        |
+| --exit-after-request | Optional  | ***PLANNED*** The server will cleanly exit after processing a single request.                                                            |
+
+The exit code for `sestest server` will be zero (**0**) for normal exit of the server, non-zero (typically **-1**) if there were any command line parameter issues or any other reason the server could not start.
 
 ## Token generation 
 
@@ -67,11 +70,15 @@ The `generate` mode allows you to generate a software entitlement token with the
 | --encrypt         | Optional  | ***PLANNED*** Certificate thumbprint of the certificate that should be used to encrypt the token.                                                                                                                                               |
 | --token-file      | Optional  | ***PLANNED***The name of a file into which the token will be written (token will be written to stdout otherwise).                                                                                                                              |
 
+The exit code for `sestest generate` will be zero (**0**) if a token was correctly generated, non-zero (typically **-1**) if there were any issues.
+
 ## List certificates
 
 Dumps a list of available certificates that have private keys; these keys *may* be usable for testing.
 
 This mode has no additional options.
+
+The exit code for `sestest list-certificates` will be zero (**0**) unless the application crashes.
 
 ## Find certificate
 
@@ -80,3 +87,6 @@ Find a given certificate given a thumbprint and show some details of that certif
 | Parameter    | Required  | Definition                                         |
 | ------------ | --------- | -------------------------------------------------- |
 | --thumbprint | Mandatory | Thumbprint of the certificate to find and display. |
+
+The exit code for `sestest find-certificate` will be zero (**0**) unless the application crashes.
+
