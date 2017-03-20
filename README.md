@@ -1,6 +1,6 @@
 # Software Entitlement Service for Azure Batch
 
-This SDK provides tooling and documentation to support ISV integration with the Software Entitlement Service of Azure Batch. This service allows a software package to verify it is running in an environment where usage metering takes place.
+This SDK provides tooling and documentation to support software package integration with the Software Entitlement Service of Azure Batch. This service allows a software package to verify it is running in an environment where usage metering takes place.
 
 * The [software entitlement library code](src/Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native) is provided for integration into applications.  The interface is native C++, and depends on the openssl SDK for cross-platform support when communicating with the software entitlement server. 
 
