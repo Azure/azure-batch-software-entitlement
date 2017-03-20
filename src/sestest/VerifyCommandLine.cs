@@ -3,7 +3,7 @@
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
     [Verb("verify", HelpText = "Verify a provided token by calling into the software entitlement service.")]
-    public sealed class VerifyOptions : OptionsBase
+    public sealed class VerifyCommandLine : CommandLineBase
     {
         [Option("token", HelpText = "The text of the JWT token to verify.")]
         public string Token { get; set; }

@@ -22,16 +22,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var parser = new Parser(ConfigureParser);
 
             var parseResult = parser
-                .ParseArguments<GenerateOptions, VerifyOptions, ServerCommandLine, ListCertificatesOptions, FindCertificateOptions>(args);
+                .ParseArguments<GenerateCommandLine, VerifyCommandLine, ServerCommandLine, ListCertificatesCommandLine, FindCertificateCommandLine>(args);
 
-            parseResult.WithParsed((OptionsBase options) => SetUpLogging(options));
+            parseResult.WithParsed((CommandLineBase options) => SetUpLogging(options));
 
             var exitCode = parseResult.MapResult(
-                (GenerateOptions options) => Generate(options),
-                (VerifyOptions options) => Verify(options),
+                (GenerateCommandLine options) => Generate(options),
+                (VerifyCommandLine options) => Verify(options),
                 (ServerCommandLine options) => Serve(options),
-                (ListCertificatesOptions options) => ListCertificates(options),
-                (FindCertificateOptions options) => FindCertificate(options),
+                (ListCertificatesCommandLine options) => ListCertificates(options),
+                (FindCertificateCommandLine options) => FindCertificate(options),
                 errors => 1);
 
             if (Debugger.IsAttached)
@@ -46,14 +46,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Generation mode - create a new token for testing
         /// </summary>
-        /// <param name="options">Options from the command line.</param>
+        /// <param name="commandLine">Options from the command line.</param>
         /// <returns>Exit code to return from this process.</returns>
-        public static int Generate(GenerateOptions options)
+        public static int Generate(GenerateCommandLine commandLine)
         {
             var logger = GlobalLogger.Logger;
             var entitlement = new SoftwareEntitlement(logger)
-                .WithVirtualMachineId(options.VirtualMachineId)
-                .ForTimeRange(options.NotBefore, options.NotAfter);
+                .WithVirtualMachineId(commandLine.VirtualMachineId)
+                .ForTimeRange(commandLine.NotBefore, commandLine.NotAfter);
 
             if (entitlement.HasErrors)
             {
@@ -75,9 +75,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Verify mode - check that a token is valid
         /// </summary>
-        /// <param name="options">Options from the command line.</param>
+        /// <param name="commandLine">Options from the command line.</param>
         /// <returns>Exit code to return from this process.</returns>
-        public static int Verify(VerifyOptions options)
+        public static int Verify(VerifyCommandLine commandLine)
         {
             return 0;
         }
@@ -110,9 +110,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// List available certificates
         /// </summary>
-        /// <param name="options">Options from the command line.</param>
+        /// <param name="commandLine">Options from the command line.</param>
         /// <returns>Exit code for process.</returns>
-        private static int ListCertificates(ListCertificatesOptions options)
+        private static int ListCertificates(ListCertificatesCommandLine commandLine)
         {
             var logger = GlobalLogger.Logger;
             var certificateStore = new CertificateStore();
@@ -138,12 +138,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Show details of one particular certificate
         /// </summary>
-        /// <param name="options">Options from the command line.</param>
+        /// <param name="commandLine">Options from the command line.</param>
         /// <returns>Exit code for process.</returns>
-        private static int FindCertificate(FindCertificateOptions options)
+        private static int FindCertificate(FindCertificateCommandLine commandLine)
         {
             var logger = GlobalLogger.Logger;
-            var thumbprint = new CertificateThumbprint(options.Thumbprint);
+            var thumbprint = new CertificateThumbprint(commandLine.Thumbprint);
             var certificateStore = new CertificateStore();
             var certificate = certificateStore.FindByThumbprint("cert", thumbprint);
             if (!certificate.HasValue)
@@ -170,10 +170,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Ensure our logging is properly initialized
         /// </summary>
-        /// <param name="options">Options selected by the user (if any).</param>
-        private static void SetUpLogging(OptionsBase options)
+        /// <param name="commandLine">Options selected by the user (if any).</param>
+        private static void SetUpLogging(CommandLineBase commandLine)
         {
-            var logger = GlobalLogger.CreateLogger(options.LogLevel);
+            var logger = GlobalLogger.CreateLogger(commandLine.LogLevel);
             logger.LogInformation("Software Entitlement Service Command Line Utility");
         }
 
