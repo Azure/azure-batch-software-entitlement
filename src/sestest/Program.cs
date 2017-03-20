@@ -173,7 +173,17 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="commandLine">Options selected by the user (if any).</param>
         private static void SetUpLogging(CommandLineBase commandLine)
         {
-            var logger = GlobalLogger.CreateLogger(commandLine.LogLevel);
+            ILogger logger;
+            if (string.IsNullOrEmpty(commandLine.LogFile))
+            {
+                logger = GlobalLogger.CreateLogger(commandLine.LogLevel);
+            }
+            else
+            {
+                var file = new FileInfo(commandLine.LogFile);
+                logger = GlobalLogger.CreateLogger(commandLine.LogLevel, file);
+            }
+
             logger.LogInformation("Software Entitlement Service Command Line Utility");
         }
 

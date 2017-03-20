@@ -2,6 +2,7 @@
 using Serilog.Events;
 using Serilog.Extensions.Logging;
 using System;
+using System.IO;
 using Microsoft.Extensions.Logging;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
@@ -29,14 +30,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// Creates a configured logger to use within SesTest
         /// </summary>
         /// <remarks>Also caches a copy of the logger for later reference from elsewhere.</remarks>
-        /// <param name="level">Desired logging level</param>
+        /// <param name="level">Desired logging level.</param>
+        /// <param name="logFile">Destination log file (if any).</param>
         /// <returns>Instance of simple logger.</returns>
-        public static ILogger CreateLogger(LogLevel level)
+        public static ILogger CreateLogger(LogLevel level, FileInfo logFile = null)
         {
-            var serilogger = new Serilog.LoggerConfiguration()
-                .WriteTo.ColoredConsole()
+            var configuration = new Serilog.LoggerConfiguration()
                 .MinimumLevel.Is(ConvertLevel(level))
-                .CreateLogger();
+                .WriteTo.ColoredConsole();
+
+            if (logFile != null)
+            {
+                configuration = configuration.WriteTo.File(logFile.FullName);
+            }
+
+            var serilogger = configuration.CreateLogger();
 
             _provider = new SerilogLoggerProvider(serilogger);
             _logger = _provider.CreateLogger(string.Empty);
