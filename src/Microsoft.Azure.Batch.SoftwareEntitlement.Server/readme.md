@@ -58,7 +58,7 @@ The calling service is not entitled to use the specified software.
 The following example shows a sample JSON response:
 ```
 {
-    "code": EntitlementDenied",
+    "code": "EntitlementDenied",
     "message":
     {
         "lang": "en-us",
