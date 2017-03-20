@@ -40,7 +40,6 @@ The following example shows a sample JSON response:
 ```
 {
     "id": "24223578-1CE8-4168-91E0-126C2D5EAA0B",
-    "url": "https://demo.westus.batch.azure.com/software.entitlements/24223578-1CE8-4168-91E0-126C2D5EAA0B?api-version=2017-03-01.4.0",
     "vmid": "..."
 }
 ```
@@ -48,7 +47,6 @@ The following example shows a sample JSON response:
 | Element | Required  | Type   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ------- | --------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | id      | Mandatory | string | A unique identifier for the specific entitlement issued to the application. <p/> Multiple entitlement requests for the same application from the same compute node may (but are not required to) return the same identifier. <p/> Entitlement requests from different compute nodes will not return duplicate identifiers. </p> Clients should make no assumptions about the structure of the `id` as it may change from release to release. |
-| url     | Mandatory | string | A unique URI for the specific entitlement issued to the application. <p/> This URI will be correctly formulated for use with with the *Token Release* method described below.                                                                                                                                                                                                                                                                |
 | vmid    | Mandatory | string | The unique [virtual machine identifier](https://azure.microsoft.com/blog/accessing-and-using-azure-vm-unique-id/) of the entitled Azure virtual machine. <p/> Clients may optionally check this matches the actual virtual machine identifier for the host machine.                                                                                                                                                                          |
 
 ### RESPONSE 403 - FORBIDDEN
