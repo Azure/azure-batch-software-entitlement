@@ -47,6 +47,10 @@ These parameters are available for every mode
 
 Run `sestest server` to stand up a diagnostic software entitlement server, able to accept and verify tokens submitted by either the application. This allows full testing of the integration.
 
+**NOTE**: On Windows, ensure you run `sestest server` from an elevated command prompt - this is required for certificate credential exchange to work. An error like _"The credentials supplie
+d to the package were not recognized"_ may indicate that `sestest server` is running in at user level.
+
+
 | Parameter            | Required  | Definition                                                                                                                               |
 | -------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | --connection-cert    | Mandatory | Thumbprint of the certificate to pin for use with HTTPS                                                                                  |
