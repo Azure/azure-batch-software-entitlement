@@ -13,20 +13,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
     public class UnpackingExceptionLogProvider : ILoggerProvider
     {
         // Reference to our wrapped provider
-        private readonly ILoggerProvider _provider;
+        private readonly ILoggerProvider _innerProvider;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UnpackingExceptionLogProvider"/> class
         /// </summary>
-        /// <param name="provider">Existing provider we should wrap.</param>
-        public UnpackingExceptionLogProvider(ILoggerProvider provider)
+        /// <param name="innerProvider">Existing provider we should wrap.</param>
+        public UnpackingExceptionLogProvider(ILoggerProvider innerProvider)
         {
-            _provider = provider;
+            _innerProvider = innerProvider;
         }
 
         public void Dispose()
         {
-            _provider.Dispose();
+            _innerProvider.Dispose();
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <returns></returns>
         public ILogger CreateLogger(string categoryName)
         {
-            var inner = _provider.CreateLogger(categoryName);
+            var inner = _innerProvider.CreateLogger(categoryName);
             return new UnpackingExceptionLogger(inner);
         }
     }
@@ -47,15 +47,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
     public class UnpackingExceptionLogger : ILogger
     {
         // Reference to our nested logger
-        private readonly ILogger _logger;
+        private readonly ILogger _innerLogger;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="UnpackingExceptionLogger"/> class
         /// </summary>
-        /// <param name="logger">Referencer to an underlying logger to use for exceptions.</param>
-        public UnpackingExceptionLogger(ILogger logger)
+        /// <param name="innerLogger">Referencer to an underlying logger to use for exceptions.</param>
+        public UnpackingExceptionLogger(ILogger innerLogger)
         {
-            _logger = logger;
+            _innerLogger = innerLogger;
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="formatter">Function to create the actual message.</param>
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            _logger.Log(logLevel, eventId, state, null, formatter);
+            _innerLogger.Log(logLevel, eventId, state, null, formatter);
             if (exception != null)
             {
                 LogException(eventId, exception);
@@ -82,7 +82,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <returns>True if messages at this log level are being emitted; false otherwise.</returns>
         public bool IsEnabled(LogLevel logLevel)
         {
-            return _logger.IsEnabled(logLevel);
+            return _innerLogger.IsEnabled(logLevel);
         }
 
         /// <summary>
@@ -92,7 +92,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <returns>An IDisposable that ends the logical operation scope on dispose.</returns>
         public IDisposable BeginScope<TState>(TState state)
         {
-            return _logger.BeginScope(state);
+            return _innerLogger.BeginScope(state);
         }
 
         private void LogException(EventId eventId, Exception exception, string prefix = "")
