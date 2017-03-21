@@ -38,7 +38,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             /*
              * A simple hard coded rule for easy initial testing
              */
-            if (!string.Equals(entitlementRequest.ApplicationId, "maya", StringComparison.OrdinalIgnoreCase))
+            if (!string.Equals(entitlementRequest.ApplicationId, "contosoapp", StringComparison.OrdinalIgnoreCase))
             {
                 var error = new SoftwareEntitlementFailureResponse
                 {
