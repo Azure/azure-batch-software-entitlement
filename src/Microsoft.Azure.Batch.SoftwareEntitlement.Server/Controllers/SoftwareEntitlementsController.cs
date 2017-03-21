@@ -1,10 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
@@ -50,28 +44,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             }
 
             var entitlementId = entitlementRequest.ApplicationId + "-" + Guid.NewGuid().ToString("D");
-            var entitlementUrl = UriHelper.BuildAbsolute(
-                Request.Scheme,
-                Request.Host,
-                Request.PathBase,
-                Request.Path.Add("/" + entitlementId));
-
             var response = new SoftwareEntitlementSuccessfulResponse
             {
                 EntitlementId = entitlementId,
-                EntitlementUrl = entitlementUrl,
                 VirtualMachineId = Guid.NewGuid().ToString("B")
             };
 
             return Ok(response);
-        }
-
-        [HttpDelete("{applicationId}/{entitlementId}")]
-        public void DeleteEntitlement(
-            [FromRoute] string applicationId,
-            [FromRoute] string entitlementId)
-        {
-            _logger.LogInformation($"Release entitlement {entitlementId} for {applicationId}");
         }
     }
 }
