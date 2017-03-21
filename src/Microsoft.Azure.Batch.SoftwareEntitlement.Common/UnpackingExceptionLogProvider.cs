@@ -104,16 +104,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 
         public IEnumerable<string> AsLines(string content)
         {
-            using (var sw = new StringWriter())
+            using (var lines = new StringReader(content))
             {
-                sw.Write(content);
-                using (var lines = new StringReader(sw.ToString()))
+                string nextLine;
+                while ((nextLine = lines.ReadLine()) != null)
                 {
-                    string nextLine;
-                    while ((nextLine = lines.ReadLine()) != null)
-                    {
-                        yield return nextLine;
-                    }
+                    yield return nextLine;
                 }
             }
         }
