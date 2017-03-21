@@ -98,6 +98,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         private void LogException(EventId eventId, Exception exception, string prefix = "")
         {
             const string indent = "    ";
+
             Log(LogLevel.Error, eventId, prefix + exception.Message, null, (s, e) => s);
             if (exception.Data != null)
             {
@@ -114,9 +115,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 
             if (exception is AggregateException aggregate)
             {
+                var newIndent = indent + prefix;
                 foreach (var e in aggregate.InnerExceptions)
                 {
-                    LogException(eventId, e, indent + prefix);
+                    LogException(eventId, e, newIndent);
                 }
             }
             else if (exception.InnerException != null)
