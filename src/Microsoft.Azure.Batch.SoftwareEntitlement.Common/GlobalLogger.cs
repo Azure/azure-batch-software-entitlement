@@ -1,9 +1,9 @@
-﻿using Serilog;
+﻿using Microsoft.Extensions.Logging;
+using Serilog;
 using Serilog.Events;
 using Serilog.Extensions.Logging;
 using System;
 using System.IO;
-using Microsoft.Extensions.Logging;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
@@ -18,7 +18,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         private static ILogger _logger;
 
         // Provider required by ASP.NET Core
-        private static SerilogLoggerProvider _provider;
+        private static ILoggerProvider _provider;
 
         public static ILogger Logger
             => _logger ?? throw new InvalidOperationException("Logging has not been initialized.");
@@ -35,19 +35,23 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <returns>Instance of simple logger.</returns>
         public static ILogger CreateLogger(LogLevel level, FileInfo logFile = null)
         {
-            var configuration = new Serilog.LoggerConfiguration()
+            const string consoleTemplate = "{Timestamp:HH:mm:ss.fff} [{Level}] {Message}{NewLine}";
+
+            var consoleConfiguration = new Serilog.LoggerConfiguration()
                 .MinimumLevel.Is(ConvertLevel(level))
-                .WriteTo.ColoredConsole();
+                .WriteTo.ColoredConsole( outputTemplate: consoleTemplate);
 
             if (logFile != null)
             {
-                configuration = configuration.WriteTo.File(logFile.FullName);
+                consoleConfiguration = consoleConfiguration.WriteTo.File(logFile.FullName);
             }
 
-            var serilogger = configuration.CreateLogger();
+            var consoleLogger = consoleConfiguration.CreateLogger();
 
-            _provider = new SerilogLoggerProvider(serilogger);
+            var serilogProvider = new SerilogLoggerProvider(consoleLogger);
+            _provider = new UnpackingExceptionLogProvider(serilogProvider);
             _logger = _provider.CreateLogger(string.Empty);
+
             return _logger;
         }
 
