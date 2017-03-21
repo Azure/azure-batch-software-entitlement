@@ -1,16 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 using CommandLine;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Server.Kestrel;
-using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
-using Microsoft.Azure.Batch.SoftwareEntitlement.Server;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
@@ -22,16 +15,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var parser = new Parser(ConfigureParser);
 
             var parseResult = parser
-                .ParseArguments<GenerateCommandLine, VerifyCommandLine, ServerCommandLine, ListCertificatesCommandLine, FindCertificateCommandLine>(args);
+                .ParseArguments<GenerateCommandLine, ServerCommandLine, ListCertificatesCommandLine, FindCertificateCommandLine>(args);
 
             parseResult.WithParsed((CommandLineBase options) => SetUpLogging(options));
 
             var exitCode = parseResult.MapResult(
-                (GenerateCommandLine options) => Generate(options),
-                (VerifyCommandLine options) => Verify(options),
-                (ServerCommandLine options) => Serve(options),
-                (ListCertificatesCommandLine options) => ListCertificates(options),
-                (FindCertificateCommandLine options) => FindCertificate(options),
+                (GenerateCommandLine options) => RunMode(options, Generate),
+                (ServerCommandLine options) => RunMode(options, Serve),
+                (ListCertificatesCommandLine options) => RunMode(options, ListCertificates),
+                (FindCertificateCommandLine options) => RunMode(options, FindCertificate),
                 errors => 1);
 
             if (Debugger.IsAttached)
@@ -47,10 +39,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Generation mode - create a new token for testing
         /// </summary>
         /// <param name="commandLine">Options from the command line.</param>
+        /// <param name="logger">Logger to use for diagnostics.</param>
         /// <returns>Exit code to return from this process.</returns>
-        public static int Generate(GenerateCommandLine commandLine)
+        public static int Generate(GenerateCommandLine commandLine, ILogger logger)
         {
-            var logger = GlobalLogger.Logger;
             var entitlement = new SoftwareEntitlement(logger)
                 .WithVirtualMachineId(commandLine.VirtualMachineId)
                 .ForTimeRange(commandLine.NotBefore, commandLine.NotAfter);
@@ -73,23 +65,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
-        /// Verify mode - check that a token is valid
-        /// </summary>
-        /// <param name="commandLine">Options from the command line.</param>
-        /// <returns>Exit code to return from this process.</returns>
-        public static int Verify(VerifyCommandLine commandLine)
-        {
-            return 0;
-        }
-
-        /// <summary>
         /// Serve mode - run as a standalone webapp  
         /// </summary>
         /// <param name="commandLine">Options from the commandline.</param>
+        /// <param name="logger">Logger to use for diagnostics.</param>
         /// <returns>Exit code to return from this process.</returns>
-        public static int Serve(ServerCommandLine commandLine)
+        public static int Serve(ServerCommandLine commandLine, ILogger logger)
         {
-            var logger = GlobalLogger.Logger;
             var options = ServerOptionBuilder.Build(commandLine);
 
             if (!options.HasValue)
@@ -111,10 +93,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// List available certificates
         /// </summary>
         /// <param name="commandLine">Options from the command line.</param>
+        /// <param name="logger">Logger to use for diagnostics.</param>
         /// <returns>Exit code for process.</returns>
-        private static int ListCertificates(ListCertificatesCommandLine commandLine)
+        private static int ListCertificates(ListCertificatesCommandLine commandLine, ILogger logger)
         {
-            var logger = GlobalLogger.Logger;
             var certificateStore = new CertificateStore();
             var allCertificates = certificateStore.FindAll();
             var withPrivateKey = allCertificates.Where(c => c.HasPrivateKey).ToList();
@@ -139,10 +121,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Show details of one particular certificate
         /// </summary>
         /// <param name="commandLine">Options from the command line.</param>
+        /// <param name="logger">Logger to use for diagnostics.</param>
         /// <returns>Exit code for process.</returns>
-        private static int FindCertificate(FindCertificateCommandLine commandLine)
+        private static int FindCertificate(FindCertificateCommandLine commandLine, ILogger logger)
         {
-            var logger = GlobalLogger.Logger;
             var thumbprint = new CertificateThumbprint(commandLine.Thumbprint);
             var certificateStore = new CertificateStore();
             var certificate = certificateStore.FindByThumbprint("cert", thumbprint);
@@ -200,6 +182,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             settings.HelpWriter = Console.Error;
         }
 
-
+        private static int RunMode<T>(T commandLine, Func<T, ILogger, int> mode)
+            where T : CommandLineBase
+        {
+            var logger = GlobalLogger.Logger;
+            try
+            {
+                return mode(commandLine, logger);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("Exception", ex, ex.Message);
+                return -1;
+            }
+        }
     }
 }
