@@ -17,13 +17,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var parseResult = parser
                 .ParseArguments<GenerateCommandLine, ServerCommandLine, ListCertificatesCommandLine, FindCertificateCommandLine>(args);
 
-            parseResult.WithParsed((CommandLineBase options) => SetUpLogging(options));
+            parseResult.WithParsed((CommandLineBase options) => ConfigureLogging(options));
 
             var exitCode = parseResult.MapResult(
-                (GenerateCommandLine options) => RunMode(options, Generate),
-                (ServerCommandLine options) => RunMode(options, Serve),
-                (ListCertificatesCommandLine options) => RunMode(options, ListCertificates),
-                (FindCertificateCommandLine options) => RunMode(options, FindCertificate),
+                (GenerateCommandLine commandLine) => RunCommand(Generate, commandLine),
+                (ServerCommandLine commandLine) => RunCommand(Serve, commandLine),
+                (ListCertificatesCommandLine commandLine) => RunCommand(ListCertificates, commandLine),
+                (FindCertificateCommandLine commandLine) => RunCommand(FindCertificate, commandLine),
                 errors => 1);
 
             if (Debugger.IsAttached)
@@ -150,10 +150,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
-        /// Ensure our logging is properly initialized
+        /// Configure our logging as requested by the user
         /// </summary>
         /// <param name="commandLine">Options selected by the user (if any).</param>
-        private static void SetUpLogging(CommandLineBase commandLine)
+        private static void ConfigureLogging(CommandLineBase commandLine)
         {
             ILogger logger;
             if (string.IsNullOrEmpty(commandLine.LogFile))
@@ -182,13 +182,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             settings.HelpWriter = Console.Error;
         }
 
-        private static int RunMode<T>(T commandLine, Func<T, ILogger, int> mode)
+        /// <summary>
+        /// Run a command with full logging
+        /// </summary>
+        /// <typeparam name="T">Type of parametrs provided for this command to run</typeparam>
+        /// <param name="command">Actual command to run.</param>
+        /// <param name="commandLine">Parameters provided on the command line.</param>
+        /// <returns>Exit code for this command.</returns>
+        private static int RunCommand<T>(Func<T, ILogger, int> command, T commandLine)
             where T : CommandLineBase
         {
             var logger = GlobalLogger.Logger;
             try
             {
-                return mode(commandLine, logger);
+                return command(commandLine, logger);
             }
             catch (Exception ex)
             {

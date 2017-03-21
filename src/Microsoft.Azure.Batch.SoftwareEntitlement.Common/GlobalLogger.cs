@@ -23,7 +23,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         public static ILogger Logger
             => _logger ?? throw new InvalidOperationException("Logging has not been initialized.");
 
-        public static ILoggerProvider Provider 
+        public static ILoggerProvider Provider
             => _provider ?? throw new InvalidOperationException("Logging has not been initialized.");
 
         /// <summary>
@@ -39,7 +39,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 
             var consoleConfiguration = new Serilog.LoggerConfiguration()
                 .MinimumLevel.Is(ConvertLevel(level))
-                .WriteTo.ColoredConsole( outputTemplate: consoleTemplate);
+                .WriteTo.ColoredConsole(outputTemplate: consoleTemplate);
 
             if (logFile != null)
             {
