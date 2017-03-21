@@ -10,17 +10,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <summary>
         /// The identifier for the approved entitlement
         /// </summary>
-        /// <remarks>
-        /// Will be formatted as a URL suitable for use for releasing the entitlement.
-        /// </remarks>
         [JsonProperty(PropertyName = "id")]
         public string EntitlementId { get; set; }
-
-        /// <summary>
-        /// The url to use for management of the approved entitlement
-        /// </summary>
-        [JsonProperty(PropertyName = "url")]
-        public string EntitlementUrl { get; set; }
 
         /// <summary>
         /// The virtual machine identifier for the Azure VM entitled to run the software
