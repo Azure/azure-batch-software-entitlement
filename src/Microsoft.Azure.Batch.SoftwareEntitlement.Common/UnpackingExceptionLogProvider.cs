@@ -74,7 +74,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 
         private void LogException(EventId eventId, Exception exception, string prefix = "")
         {
-            Log(LogLevel.Error, eventId, exception.Message, null, (s, e) => s);
+            Log(LogLevel.Error, eventId, prefix + exception.Message, null, (s, e) => s);
             if (exception.Data != null)
             {
                 foreach (DictionaryEntry entry in exception.Data)
@@ -88,17 +88,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 Log(LogLevel.Debug, eventId, prefix + line, null, (s, e) => s);
             }
 
-            if (exception.InnerException != null)
-            {
-                LogException(eventId, exception.InnerException, prefix + "    ");
-            }
-
             if (exception is AggregateException aggregate)
             {
                 foreach (var e in aggregate.InnerExceptions)
                 {
                     LogException(eventId, e, prefix + "    ");
                 }
+            }
+            else if (exception.InnerException != null)
+            {
+                LogException(eventId, exception.InnerException, prefix + "    ");
             }
         }
 
