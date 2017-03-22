@@ -132,7 +132,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             }
         }
 
-        // Convert a string containing mutiple lines into a series of lines
+        // Convert a string containing multiple lines into a series of lines
         private IEnumerable<string> AsLines(string content)
         {
             using (var lines = new StringReader(content))
