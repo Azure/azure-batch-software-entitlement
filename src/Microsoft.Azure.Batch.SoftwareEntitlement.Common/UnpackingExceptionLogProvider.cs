@@ -99,7 +99,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         {
             const string indent = "    ";
 
-            Log(LogLevel.Error, eventId, prefix + exception.Message, null, (s, e) => s);
+            Log(
+                LogLevel.Error,
+                eventId,
+                $"{prefix}{exception.Message} ({exception.GetType().Name})",
+                null,
+                (s, e) => s);
             if (exception.Data != null)
             {
                 foreach (DictionaryEntry entry in exception.Data)
