@@ -113,7 +113,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 }
             }
 
-            foreach (var line in AsLines(exception.StackTrace))
+            foreach (var line in exception.StackTrace.AsLines())
             {
                 Log(LogLevel.Debug, eventId, prefix + line, null, (s, e) => s);
             }
@@ -129,19 +129,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             else if (exception.InnerException != null)
             {
                 LogException(eventId, exception.InnerException, indent + prefix);
-            }
-        }
-
-        // Convert a string containing multiple lines into a series of lines
-        private IEnumerable<string> AsLines(string content)
-        {
-            using (var lines = new StringReader(content))
-            {
-                string nextLine;
-                while ((nextLine = lines.ReadLine()) != null)
-                {
-                    yield return nextLine;
-                }
             }
         }
     }
