@@ -1,16 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 using CommandLine;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Server.Kestrel;
-using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
-using Microsoft.Azure.Batch.SoftwareEntitlement.Server;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
@@ -22,16 +15,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var parser = new Parser(ConfigureParser);
 
             var parseResult = parser
-                .ParseArguments<GenerateOptions, VerifyOptions, ServerCommandLine, ListCertificatesOptions, FindCertificateOptions>(args);
+                .ParseArguments<GenerateCommandLine, ServerCommandLine, ListCertificatesCommandLine, FindCertificateCommandLine>(args);
 
-            parseResult.WithParsed((OptionsBase options) => SetUpLogging(options));
+            parseResult.WithParsed((CommandLineBase options) => ConfigureLogging(options));
 
             var exitCode = parseResult.MapResult(
-                (GenerateOptions options) => Generate(options),
-                (VerifyOptions options) => Verify(options),
-                (ServerCommandLine options) => Serve(options),
-                (ListCertificatesOptions options) => ListCertificates(options),
-                (FindCertificateOptions options) => FindCertificate(options),
+                (GenerateCommandLine commandLine) => RunCommand(Generate, commandLine),
+                (ServerCommandLine commandLine) => RunCommand(Serve, commandLine),
+                (ListCertificatesCommandLine commandLine) => RunCommand(ListCertificates, commandLine),
+                (FindCertificateCommandLine commandLine) => RunCommand(FindCertificate, commandLine),
                 errors => 1);
 
             if (Debugger.IsAttached)
@@ -46,14 +38,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Generation mode - create a new token for testing
         /// </summary>
-        /// <param name="options">Options from the command line.</param>
+        /// <param name="commandLine">Options from the command line.</param>
+        /// <param name="logger">Logger to use for diagnostics.</param>
         /// <returns>Exit code to return from this process.</returns>
-        public static int Generate(GenerateOptions options)
+        public static int Generate(GenerateCommandLine commandLine, ILogger logger)
         {
-            var logger = GlobalLogger.Logger;
             var entitlement = new SoftwareEntitlement(logger)
-                .WithVirtualMachineId(options.VirtualMachineId)
-                .ForTimeRange(options.NotBefore, options.NotAfter);
+                .WithVirtualMachineId(commandLine.VirtualMachineId)
+                .ForTimeRange(commandLine.NotBefore, commandLine.NotAfter);
 
             if (entitlement.HasErrors)
             {
@@ -73,23 +65,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
-        /// Verify mode - check that a token is valid
-        /// </summary>
-        /// <param name="options">Options from the command line.</param>
-        /// <returns>Exit code to return from this process.</returns>
-        public static int Verify(VerifyOptions options)
-        {
-            return 0;
-        }
-
-        /// <summary>
         /// Serve mode - run as a standalone webapp  
         /// </summary>
         /// <param name="commandLine">Options from the commandline.</param>
+        /// <param name="logger">Logger to use for diagnostics.</param>
         /// <returns>Exit code to return from this process.</returns>
-        public static int Serve(ServerCommandLine commandLine)
+        public static int Serve(ServerCommandLine commandLine, ILogger logger)
         {
-            var logger = GlobalLogger.Logger;
             var options = ServerOptionBuilder.Build(commandLine);
 
             if (!options.HasValue)
@@ -110,11 +92,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// List available certificates
         /// </summary>
-        /// <param name="options">Options from the command line.</param>
+        /// <param name="commandLine">Options from the command line.</param>
+        /// <param name="logger">Logger to use for diagnostics.</param>
         /// <returns>Exit code for process.</returns>
-        private static int ListCertificates(ListCertificatesOptions options)
+        private static int ListCertificates(ListCertificatesCommandLine commandLine, ILogger logger)
         {
-            var logger = GlobalLogger.Logger;
             var certificateStore = new CertificateStore();
             var allCertificates = certificateStore.FindAll();
             var withPrivateKey = allCertificates.Where(c => c.HasPrivateKey).ToList();
@@ -138,12 +120,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Show details of one particular certificate
         /// </summary>
-        /// <param name="options">Options from the command line.</param>
+        /// <param name="commandLine">Options from the command line.</param>
+        /// <param name="logger">Logger to use for diagnostics.</param>
         /// <returns>Exit code for process.</returns>
-        private static int FindCertificate(FindCertificateOptions options)
+        private static int FindCertificate(FindCertificateCommandLine commandLine, ILogger logger)
         {
-            var logger = GlobalLogger.Logger;
-            var thumbprint = new CertificateThumbprint(options.Thumbprint);
+            var thumbprint = new CertificateThumbprint(commandLine.Thumbprint);
             var certificateStore = new CertificateStore();
             var certificate = certificateStore.FindByThumbprint("cert", thumbprint);
             if (!certificate.HasValue)
@@ -168,12 +150,22 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
-        /// Ensure our logging is properly initialized
+        /// Configure our logging as requested by the user
         /// </summary>
-        /// <param name="options">Options selected by the user (if any).</param>
-        private static void SetUpLogging(OptionsBase options)
+        /// <param name="commandLine">Options selected by the user (if any).</param>
+        private static void ConfigureLogging(CommandLineBase commandLine)
         {
-            var logger = GlobalLogger.CreateLogger(options.LogLevel);
+            ILogger logger;
+            if (string.IsNullOrEmpty(commandLine.LogFile))
+            {
+                logger = GlobalLogger.CreateLogger(commandLine.LogLevel);
+            }
+            else
+            {
+                var file = new FileInfo(commandLine.LogFile);
+                logger = GlobalLogger.CreateLogger(commandLine.LogLevel, file);
+            }
+
             logger.LogInformation("Software Entitlement Service Command Line Utility");
         }
 
@@ -190,6 +182,26 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             settings.HelpWriter = Console.Error;
         }
 
-
+        /// <summary>
+        /// Run a command with full logging
+        /// </summary>
+        /// <typeparam name="T">Type of parametrs provided for this command to run</typeparam>
+        /// <param name="command">Actual command to run.</param>
+        /// <param name="commandLine">Parameters provided on the command line.</param>
+        /// <returns>Exit code for this command.</returns>
+        private static int RunCommand<T>(Func<T, ILogger, int> command, T commandLine)
+            where T : CommandLineBase
+        {
+            var logger = GlobalLogger.Logger;
+            try
+            {
+                return command(commandLine, logger);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("Exception", ex, ex.Message);
+                return -1;
+            }
+        }
     }
 }

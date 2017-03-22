@@ -1,8 +1,9 @@
-﻿using Serilog;
+﻿using Microsoft.Extensions.Logging;
+using Serilog;
 using Serilog.Events;
 using Serilog.Extensions.Logging;
 using System;
-using Microsoft.Extensions.Logging;
+using System.IO;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 
@@ -17,29 +18,40 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         private static ILogger _logger;
 
         // Provider required by ASP.NET Core
-        private static SerilogLoggerProvider _provider;
+        private static ILoggerProvider _provider;
 
         public static ILogger Logger
             => _logger ?? throw new InvalidOperationException("Logging has not been initialized.");
 
-        public static ILoggerProvider Provider 
+        public static ILoggerProvider Provider
             => _provider ?? throw new InvalidOperationException("Logging has not been initialized.");
 
         /// <summary>
         /// Creates a configured logger to use within SesTest
         /// </summary>
         /// <remarks>Also caches a copy of the logger for later reference from elsewhere.</remarks>
-        /// <param name="level">Desired logging level</param>
+        /// <param name="level">Desired logging level.</param>
+        /// <param name="logFile">Destination log file (if any).</param>
         /// <returns>Instance of simple logger.</returns>
-        public static ILogger CreateLogger(LogLevel level)
+        public static ILogger CreateLogger(LogLevel level, FileInfo logFile = null)
         {
-            var serilogger = new Serilog.LoggerConfiguration()
-                .WriteTo.ColoredConsole()
-                .MinimumLevel.Is(ConvertLevel(level))
-                .CreateLogger();
+            const string consoleTemplate = "{Timestamp:HH:mm:ss.fff} [{Level}] {Message}{NewLine}";
 
-            _provider = new SerilogLoggerProvider(serilogger);
+            var consoleConfiguration = new Serilog.LoggerConfiguration()
+                .MinimumLevel.Is(ConvertLevel(level))
+                .WriteTo.ColoredConsole(outputTemplate: consoleTemplate);
+
+            if (logFile != null)
+            {
+                consoleConfiguration = consoleConfiguration.WriteTo.File(logFile.FullName);
+            }
+
+            var consoleLogger = consoleConfiguration.CreateLogger();
+
+            var serilogProvider = new SerilogLoggerProvider(consoleLogger);
+            _provider = new UnpackingExceptionLogProvider(serilogProvider);
             _logger = _provider.CreateLogger(string.Empty);
+
             return _logger;
         }
 
