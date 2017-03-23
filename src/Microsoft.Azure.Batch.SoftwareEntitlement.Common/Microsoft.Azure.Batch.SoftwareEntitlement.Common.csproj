@@ -7,6 +7,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OutputPath>..\..\out\Microsoft.Azure.Batch.SoftwareEntitlement.Common\Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG;NETSTANDARD1_5</DefineConstants>
+    <DebugType>full</DebugType>
+    <DebugSymbols>True</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
