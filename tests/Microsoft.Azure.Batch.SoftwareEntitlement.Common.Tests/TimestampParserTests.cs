@@ -10,19 +10,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
 {
     public class TimestampParserTests
     {
-        // Substitute logger used for testing
-        private readonly ValidationLogger _logger = new ValidationLogger(NullLogger.Instance);
-
-        public class Constructor : TimestampParserTests
-        {
-            [Fact]
-            public void GivenNullLogger_ThrowsException()
-            {
-                Assert.Throws<ArgumentNullException>(
-                    () => new TimestampParser(null));
-            }
-        }
-
         public class ParseMethod : TimestampParserTests
         {
             // Initialized parser to use for testing
@@ -31,43 +18,62 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             // Timestamp for testing
             private readonly DateTimeOffset _timestamp;
 
+            // Invalid timestamp for testing
+            private string _invalidTimestamp = "not a timestamp";
+
+            // Name of the value we're parsing
+            private string _name = "Demo";
+
             public ParseMethod()
             {
-                _parser = new TimestampParser(_logger);
+                _parser = new TimestampParser();
                 _timestamp = DateTimeOffset.Now.At(14, 39); // Needs to have 0 seconds and 0 milliseconds
             }
 
             [Fact]
-            public void GivenEmptyString_ReturnsFalse()
+            public void GivenEmptyValue_ReturnsError()
             {
-                var (valid, timestamp) = _parser.TryParse(string.Empty);
-                valid.Should().BeFalse();
+                var result = _parser.TryParse(string.Empty, "name");
+                result.HasValue.Should().BeFalse();
+            }
+
+            [Fact]
+            public void GivenEmptyName_ReturnsError()
+            {
+                var result = _parser.TryParse("value", string.Empty);
+                result.HasValue.Should().BeFalse();
             }
 
             [Fact]
             public void GivenTimestampInExpectedFormat_ReturnsExpectedValue()
             {
                 var valueToParse = _timestamp.ToString(TimestampParser.ExpectedFormat);
-                var (valid, timestamp) = _parser.TryParse(valueToParse);
-                valid.Should().BeTrue();
-                timestamp.Should().Be(_timestamp);
+                var result = _parser.TryParse(valueToParse, _name);
+                result.HasValue.Should().BeTrue();
+                result.Value.Should().Be(_timestamp);
             }
 
             [Fact]
             public void GivenTimestampInDifferentFormat_ReturnsExpectedValue()
             {
                 var valueToParse = _timestamp.ToString("G");
-                var (valid, timestamp) = _parser.TryParse(valueToParse);
-                valid.Should().BeTrue();
-                timestamp.Should().Be(_timestamp);
+                var result = _parser.TryParse(valueToParse, _name);
+                result.HasValue.Should().BeTrue();
+                result.Value.Should().Be(_timestamp);
             }
 
             [Fact]
-            public void GivenTimestampInDifferentFormat_GeneratesWarning()
+            public void GivenInvalidTimestamp_ReturnsError()
             {
-                var valueToParse = _timestamp.ToString("G");
-                _parser.TryParse(valueToParse);
-                _logger.HasWarnings.Should().BeTrue();
+                var result = _parser.TryParse(_invalidTimestamp, _name);
+                result.HasValue.Should().BeFalse();
+            }
+
+            [Fact]
+            public void GivenInvalidTimestamp_ReturnsErrorIncludingName()
+            {
+                var result = _parser.TryParse(_invalidTimestamp, _name);
+                result.Errors.Should().Contain(e => e.Contains(_name));
             }
         }
     }
