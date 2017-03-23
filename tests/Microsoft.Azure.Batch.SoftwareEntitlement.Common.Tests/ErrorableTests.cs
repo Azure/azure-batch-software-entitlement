@@ -106,7 +106,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             }
         }
 
-        public class MatchMethod
+        public class MatchMethodWithActions
         {
             [Fact]
             public void WhenSuccess_CallsActionWithExpectedValue()
@@ -125,6 +125,30 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                 errorable.Match(
                     v => throw new InvalidOperationException("Should not be called"),
                     errors => errors.Should().Contain(error));
+            }
+        }
+
+        public class MatchMethodWithFunctions
+        {
+            [Fact]
+            public void WhenSuccess_CallsActionWithExpectedValue()
+            {
+                var errorable = Errorable.Success(43);
+                var result = errorable.Match(
+                    v => 43,
+                    errors => throw new InvalidOperationException("Should not be called"));
+                 result.Should().Be(43);
+            }
+
+            [Fact]
+            public void WhenFailure_CallsActionWithExpectedErrors()
+            {
+                var error = "Error";
+                var errorable = Errorable.Failure<int>(error);
+                var result = errorable.Match<int>(
+                    v => throw new InvalidOperationException("Should not be called"),
+                    errors => 42);
+                result.Should().Be(42);
             }
         }
     }

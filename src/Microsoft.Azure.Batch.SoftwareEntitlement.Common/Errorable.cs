@@ -72,7 +72,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <returns>A new instance with the error included.</returns>
         public abstract Errorable<T> AddError(string error);
 
+        /// <summary>
+        /// Take an action depending on whether we have a value or some errors
+        /// </summary>
+        /// <param name="whenSuccessful">Action to take when we have a value.</param>
+        /// <param name="whenFailure">Action to take when we have errors.</param>
         public abstract void Match(Action<T> whenSuccessful, Action<IEnumerable<string>> whenFailure);
+
+        /// <summary>
+        /// Call one function or another depending on whether we have a value or some errors
+        /// </summary>
+        /// <typeparam name="R">Type of value to return.</typeparam>
+        /// <param name="whenSuccessful">Function to call when we have a value.</param>
+        /// <param name="whenFailure">Function to call when we have errors.</param>
+        /// <returns></returns>
+        public abstract R Match<R>(Func<T,R> whenSuccessful, Func<IEnumerable<string>, R> whenFailure);
 
         /// <summary>
         /// Private constructor to prevent other subclasses
@@ -103,9 +117,26 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 return new FailureImplementation(errors);
             }
 
+            /// <summary>
+            /// Take an action depending on whether we have a value or some errors
+            /// </summary>
+            /// <param name="whenSuccessful">Action to take when we have a value.</param>
+            /// <param name="whenFailure">Action to take when we have errors.</param>
             public override void Match(Action<T> whenSuccessful, Action<IEnumerable<string>> whenFailure)
             {
                 whenSuccessful(Value);
+            }
+
+            /// <summary>
+            /// Call one function or another depending on whether we have a value or some errors
+            /// </summary>
+            /// <typeparam name="R">Type of value to return.</typeparam>
+            /// <param name="whenSuccessful">Function to call when we have a value.</param>
+            /// <param name="whenFailure">Function to call when we have errors.</param>
+            /// <returns></returns>
+            public override R Match<R>(Func<T, R> whenSuccessful, Func<IEnumerable<string>, R> whenFailure)
+            {
+                return whenSuccessful(Value);
             }
         }
 
@@ -131,9 +162,26 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 return new FailureImplementation(Errors.Add(error));
             }
 
+            /// <summary>
+            /// Take an action depending on whether we have a value or some errors
+            /// </summary>
+            /// <param name="whenSuccessful">Action to take when we have a value.</param>
+            /// <param name="whenFailure">Action to take when we have errors.</param>
             public override void Match(Action<T> whenSuccessful, Action<IEnumerable<string>> whenFailure)
             {
                 whenFailure(Errors);
+            }
+
+            /// <summary>
+            /// Call one function or another depending on whether we have a value or some errors
+            /// </summary>
+            /// <typeparam name="R">Type of value to return.</typeparam>
+            /// <param name="whenSuccessful">Function to call when we have a value.</param>
+            /// <param name="whenFailure">Function to call when we have errors.</param>
+            /// <returns></returns>
+            public override R Match<R>(Func<T, R> whenSuccessful, Func<IEnumerable<string>, R> whenFailure)
+            {
+                return whenFailure(Errors);
             }
         }
     }
