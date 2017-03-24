@@ -9,10 +9,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     [Verb("generate", HelpText = "Generate a token with specified parameters")]
     public sealed class GenerateCommandLine : CommandLineBase
     {
-        [Option("entitlement-id", HelpText = "Unique identifier(s) for the entitlement(s) to include (comma separated).", Separator = ',')]
-        public IEnumerable<string> EntitlementIds { get; set; }
+        [Option("application-id", HelpText = "Unique identifier(s) for the applications(s) to include in the entitlement (comma separated).", Separator = ',')]
+        public IEnumerable<string> ApplicationIds { get; set; }
 
-        [Option("vmid", HelpText = "Unique identifier for the Azure virtual machine")]
+        [Option("vmid", HelpText = "Unique identifier for the Azure virtual machine (mandatory).")]
         public string VirtualMachineId { get; set; }
 
         [Option("not-before",

@@ -11,12 +11,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     /// </summary>
     public class SoftwareEntitlement
     {
-        // Reference to the logger we use for reporting activity
-        private readonly ValidationLogger _logger;
-
-        // Parser used to convert from text into instants of time
-        private readonly TimestampParser _timestampParser;
-
         /// <summary>
         /// Gets the virtual machine identifier for the machine entitled to use the specified packages
         /// </summary>
@@ -38,19 +32,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public DateTimeOffset NotAfter { get; }
 
         /// <summary>
-        /// Gets a value indicating whether this token has fatal errors
-        /// </summary>
-        public bool HasErrors => _logger.HasErrors;
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="SoftwareEntitlement"/> class
         /// </summary>
-        public SoftwareEntitlement(ILogger logger)
+        public SoftwareEntitlement()
         {
             var now = DateTimeOffset.Now;
-
-            _logger = new ValidationLogger(logger);
-            _timestampParser = new TimestampParser(_logger);
 
             VirtualMachineId = string.Empty;
             Created = now;
@@ -65,75 +51,27 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns></returns>
         public SoftwareEntitlement WithVirtualMachineId(string virtualMachineId)
         {
-            if (string.IsNullOrWhiteSpace(virtualMachineId))
-            {
-                _logger.LogError("Virtual Machine ID must be specified");
-                return this;
-            }
-
-            _logger.LogDebug("Virtual machine id is {VirtualMachineId}", virtualMachineId);
-
             return new SoftwareEntitlement(this, virtualMachineId: virtualMachineId);
         }
 
         /// <summary>
-        /// Specify the time frame for which the token will be valid
+        /// Specify an instant before which the token will not be valid
         /// </summary>
         /// <param name="notBefore">Earliest instant of availability.</param>
-        /// <param name="notAfter">Latest instant of availability.</param>
         /// <returns></returns>
-        public SoftwareEntitlement ForTimeRange(string notBefore, string notAfter)
+        public SoftwareEntitlement FromInstant(DateTimeOffset notBefore)
         {
-            var start = NotBefore;
-            var finish = NotAfter;
-
-            if (!string.IsNullOrWhiteSpace(notBefore))
-            {
-                // TryParse will log any errors encountered, so we don't need explicit handling of the failure cases here
-                var (successful, timestamp) = _timestampParser.TryParse(notBefore);
-                if (successful)
-                {
-                    start = timestamp;
-                }
-            }
-
-            if (!string.IsNullOrWhiteSpace(notAfter))
-            {
-                var (successful, timestamp) = _timestampParser.TryParse(notAfter);
-                if (successful)
-                {
-                    finish = timestamp;
-                }
-            }
-
-            return ForTimeRange(start, finish);
+            return new SoftwareEntitlement(this, notBefore: notBefore);
         }
 
         /// <summary>
-        /// Specify the time frame for which the token will be valid
+        /// Specify an instant before which the token will not be valid
         /// </summary>
-        /// <param name="notBefore">Earliest instant of availability.</param>
-        /// <param name="notAfter">Latest instant of availability.</param>
+        /// <param name="notAfter">Earliest instant of availability.</param>
         /// <returns></returns>
-        public SoftwareEntitlement ForTimeRange(DateTimeOffset notBefore, DateTimeOffset notAfter)
+        public SoftwareEntitlement UntilInstant(DateTimeOffset notAfter)
         {
-            if (notAfter < notBefore)
-            {
-                _logger.LogError("Token expiry of {NotAfter} must be after token becomes active at {NotBefore}.", notAfter, notBefore);
-                return this;
-            }
-
-            if (notAfter < DateTimeOffset.Now)
-            {
-                _logger.LogWarning("Token expiry of {NotAfter} has already passed", notAfter);
-            }
-
-            if (notBefore > DateTimeOffset.Now)
-            {
-                _logger.LogInformation("Token does not become available until {NotBefore}", notBefore);
-            }
-
-            return new SoftwareEntitlement(this, notBefore: notBefore, notAfter: notAfter);
+            return new SoftwareEntitlement(this, notAfter: notAfter);
         }
 
         /// <summary>
@@ -151,9 +89,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             DateTimeOffset? notAfter = null,
             string virtualMachineId = null)
         {
-            _logger = original._logger;
-            _timestampParser = original._timestampParser;
-
             Created = original.Created;
 
             NotBefore = notBefore ?? original.NotBefore;
