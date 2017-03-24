@@ -51,7 +51,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             {
                 logger.LogError("Unable to generate template; please address the reported errors and try again.");
                 return -1;
-            }
+            } 
 
             var generator = new TokenGenerator(logger);
             var token = generator.Generate(entitlement);
