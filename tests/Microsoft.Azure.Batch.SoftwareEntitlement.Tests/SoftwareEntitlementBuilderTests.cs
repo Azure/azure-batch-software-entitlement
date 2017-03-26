@@ -10,19 +10,29 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
     public class SoftwareEntitlementBuilderTests
     {
         // A valid set of command line arguments for testing
-        private readonly GenerateCommandLine _commandLine = new GenerateCommandLine()
+        private readonly GenerateCommandLine _commandLine = new GenerateCommandLine
         {
             VirtualMachineId = "Sample"
         };
 
         public class BuildMethod : SoftwareEntitlementBuilderTests
         {
-
             [Fact]
             public void GivenNullCommandLine_ThrowsArgumentNullException()
             {
                 Assert.Throws<ArgumentNullException>(
                     () => SoftwareEntitlementBuilder.Build(null));
+            }
+
+            [Fact]
+            public void GivenValidCommandLine_ReturnsNoErrors()
+            {
+                // If this test fails, verify that the command line specified by _commandLine 
+                // (above) correctly specifies a valid token; If this constraint is violated, most 
+                // all of the tests later in this file might fail with spurious errors.
+                var entitlement = SoftwareEntitlementBuilder.Build(_commandLine);
+                entitlement.Errors.Should()
+                    .BeEmpty(because: "the command line represented by _commandLine should result in a valid token");
             }
         }
 
