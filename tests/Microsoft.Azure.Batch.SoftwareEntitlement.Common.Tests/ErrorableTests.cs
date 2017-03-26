@@ -131,24 +131,51 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
         public class MatchMethodWithFunctions
         {
             [Fact]
-            public void WhenSuccess_CallsActionWithExpectedValue()
+            public void WhenSuccess_CallsFunctionWithExpectedValue()
             {
                 var errorable = Errorable.Success(43);
-                var result = errorable.Match(
-                    v => 43,
+                var result = errorable.Match<int>(
+                    v =>
+                    {
+                        v.Should().Be(43);
+                        return 128; // Needs a return value so this is a Func<int,int> 
+                    },
                     errors => throw new InvalidOperationException("Should not be called"));
-                 result.Should().Be(43);
             }
 
             [Fact]
-            public void WhenFailure_CallsActionWithExpectedErrors()
+            public void WhenSuccess_ReturnsExpectedValueFromFunction()
+            {
+                var errorable = Errorable.Success(43);
+                var result = errorable.Match<int>(
+                    v => 128,
+                    errors => throw new InvalidOperationException("Should not be called"));
+                result.Should().Be(128);
+            }
+
+            [Fact]
+            public void WhenFailure_CallsFunctionWithExpectedErrors()
             {
                 var error = "Error";
                 var errorable = Errorable.Failure<int>(error);
                 var result = errorable.Match<int>(
                     v => throw new InvalidOperationException("Should not be called"),
-                    errors => 42);
-                result.Should().Be(42);
+                    errors =>
+                    {
+                        errors.Should().BeEquivalentTo(error);
+                        return 192; // Needs a return value so this is a Func<int,int> 
+                    });
+            }
+
+            [Fact]
+            public void WhenFailure_ReturnsExpectedValueFromFunction()
+            {
+                var error = "Error";
+                var errorable = Errorable.Failure<int>(error);
+                var result = errorable.Match<int>(
+                    v => throw new InvalidOperationException("Should not be called"),
+                    errors => 192);
+                result.Should().Be(192);
             }
         }
     }
