@@ -75,11 +75,20 @@ int main(int argc, char** argv)
             }
         }
 
+        std::string token = parameters.find("--token")->second;
+        if (token == "-")
+        {
+            //
+            // Read the thumbprint from stdin.
+            //
+            std::getline(std::cin, token);
+        }
+
         auto entitlement = Microsoft::Azure::Batch::SoftwareEntitlement::GetEntitlement(
             parameters.find("--url")->second,
             parameters.find("--thumbprint")->second,
             parameters.find("--common-name")->second,
-            parameters.find("--token")->second,
+            token,
             parameters.find("--application")->second
         );
         std::cout << entitlement->Id() << std::endl;

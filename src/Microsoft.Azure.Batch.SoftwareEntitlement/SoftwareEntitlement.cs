@@ -51,6 +51,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns></returns>
         public SoftwareEntitlement WithVirtualMachineId(string virtualMachineId)
         {
+            if (string.IsNullOrEmpty(virtualMachineId))
+            {
+                throw new ArgumentNullException(nameof(virtualMachineId));
+            }
+
             return new SoftwareEntitlement(this, virtualMachineId: virtualMachineId);
         }
 
@@ -83,7 +88,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="notBefore">Optionally specify a new value for <see cref="NotBefore"/>.</param>
         /// <param name="notAfter">Optionally specify a new value for <see cref="NotAfter"/>.</param>
         /// <param name="virtualMachineId">Optionally specify a new value for <see cref="VirtualMachineId"/>.</param>
-        public SoftwareEntitlement(
+        private SoftwareEntitlement(
             SoftwareEntitlement original,
             DateTimeOffset? notBefore = null,
             DateTimeOffset? notAfter = null,
