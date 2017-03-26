@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using CommandLine;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
@@ -10,6 +12,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
     public static class Program
     {
+        private static ILogger _logger;
+
         static int Main(string[] args)
         {
             var parser = new Parser(ConfigureParser);
@@ -39,28 +43,24 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Generation mode - create a new token for testing
         /// </summary>
         /// <param name="commandLine">Options from the command line.</param>
-        /// <param name="logger">Logger to use for diagnostics.</param>
+        /// 
         /// <returns>Exit code to return from this process.</returns>
-        public static int Generate(GenerateCommandLine commandLine, ILogger logger)
+        public static int Generate(GenerateCommandLine commandLine)
         {
-            var entitlement = new SoftwareEntitlement(logger)
-                .WithVirtualMachineId(commandLine.VirtualMachineId)
-                .ForTimeRange(commandLine.NotBefore, commandLine.NotAfter);
+            var entitlement = SoftwareEntitlementBuilder.Build(commandLine);
+            return entitlement.Match(GenerateToken, LogErrors);
+        }
 
-            if (entitlement.HasErrors)
-            {
-                logger.LogError("Unable to generate template; please address the reported errors and try again.");
-                return -1;
-            } 
-
-            var generator = new TokenGenerator(logger);
+        private static int GenerateToken(SoftwareEntitlement entitlement)
+        {
+            var generator = new TokenGenerator(_logger);
             var token = generator.Generate(entitlement);
             if (token == null)
             {
                 return -1;
             }
 
-            logger.LogInformation("Token: {JWT}", token);
+            _logger.LogInformation("Token: {JWT}", token);
             return 0;
         }
 
@@ -68,23 +68,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Serve mode - run as a standalone webapp  
         /// </summary>
         /// <param name="commandLine">Options from the commandline.</param>
-        /// <param name="logger">Logger to use for diagnostics.</param>
         /// <returns>Exit code to return from this process.</returns>
-        public static int Serve(ServerCommandLine commandLine, ILogger logger)
+        public static int Serve(ServerCommandLine commandLine)
         {
             var options = ServerOptionBuilder.Build(commandLine);
+            return options.Match(RunServer, LogErrors);
+        }
 
-            if (!options.HasValue)
-            {
-                foreach (var e in options.Errors)
-                {
-                    logger.LogError(e);
-                }
-
-                return -1;
-            }
-
-            var server = new SoftwareEntitlementServer(options.Value, GlobalLogger.Logger);
+        private static int RunServer(ServerOptions options)
+        {
+            var server = new SoftwareEntitlementServer(options, GlobalLogger.Logger);
             server.Run();
             return 0;
         }
@@ -93,14 +86,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// List available certificates
         /// </summary>
         /// <param name="commandLine">Options from the command line.</param>
-        /// <param name="logger">Logger to use for diagnostics.</param>
         /// <returns>Exit code for process.</returns>
-        private static int ListCertificates(ListCertificatesCommandLine commandLine, ILogger logger)
+        private static int ListCertificates(ListCertificatesCommandLine commandLine)
         {
             var certificateStore = new CertificateStore();
             var allCertificates = certificateStore.FindAll();
             var withPrivateKey = allCertificates.Where(c => c.HasPrivateKey).ToList();
-            logger.LogInformation("Found {count} certificates with private keys", withPrivateKey.Count);
+            _logger.LogInformation("Found {count} certificates with private keys", withPrivateKey.Count);
 
             foreach (var cert in withPrivateKey)
             {
@@ -108,7 +100,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                         ? cert.SubjectName.Name
                         : cert.FriendlyName;
 
-                logger.LogInformation(
+                _logger.LogInformation(
                     "{Name} - {Thumbprint}",
                     name,
                     cert.Thumbprint);
@@ -121,29 +113,23 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Show details of one particular certificate
         /// </summary>
         /// <param name="commandLine">Options from the command line.</param>
-        /// <param name="logger">Logger to use for diagnostics.</param>
         /// <returns>Exit code for process.</returns>
-        private static int FindCertificate(FindCertificateCommandLine commandLine, ILogger logger)
+        private static int FindCertificate(FindCertificateCommandLine commandLine)
         {
             var thumbprint = new CertificateThumbprint(commandLine.Thumbprint);
             var certificateStore = new CertificateStore();
             var certificate = certificateStore.FindByThumbprint("cert", thumbprint);
-            if (!certificate.HasValue)
-            {
-                logger.LogError("Failed to find certificate {Thumbprint}", thumbprint);
-                foreach (var error in certificate.Errors)
-                {
-                    logger.LogError(error);
-                }
+            return certificate.Match(ShowCertificate, LogErrors);
+        }
 
-                return -1;
-            }
-
-            var certDetails = certificate.Value.ToString()
-                    .Split(new[] { Environment.NewLine, "\r\n", "\n" }, StringSplitOptions.None);
-            foreach (var line in certDetails)
+        private static int ShowCertificate(X509Certificate2 certificate)
+        {
+            //TODO: Change this to use StringExtensions.AsLines() when that gets refactored
+            var details = certificate.ToString()
+                .Split(new[] { Environment.NewLine, "\r\n", "\n" }, StringSplitOptions.None);
+            foreach (var line in details)
             {
-                logger.LogInformation(line);
+                _logger.LogInformation(line);
             }
 
             return 0;
@@ -155,18 +141,17 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="commandLine">Options selected by the user (if any).</param>
         private static void ConfigureLogging(CommandLineBase commandLine)
         {
-            ILogger logger;
             if (string.IsNullOrEmpty(commandLine.LogFile))
             {
-                logger = GlobalLogger.CreateLogger(commandLine.LogLevel);
+                _logger = GlobalLogger.CreateLogger(commandLine.LogLevel);
             }
             else
             {
                 var file = new FileInfo(commandLine.LogFile);
-                logger = GlobalLogger.CreateLogger(commandLine.LogLevel, file);
+                _logger = GlobalLogger.CreateLogger(commandLine.LogLevel, file);
             }
 
-            logger.LogInformation("Software Entitlement Service Command Line Utility");
+            _logger.LogInformation("Software Entitlement Service Command Line Utility");
         }
 
         /// <summary>
@@ -189,19 +174,29 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="command">Actual command to run.</param>
         /// <param name="commandLine">Parameters provided on the command line.</param>
         /// <returns>Exit code for this command.</returns>
-        private static int RunCommand<T>(Func<T, ILogger, int> command, T commandLine)
+        private static int RunCommand<T>(Func<T, int> command, T commandLine)
             where T : CommandLineBase
         {
-            var logger = GlobalLogger.Logger;
             try
             {
-                return command(commandLine, logger);
+                return command(commandLine);
             }
             catch (Exception ex)
             {
-                logger.LogError("Exception", ex, ex.Message);
+                _logger.LogError("Exception", ex, ex.Message);
                 return -1;
             }
         }
+
+        private static int LogErrors(IEnumerable<string> errors)
+        {
+            foreach (var e in errors)
+            {
+                _logger.LogError(e);
+            }
+
+            return -1;
+        }
+
     }
 }

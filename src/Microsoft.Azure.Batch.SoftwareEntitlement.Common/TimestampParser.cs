@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Globalization;
-using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
@@ -13,45 +12,37 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         // The expected format for timestamps
         public const string ExpectedFormat = "HH:mm d-MMM-yyyy";
 
-        // Reference to our common logger
-        private readonly ILogger _logger;
-
-        /// <summary>
-        /// Initialize a new instance of the <see cref="TimestampParser"/> class
-        /// </summary>
-        /// <param name="logger">Logger to use for any warnings.</param>
-        public TimestampParser(ILogger logger)
-        {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        }
-
         /// <summary>
         /// Try to parse a string into a DateTimeOffset
         /// </summary>
         /// <param name="value">The string value to parse.</param>
-        /// <returns>A tuple containing either true, and a date; or false and a default date.</returns>
-        public (bool successful, DateTimeOffset timestamp) TryParse(string value)
+        /// <param name="name">Name to use for the value if there is an error.</param>
+        /// <returns>A succesfully parsed <see cref="DateTimeOffset"/> or errors detailing what 
+        /// went wrong.</returns>
+        public Errorable<DateTimeOffset> TryParse(string value, string name)
         {
             if (DateTimeOffset.TryParseExact(
                 value, ExpectedFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var result))
             {
                 // Correctly parsed in the expected format
-                return (true, result);
+                return Errorable.Success(result);
             }
 
             if (DateTimeOffset.TryParse(
                 value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out result))
             {
                 // Correctly parsed with detected format
-                _logger.LogWarning(
-                    "Timestamp {TimeStamp} was not in the expected format {Format}; using {DateTime:F}.", 
-                    value, 
-                    ExpectedFormat, 
-                    result);
-                return (true, result);
+                return Errorable.Success(result);
             }
 
-            return (false, default(DateTimeOffset));
+            if (DateTimeOffset.TryParse(value, out result))
+            {
+                // Correctly parsed with detected format
+                return Errorable.Success(result);
+            }
+
+            return Errorable.Failure<DateTimeOffset>(
+                $"Unable to parse {name} timestamp '{value}' (expected format is '{ExpectedFormat}')");
         }
     }
 }

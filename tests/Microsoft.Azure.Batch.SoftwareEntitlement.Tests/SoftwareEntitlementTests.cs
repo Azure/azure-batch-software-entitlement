@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using FluentAssertions;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
@@ -11,16 +9,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
     public class SoftwareEntitlementTests
     {
         // An empty software entitlement to use for testing
-        private readonly SoftwareEntitlement _emptyEntitlement = new SoftwareEntitlement(NullLogger.Instance);
+        private readonly SoftwareEntitlement _emptyEntitlement = new SoftwareEntitlement();
 
         // A Times span representing NZDT
         private readonly TimeSpan _nzdt = new TimeSpan(+13, 0, 0);
 
         // An instant to use as the start for testing
-        private DateTimeOffset _start;
+        private readonly DateTimeOffset _start;
 
         // An instant to use as the finish for testing
-        private DateTimeOffset _finish;
+        private readonly DateTimeOffset _finish;
 
         public SoftwareEntitlementTests()
         {
@@ -42,29 +40,27 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var vmid = "Sample";
                 _emptyEntitlement.WithVirtualMachineId(vmid)
-                    .VirtualMachineId.Should()
-                    .Be(vmid);
+                    .VirtualMachineId.Should().Be(vmid);
             }
         }
 
-        public class ForTimeRangeMethod : SoftwareEntitlementTests
+        public class FromInstantMethod : SoftwareEntitlementTests
         {
             [Fact]
             public void GivenStart_ConfiguresProperty()
             {
-                _emptyEntitlement.ForTimeRange(_start, _finish)
-                    .NotBefore
-                    .Should()
-                    .Be(_start);
+                _emptyEntitlement.FromInstant(_start)
+                    .NotBefore.Should().Be(_start);
             }
+        }
 
+        public class UntilInstantMethod : SoftwareEntitlementTests
+        {
             [Fact]
             public void GivenFinish_ConfiguresProperty()
             {
-                _emptyEntitlement.ForTimeRange(_start, _finish)
-                    .NotAfter
-                    .Should()
-                    .Be(_finish);
+                _emptyEntitlement.UntilInstant(_finish)
+                    .NotAfter.Should().Be(_finish);
             }
         }
     }

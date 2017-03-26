@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     /// </summary>
     public class ServerOptionBuilder
     {
-        // Reference to the server options we wrap
+        // Reference to the server command line we wrap
         private readonly ServerCommandLine _commandLine;
 
         // Reference to a store in which we can search for certificates
@@ -47,7 +47,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>Either a usable (and completely valid) <see cref="ServerOptions"/> or a set 
         /// of errors.</returns>
         private Errorable<ServerOptions> Build()
-        { 
+        {
             var options = new ServerOptions();
             var errors = new List<string>();
 
