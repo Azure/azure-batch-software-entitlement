@@ -6,6 +6,8 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <OutputPath>..\..\out\Microsoft.Azure.Batch.SoftwareEntitlement.Tests\Debug\</OutputPath>
+    <DebugType>full</DebugType>
+    <DebugSymbols>True</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
@@ -17,6 +19,8 @@
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="9.0.1" />
     <PackageReference Include="NSubstitute" Version="2.0.2" />
+    <PackageReference Include="OpenCover" Version="4.6.519" />
+    <PackageReference Include="ReportGenerator" Version="2.5.6" />
     <PackageReference Include="Roslynator.Analyzers" Version="1.2.0" />
     <PackageReference Include="System.ValueTuple" Version="4.3.0" />
     <PackageReference Include="xunit" Version="2.2.0" />
