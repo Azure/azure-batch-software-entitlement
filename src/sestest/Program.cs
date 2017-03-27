@@ -47,14 +47,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>Exit code to return from this process.</returns>
         public static int Generate(GenerateCommandLine commandLine)
         {
-            var entitlement = SoftwareEntitlementBuilder.Build(commandLine);
+            var entitlement = NodeEntitlementsBuilder.Build(commandLine);
             return entitlement.Match(GenerateToken, LogErrors);
         }
 
-        private static int GenerateToken(SoftwareEntitlement entitlement)
+        private static int GenerateToken(NodeEntitlements entitlements)
         {
             var generator = new TokenGenerator(_logger);
-            var token = generator.Generate(entitlement);
+            var token = generator.Generate(entitlements);
             if (token == null)
             {
                 return -1;

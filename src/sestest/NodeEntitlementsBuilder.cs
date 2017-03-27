@@ -7,10 +7,10 @@ using System.Text;
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
     /// <summary>
-    /// A factory object that tries to create a <see cref="SoftwareEntitlement"/> instance when given 
+    /// A factory object that tries to create a <see cref="NodeEntitlements"/> instance when given 
     /// the <see cref="GenerateCommandLine"/> specified by the user.
     /// </summary>
-    public class SoftwareEntitlementBuilder
+    public class NodeEntitlementsBuilder
     {
         // Reference to the generate command line we wrap
         private readonly GenerateCommandLine _commandLine;
@@ -25,15 +25,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         private readonly DateTimeOffset _now = DateTimeOffset.Now;
 
         /// <summary>
-        /// Build an instance of <see cref="SoftwareEntitlement"/> from the information supplied on the 
+        /// Build an instance of <see cref="NodeEntitlements"/> from the information supplied on the 
         /// command line by the user
         /// </summary>
         /// <param name="commandLine">Command line parameters supplied by the user.</param>
-        /// <returns>Either a usable (and completely valid) <see cref="SoftwareEntitlement"/> or a set 
+        /// <returns>Either a usable (and completely valid) <see cref="NodeEntitlements"/> or a set 
         /// of errors.</returns>
-        public static Errorable<SoftwareEntitlement> Build(GenerateCommandLine commandLine)
+        public static Errorable<NodeEntitlements> Build(GenerateCommandLine commandLine)
         {
-            var builder = new SoftwareEntitlementBuilder(commandLine);
+            var builder = new NodeEntitlementsBuilder(commandLine);
             return builder.Build();
         }
 
@@ -41,25 +41,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Initializes a new instance of the <see cref="GenerateCommandLine"/> class
         /// </summary>
         /// <param name="commandLine">Options provided on the command line.</param>
-        private SoftwareEntitlementBuilder(GenerateCommandLine commandLine)
+        private NodeEntitlementsBuilder(GenerateCommandLine commandLine)
         {
             _commandLine = commandLine ?? throw new ArgumentNullException(nameof(commandLine));
         }
 
         /// <summary>
-        /// Build an instance of <see cref="SoftwareEntitlement"/> from the information supplied on the 
+        /// Build an instance of <see cref="NodeEntitlements"/> from the information supplied on the 
         /// command line by the user
         /// </summary>
-        /// <returns>Either a usable (and completely valid) <see cref="SoftwareEntitlement"/> or a set 
+        /// <returns>Either a usable (and completely valid) <see cref="NodeEntitlements"/> or a set 
         /// of errors.</returns>
-        private Errorable<SoftwareEntitlement> Build()
+        private Errorable<NodeEntitlements> Build()
         {
-            var entitlement = new SoftwareEntitlement();
+            var entitlement = new NodeEntitlements();
             var errors = new List<string>();
 
             // readConfiguration - function to read the configuration value
             // applyConfiguration - function to modify our configuration with the value read
-            void Configure<V>(Func<Errorable<V>> readConfiguration, Func<V, SoftwareEntitlement> applyConfiguration)
+            void Configure<V>(Func<Errorable<V>> readConfiguration, Func<V, NodeEntitlements> applyConfiguration)
             {
                 readConfiguration().Match(
                     whenSuccessful: value => entitlement = applyConfiguration(value),
@@ -72,7 +72,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             if (errors.Any())
             {
-                return Errorable.Failure<SoftwareEntitlement>(errors);
+                return Errorable.Failure<NodeEntitlements>(errors);
             }
 
             return Errorable.Success(entitlement);

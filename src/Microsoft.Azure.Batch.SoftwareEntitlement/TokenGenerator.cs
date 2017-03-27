@@ -28,15 +28,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Generate a token from a software entitlement
         /// </summary>
-        /// <param name="entitlement">Software entitlement to use when populating the token.</param>
+        /// <param name="entitlements">Software entitlement to use when populating the token.</param>
         /// <returns></returns>
-        public string Generate(SoftwareEntitlement entitlement)
+        public string Generate(NodeEntitlements entitlements)
         {
             _logger.LogWarning("Incomplete implementation of Generate");
 
             var claims = new List<Claim>
             {
-                new Claim("vid", entitlement.VirtualMachineId)
+                new Claim("vid", entitlements.VirtualMachineId)
             };
 
             var claimsIdentity = new ClaimsIdentity(claims);
@@ -48,8 +48,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 //Subject = claimsIdentity
                 //SigningCredentials = signingCredentials,
                 Subject = claimsIdentity,
-                NotBefore = entitlement.NotBefore.UtcDateTime,
-                Expires = entitlement.NotAfter.UtcDateTime,
+                NotBefore = entitlements.NotBefore.UtcDateTime,
+                Expires = entitlements.NotAfter.UtcDateTime,
                 IssuedAt = DateTimeOffset.Now.UtcDateTime,
                 Issuer = "https://batch.azure.com/software-entitlement"
             };

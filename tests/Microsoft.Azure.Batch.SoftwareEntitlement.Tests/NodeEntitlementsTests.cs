@@ -6,10 +6,10 @@ using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 {
-    public class SoftwareEntitlementTests
+    public class NodeEntitlementsTests
     {
         // An empty software entitlement to use for testing
-        private readonly SoftwareEntitlement _emptyEntitlement = new SoftwareEntitlement();
+        private readonly NodeEntitlements _emptyEntitlement = new NodeEntitlements();
 
         // A Times span representing NZDT
         private readonly TimeSpan _nzdt = new TimeSpan(+13, 0, 0);
@@ -20,13 +20,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         // An instant to use as the finish for testing
         private readonly DateTimeOffset _finish;
 
-        public SoftwareEntitlementTests()
+        public NodeEntitlementsTests()
         {
             _start = new DateTimeOffset(2016, 2, 29, 16, 14, 12, _nzdt);
             _finish = new DateTimeOffset(2016, 3, 31, 16, 14, 12, _nzdt);
         }
 
-        public class WithVirtualMachineIdMethod : SoftwareEntitlementTests
+        public class WithVirtualMachineIdMethod : NodeEntitlementsTests
         {
             [Fact]
             public void GivenNull_ThrowsArgumentNullException()
@@ -44,7 +44,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
         }
 
-        public class FromInstantMethod : SoftwareEntitlementTests
+        public class FromInstantMethod : NodeEntitlementsTests
         {
             [Fact]
             public void GivenStart_ConfiguresProperty()
@@ -54,7 +54,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
         }
 
-        public class UntilInstantMethod : SoftwareEntitlementTests
+        public class UntilInstantMethod : NodeEntitlementsTests
         {
             [Fact]
             public void GivenFinish_ConfiguresProperty()
