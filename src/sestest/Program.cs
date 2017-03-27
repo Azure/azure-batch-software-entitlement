@@ -131,10 +131,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         private static int ShowCertificate(X509Certificate2 certificate)
         {
-            //TODO: Change this to use StringExtensions.AsLines() when that gets refactored
-            var details = certificate.ToString()
-                .Split(new[] { Environment.NewLine, "\r\n", "\n" }, StringSplitOptions.None);
-            foreach (var line in details)
+            foreach (var line in certificate.ToString().AsLines())
             {
                 _logger.LogInformation(line);
             }
