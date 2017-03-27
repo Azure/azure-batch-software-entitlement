@@ -28,6 +28,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Microsoft.Azure.Batch.SoftwareEntitlement.Common\Microsoft.Azure.Batch.SoftwareEntitlement.Common.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.Azure.Batch.SoftwareEntitlement.Server\Microsoft.Azure.Batch.SoftwareEntitlement.Server.csproj" />
+    <ProjectReference Include="..\..\src\Microsoft.Azure.Batch.SoftwareEntitlement\Microsoft.Azure.Batch.SoftwareEntitlement.csproj" />
     <ProjectReference Include="..\..\src\sestest\sestest.csproj" />
   </ItemGroup>
 
