@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Text;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
 {
@@ -29,25 +31,37 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             _logger.LogDebug($"Application id: {entitlementRequest.ApplicationId}");
             _logger.LogDebug($"Request token: {entitlementRequest.Token}");
 
-            /*
-             * A simple hard coded rule for easy initial testing
-             */
-            if (!string.Equals(entitlementRequest.ApplicationId, "contosoapp", StringComparison.OrdinalIgnoreCase))
+            // Hard coded for now, will use certificates later on
+            var plainTextSecurityKey = "This is my shared, not so secret, secret!";
+            var signingKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(plainTextSecurityKey));
+
+            var verifier = new TokenVerifier(signingKey);
+            var result = verifier.Verify(entitlementRequest.Token);
+
+            if (!result.HasValue)
             {
+                foreach (var e in result.Errors)
+                {
+                    _logger.LogError(e);
+                }
+
                 var error = new SoftwareEntitlementFailureResponse
                 {
                     Code = "EntitlementDenied",
-                    Message = new ErrorMessage($"Entitlements for {entitlementRequest.ApplicationId} not currently supported.")
+                    Message = new ErrorMessage($"Entitlement for {entitlementRequest.ApplicationId} was denied.")
                 };
 
                 return StatusCode(403, error);
             }
 
+            var entitlement = result.Value;
+
             var entitlementId = entitlementRequest.ApplicationId + "-" + Guid.NewGuid().ToString("D");
             var response = new SoftwareEntitlementSuccessfulResponse
             {
                 EntitlementId = entitlementId,
-                VirtualMachineId = Guid.NewGuid().ToString("B")
+                VirtualMachineId = entitlement.VirtualMachineId
             };
 
             return Ok(response);

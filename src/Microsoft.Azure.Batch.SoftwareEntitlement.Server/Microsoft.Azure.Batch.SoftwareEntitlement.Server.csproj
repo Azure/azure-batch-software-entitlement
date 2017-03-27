@@ -40,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.Azure.Batch.SoftwareEntitlement.Common\Microsoft.Azure.Batch.SoftwareEntitlement.Common.csproj" />
+    <ProjectReference Include="..\Microsoft.Azure.Batch.SoftwareEntitlement\Microsoft.Azure.Batch.SoftwareEntitlement.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Serilog.Extensions.Logging">
