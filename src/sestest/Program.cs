@@ -4,9 +4,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using CommandLine;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -53,7 +55,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         private static int GenerateToken(NodeEntitlements entitlements)
         {
-            var generator = new TokenGenerator();
+            // Hard coded for now, will use certificates later on
+            var plainTextSecurityKey = "This is my shared, not so secret, secret!";
+            var signingKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(plainTextSecurityKey));
+
+            var generator = new TokenGenerator(signingKey);
             var token = generator.Generate(entitlements);
             if (token == null)
             {

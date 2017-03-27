@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
@@ -12,10 +13,17 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     public class TokenGenerator
     {
         /// <summary>
+        /// Gets the key that will be used to sign the token
+        /// </summary>
+        public SecurityKey SigningKey { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="TokenGenerator"/> class
         /// </summary>
-        public TokenGenerator()
+        /// <param name="signingKey">Key to use to sign the token.</param>
+        public TokenGenerator(SecurityKey signingKey)
         {
+            SigningKey = signingKey;
         }
 
         /// <summary>
@@ -30,14 +38,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 new Claim("vid", entitlements.VirtualMachineId)
             };
 
+            var signingCredentials = new SigningCredentials(SigningKey, SecurityAlgorithms.HmacSha256Signature);
             var claimsIdentity = new ClaimsIdentity(claims);
             var securityTokenDescriptor = new SecurityTokenDescriptor()
             {
                 //Audience = 
                 //AppliesToAddress = "http://my.website.com",
                 //TokenIssuerName = "http://my.tokenissuer.com",
-                //Subject = claimsIdentity
-                //SigningCredentials = signingCredentials,
+                SigningCredentials = signingCredentials,
                 Subject = claimsIdentity,
                 NotBefore = entitlements.NotBefore.UtcDateTime,
                 Expires = entitlements.NotAfter.UtcDateTime,
