@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
@@ -13,16 +12,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     /// </summary>
     public class TokenGenerator
     {
-        // Reference to our logger
-        private readonly ILogger _logger;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="TokenGenerator"/> class
         /// </summary>
-        /// <param name="logger">Logger to use for progress and status messages.</param>
-        public TokenGenerator(ILogger logger)
+        public TokenGenerator()
         {
-            _logger = logger;
         }
 
         /// <summary>
@@ -32,8 +26,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns></returns>
         public string Generate(NodeEntitlements entitlements)
         {
-            _logger.LogWarning("Incomplete implementation of Generate");
-
             var claims = new List<Claim>
             {
                 new Claim("vid", entitlements.VirtualMachineId)

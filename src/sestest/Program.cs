@@ -53,7 +53,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         private static int GenerateToken(NodeEntitlements entitlements)
         {
-            var generator = new TokenGenerator(_logger);
+            var generator = new TokenGenerator();
             var token = generator.Generate(entitlements);
             if (token == null)
             {
