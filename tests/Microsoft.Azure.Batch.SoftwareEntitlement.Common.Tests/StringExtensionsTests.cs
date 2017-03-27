@@ -7,7 +7,7 @@ using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
 {
-    public class StringExtensionsTests
+    public abstract class StringExtensionsTests
     {
         public class AsLinesMethod : StringExtensionsTests
         {

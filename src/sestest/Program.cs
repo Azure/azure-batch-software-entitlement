@@ -14,7 +14,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     {
         private static ILogger _logger;
 
-        static int Main(string[] args)
+        public static int Main(string[] args)
         {
             var parser = new Parser(ConfigureParser);
 
@@ -155,7 +155,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
-        /// Configure parsing of our commandline options
+        /// Configure parsing of our command-line options
         /// </summary>
         /// <param name="settings">Settings instance to update.</param>
         private static void ConfigureParser(ParserSettings settings)
@@ -197,6 +197,5 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             return -1;
         }
-
     }
 }

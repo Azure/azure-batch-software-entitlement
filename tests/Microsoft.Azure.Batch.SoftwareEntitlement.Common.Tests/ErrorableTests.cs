@@ -6,7 +6,7 @@ using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
 {
-    public class ErrorableTests
+    public abstract class ErrorableTests
     {
         public class SuccessMethod : ErrorableTests
         {
