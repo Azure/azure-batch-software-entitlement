@@ -4,13 +4,13 @@
 
 # Write a divider line
 function Write-Divider {
-    Write-Host ("-" * $host.UI.RawUI.WindowSize.Width) -ForegroundColor DarkGray
+    Write-Output ("-" * $host.UI.RawUI.WindowSize.Width)
 }
 
 # Write a header
 function Write-Header($header) {
-    Write-Host
+    Write-Output ""
     Write-Divider
-    Write-Host $header -ForegroundColor Green
+    Write-Output $header
     Write-Divider
 }

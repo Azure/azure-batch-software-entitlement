@@ -6,13 +6,13 @@
 
 Write-Divider
 $dotnetExe = resolve-path "C:\Program Files\dotnet\dotnet.exe"
-Write-Host "Dotnet executable:           $dotnetExe"
+Write-Output "Dotnet executable:           $dotnetExe"
 
 $openCoverExe = resolve-path $env:userprofile\.nuget\packages\OpenCover\*\tools\OpenCover.Console.exe 
-Write-Host "Opencover executable:        $openCoverExe"
+Write-Output "Opencover executable:        $openCoverExe"
 
 $reportGeneratorExe = resolve-path $env:userprofile\.nuget\packages\reportgenerator\*\tools\ReportGenerator.exe
-Write-Host "Report Generator executable: $reportGeneratorExe"
+Write-Output "Report Generator executable: $reportGeneratorExe"
 Write-Divider
 
 $commonTests = resolve-path .\tests\Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests\*.csproj
@@ -32,6 +32,6 @@ Write-Header "Generating Report"
 
 $reportIndex = resolve-path .\out\cover\index.htm
 Write-Line
-Write-Host "Test coverage report file:   $reportIndex"
+Write-Output "Test coverage report file:   $reportIndex"
 
 & $reportIndex
