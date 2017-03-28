@@ -3,7 +3,7 @@
 #
 . $PSScriptRoot\scripts\includes.ps1
 
-$dotnetExe = resolve-path "C:\Program Files\dotnet\dotnet.exe"
+$dotnetExe = (get-command dotnet).Source
 Write-Host "Dotnet executable: $dotnetExe"
 
 Write-Header "Restoring Nuget packages"

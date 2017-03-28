@@ -5,7 +5,7 @@
 . $PSScriptRoot\scripts\includes.ps1
 
 Write-Divider
-$dotnetExe = resolve-path "C:\Program Files\dotnet\dotnet.exe"
+$dotnetExe = (get-command dotnet).Source
 Write-Output "Dotnet executable:           $dotnetExe"
 
 $openCoverExe = resolve-path $env:userprofile\.nuget\packages\OpenCover\*\tools\OpenCover.Console.exe 
