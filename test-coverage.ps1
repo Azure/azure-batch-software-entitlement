@@ -4,7 +4,7 @@
 
 . $PSScriptRoot\scripts\includes.ps1
 
-Write-Line
+Write-Divider
 $dotnetExe = resolve-path "C:\Program Files\dotnet\dotnet.exe"
 Write-Host "Dotnet executable:           $dotnetExe"
 
@@ -13,7 +13,7 @@ Write-Host "Opencover executable:        $openCoverExe"
 
 $reportGeneratorExe = resolve-path $env:userprofile\.nuget\packages\reportgenerator\*\tools\ReportGenerator.exe
 Write-Host "Report Generator executable: $reportGeneratorExe"
-Write-Line
+Write-Divider
 
 $commonTests = resolve-path .\tests\Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests\*.csproj
 $sesTests = resolve-path .\tests\Microsoft.Azure.Batch.SoftwareEntitlement.Tests\*.csproj
