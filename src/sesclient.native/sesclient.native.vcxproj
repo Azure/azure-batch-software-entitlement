@@ -72,18 +72,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\GitHub\azure-batch-software-entitlement\src\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\GitHub\azure-batch-software-entitlement\packages\openssl.v140.windesktop.msvcstl.static.rt-dyn.x64.1.0.2.1\lib\native\v140\windesktop\msvcstl\static\rt-dyn\x64\debug;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64</LibraryPath>
+    <IncludePath>..\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\GitHub\azure-batch-software-entitlement\src\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native;$(IncludePath)</IncludePath>
+    <IncludePath>..\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>..\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
+    <IncludePath>..\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
