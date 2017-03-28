@@ -30,10 +30,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         public class Constructor : TokenVerifierTests
         {
             [Fact]
-            public void GivenNullKey_ShoudlThrowArgumentNullException()
+            public void GivenNullKey_ShouldThrowArgumentNullException()
             {
-                Assert.Throws<ArgumentNullException>(
-                    () => new TokenVerifier(null));
+                var exception =
+                    Assert.Throws<ArgumentNullException>(
+                        () => new TokenVerifier(null));
+                exception.ParamName.Should().Be("signingKey");
             }
 
             [Fact]

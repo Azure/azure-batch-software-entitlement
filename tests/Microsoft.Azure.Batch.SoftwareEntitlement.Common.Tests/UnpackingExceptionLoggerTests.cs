@@ -15,8 +15,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenNoInnerLogger_ThrowsArgumentNullException()
             {
-                Assert.Throws<ArgumentNullException>(
-                    () => new UnpackingExceptionLogger(null));
+                var exception =
+                    Assert.Throws<ArgumentNullException>(
+                        () => new UnpackingExceptionLogger(null));
+                exception.ParamName.Should().Be("innerLogger");
             }
         }
 

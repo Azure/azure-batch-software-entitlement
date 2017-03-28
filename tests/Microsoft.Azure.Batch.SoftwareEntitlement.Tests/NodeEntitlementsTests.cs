@@ -31,8 +31,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void GivenNull_ThrowsArgumentNullException()
             {
-                Assert.Throws<ArgumentNullException>(
-                    () => _emptyEntitlement.WithVirtualMachineId(null));
+                var exception =
+                    Assert.Throws<ArgumentNullException>(
+                        () => _emptyEntitlement.WithVirtualMachineId(null));
+                exception.ParamName.Should().Be("virtualMachineId");
             }
 
             [Fact]

@@ -20,8 +20,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void GivenNullCommandLine_ThrowsArgumentNullException()
             {
-                Assert.Throws<ArgumentNullException>(
-                    () => NodeEntitlementsBuilder.Build(null));
+                var exception =
+                    Assert.Throws<ArgumentNullException>(
+                        () => NodeEntitlementsBuilder.Build(null));
+                exception.ParamName.Should().Be("commandLine");
             }
 
             [Fact]

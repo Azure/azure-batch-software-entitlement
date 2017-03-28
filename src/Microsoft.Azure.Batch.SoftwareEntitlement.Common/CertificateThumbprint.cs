@@ -21,7 +21,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         {
             if (string.IsNullOrWhiteSpace(thumbprint))
             {
-                throw new ArgumentException(nameof(thumbprint));
+                throw new ArgumentException("No thumbprint specified", nameof(thumbprint));
             }
 
             _thumbprint = SanitizeThumbprint(thumbprint);
