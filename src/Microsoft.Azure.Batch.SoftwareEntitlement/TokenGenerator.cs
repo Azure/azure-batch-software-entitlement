@@ -23,7 +23,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="signingKey">Key to use to sign the token.</param>
         public TokenGenerator(SecurityKey signingKey)
         {
-            SigningKey = signingKey;
+            SigningKey = signingKey ?? throw new ArgumentNullException(nameof(signingKey));
         }
 
         /// <summary>
@@ -33,6 +33,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns></returns>
         public string Generate(NodeEntitlements entitlements)
         {
+            if (entitlements == null)
+            {
+                throw new ArgumentNullException(nameof(entitlements));
+            }
+
             var claims = new List<Claim>
             {
                 new Claim("vid", entitlements.VirtualMachineId)
