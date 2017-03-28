@@ -37,11 +37,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
                 Encoding.UTF8.GetBytes(plainTextSecurityKey));
 
             var verifier = new TokenVerifier(signingKey);
-            var result = verifier.Verify(entitlementRequest.Token);
-
-            if (!result.HasValue)
+            var verificationResult = verifier.Verify(entitlementRequest.Token);
+            if (!verificationResult.HasValue)
             {
-                foreach (var e in result.Errors)
+                foreach (var e in verificationResult.Errors)
                 {
                     _logger.LogError(e);
                 }
@@ -55,7 +54,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
                 return StatusCode(403, error);
             }
 
-            var entitlement = result.Value;
+            var entitlement = verificationResult.Value;
 
             var entitlementId = entitlementRequest.ApplicationId + "-" + Guid.NewGuid().ToString("D");
             var response = new SoftwareEntitlementSuccessfulResponse

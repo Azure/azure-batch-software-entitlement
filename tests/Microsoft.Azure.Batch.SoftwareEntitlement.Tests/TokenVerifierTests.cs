@@ -16,7 +16,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         private readonly string _virtualMachineId = "virtual-machine-identifier";
 
         // Key used to verify token signatures
-        private SymmetricSecurityKey _signingKey;
+        private readonly SymmetricSecurityKey _signingKey;
 
         public TokenVerifierTests()
         {

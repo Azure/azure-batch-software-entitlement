@@ -10,7 +10,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
     public class TokenEnforcementTests
     {
         // A valid software entitlement to use for testing
-        private readonly NodeEntitlements _validEntitlement;
+        private readonly NodeEntitlements _validEntitlements;
 
         // Generator used to create a token
         private readonly TokenGenerator _generator;
@@ -22,7 +22,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         private readonly DateTimeOffset _now = DateTimeOffset.Now;
 
         // Key used to sign the token
-        private SymmetricSecurityKey _signingKey;
+        private readonly SymmetricSecurityKey _signingKey;
 
         public TokenEnforcementTests()
         {
@@ -31,7 +31,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             _signingKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(plainTextSecurityKey));
 
-            _validEntitlement = new NodeEntitlements()
+            _validEntitlements = new NodeEntitlements()
                 .WithVirtualMachineId("virtual-machine-identifier")
                 .FromInstant(_now)
                 .UntilInstant(_now + TimeSpan.FromDays(7));
@@ -47,7 +47,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void GivenValidEntitlement_ReturnsSuccess()
             {
-                var token = _generator.Generate(_validEntitlement);
+                var token = _generator.Generate(_validEntitlements);
                 var result = _verifier.Verify(token);
                 result.HasValue.Should().BeTrue();
             }
@@ -62,23 +62,23 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void GivenValidEntitlement_HasExpectedNotBefore()
             {
-                var token = _generator.Generate(_validEntitlement);
+                var token = _generator.Generate(_validEntitlements);
                 var result = _verifier.Verify(token);
-                result.Value.NotBefore.Should().BeCloseTo(_validEntitlement.NotBefore, precision: 1000);
+                result.Value.NotBefore.Should().BeCloseTo(_validEntitlements.NotBefore, precision: 1000);
             }
 
             [Fact]
             public void GivenValidEntitlement_HasExpectedNotAfter()
             {
-                var token = _generator.Generate(_validEntitlement);
+                var token = _generator.Generate(_validEntitlements);
                 var result = _verifier.Verify(token);
-                result.Value.NotAfter.Should().BeCloseTo(_validEntitlement.NotAfter, precision: 1000);
+                result.Value.NotAfter.Should().BeCloseTo(_validEntitlements.NotAfter, precision: 1000);
             }
 
             [Fact]
             public void WhenEntitlementHasExpired_ReturnsExpectedError()
             {
-                var entitlement = _validEntitlement
+                var entitlement = _validEntitlements
                     .FromInstant(_now - _oneWeek)
                     .UntilInstant(_now - _oneDay);
                 var token = _generator.Generate(entitlement);
@@ -89,7 +89,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WhenEntitlementHasNotYetStarted_ReturnsExpectedError()
             {
-                var entitlement = _validEntitlement
+                var entitlement = _validEntitlements
                     .FromInstant(_now + _oneDay)
                     .UntilInstant(_now + _oneWeek);
                 var token = _generator.Generate(entitlement);
@@ -103,9 +103,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void ValueEmbeddedInToken_IsReturnedByVerifier()
             {
-                var token = _generator.Generate(_validEntitlement);
+                var token = _generator.Generate(_validEntitlements);
                 var result = _verifier.Verify(token);
-                result.Value.VirtualMachineId.Should().Be(_validEntitlement.VirtualMachineId);
+                result.Value.VirtualMachineId.Should().Be(_validEntitlements.VirtualMachineId);
             }
         }
     }
