@@ -2,9 +2,9 @@
 # Build native components for Windows
 #
 param (
-    # Valid choices are: "x86" or "x64"
+    [ValidateSet('x86', 'x64')]
     $platform = "x64", 
-    # Valid choices are: "Release" or "Debug"
+    [ValidateSet('Release', 'Debug')]
     $configuration = "Debug"
 )
 
