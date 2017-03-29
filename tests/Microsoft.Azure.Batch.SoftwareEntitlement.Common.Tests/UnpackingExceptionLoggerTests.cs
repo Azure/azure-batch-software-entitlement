@@ -1,24 +1,24 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using FluentAssertions;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests.Fakes;
 using Microsoft.Extensions.Logging;
-using NSubstitute;
 using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
 {
-    public class UnpackingExceptionLoggerTests
+    public abstract class UnpackingExceptionLoggerTests
     {
-        public class Constructor : UnpackingExceptionLoggerTests
+        public abstract class Constructor : UnpackingExceptionLoggerTests
         {
             [Fact]
             public void GivenNoInnerLogger_ThrowsArgumentNullException()
             {
-                Assert.Throws<ArgumentNullException>(
-                    () => new UnpackingExceptionLogger(null));
+                var exception =
+                    Assert.Throws<ArgumentNullException>(
+                        () => new UnpackingExceptionLogger(null));
+                exception.ParamName.Should().Be("innerLogger");
             }
         }
 

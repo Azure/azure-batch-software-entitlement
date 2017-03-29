@@ -2,8 +2,7 @@
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
-using Microsoft.Extensions.Logging;
+using System.Text;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
@@ -13,43 +12,48 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     /// </summary>
     public class TokenGenerator
     {
-        // Reference to our logger
-        private readonly ILogger _logger;
+        /// <summary>
+        /// Gets the key that will be used to sign the token
+        /// </summary>
+        public SecurityKey SigningKey { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TokenGenerator"/> class
         /// </summary>
-        /// <param name="logger">Logger to use for progress and status messages.</param>
-        public TokenGenerator(ILogger logger)
+        /// <param name="signingKey">Key to use to sign the token.</param>
+        public TokenGenerator(SecurityKey signingKey)
         {
-            _logger = logger;
+            SigningKey = signingKey ?? throw new ArgumentNullException(nameof(signingKey));
         }
 
         /// <summary>
         /// Generate a token from a software entitlement
         /// </summary>
-        /// <param name="entitlement">Software entitlement to use when populating the token.</param>
+        /// <param name="entitlements">Software entitlement to use when populating the token.</param>
         /// <returns></returns>
-        public string Generate(SoftwareEntitlement entitlement)
+        public string Generate(NodeEntitlements entitlements)
         {
-            _logger.LogWarning("Incomplete implementation of Generate");
+            if (entitlements == null)
+            {
+                throw new ArgumentNullException(nameof(entitlements));
+            }
 
             var claims = new List<Claim>
             {
-                new Claim("vid", entitlement.VirtualMachineId)
+                new Claim("vid", entitlements.VirtualMachineId)
             };
 
+            var signingCredentials = new SigningCredentials(SigningKey, SecurityAlgorithms.HmacSha256Signature);
             var claimsIdentity = new ClaimsIdentity(claims);
             var securityTokenDescriptor = new SecurityTokenDescriptor()
             {
                 //Audience = 
                 //AppliesToAddress = "http://my.website.com",
                 //TokenIssuerName = "http://my.tokenissuer.com",
-                //Subject = claimsIdentity
-                //SigningCredentials = signingCredentials,
+                SigningCredentials = signingCredentials,
                 Subject = claimsIdentity,
-                NotBefore = entitlement.NotBefore.UtcDateTime,
-                Expires = entitlement.NotAfter.UtcDateTime,
+                NotBefore = entitlements.NotBefore.UtcDateTime,
+                Expires = entitlements.NotAfter.UtcDateTime,
                 IssuedAt = DateTimeOffset.Now.UtcDateTime,
                 Issuer = "https://batch.azure.com/software-entitlement"
             };

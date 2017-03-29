@@ -4,9 +4,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Text;
 using CommandLine;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -14,7 +16,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     {
         private static ILogger _logger;
 
-        static int Main(string[] args)
+        public static int Main(string[] args)
         {
             var parser = new Parser(ConfigureParser);
 
@@ -47,14 +49,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>Exit code to return from this process.</returns>
         public static int Generate(GenerateCommandLine commandLine)
         {
-            var entitlement = SoftwareEntitlementBuilder.Build(commandLine);
+            var entitlement = NodeEntitlementsBuilder.Build(commandLine);
             return entitlement.Match(GenerateToken, LogErrors);
         }
 
-        private static int GenerateToken(SoftwareEntitlement entitlement)
+        private static int GenerateToken(NodeEntitlements entitlements)
         {
-            var generator = new TokenGenerator(_logger);
-            var token = generator.Generate(entitlement);
+            // Hard coded for now, will use certificates later on
+            var plainTextSecurityKey = "This is my shared, not so secret, secret!";
+            var signingKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(plainTextSecurityKey));
+
+            var generator = new TokenGenerator(signingKey);
+            var token = generator.Generate(entitlements);
             if (token == null)
             {
                 return -1;
@@ -124,10 +131,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         private static int ShowCertificate(X509Certificate2 certificate)
         {
-            //TODO: Change this to use StringExtensions.AsLines() when that gets refactored
-            var details = certificate.ToString()
-                .Split(new[] { Environment.NewLine, "\r\n", "\n" }, StringSplitOptions.None);
-            foreach (var line in details)
+            foreach (var line in certificate.ToString().AsLines())
             {
                 _logger.LogInformation(line);
             }
@@ -155,7 +159,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
-        /// Configure parsing of our commandline options
+        /// Configure parsing of our command-line options
         /// </summary>
         /// <param name="settings">Settings instance to update.</param>
         private static void ConfigureParser(ParserSettings settings)
@@ -197,6 +201,5 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             return -1;
         }
-
     }
 }

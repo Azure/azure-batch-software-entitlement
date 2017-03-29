@@ -7,7 +7,7 @@ using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 {
-    public class SoftwareEntitlementBuilderTests
+    public class NodeEntitlementsBuilderTests
     {
         // A valid set of command line arguments for testing
         private readonly GenerateCommandLine _commandLine = new GenerateCommandLine
@@ -15,13 +15,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             VirtualMachineId = "Sample"
         };
 
-        public class BuildMethod : SoftwareEntitlementBuilderTests
+        public class BuildMethod : NodeEntitlementsBuilderTests
         {
             [Fact]
             public void GivenNullCommandLine_ThrowsArgumentNullException()
             {
-                Assert.Throws<ArgumentNullException>(
-                    () => SoftwareEntitlementBuilder.Build(null));
+                var exception =
+                    Assert.Throws<ArgumentNullException>(
+                        () => NodeEntitlementsBuilder.Build(null));
+                exception.ParamName.Should().Be("commandLine");
             }
 
             [Fact]
@@ -30,19 +32,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 // If this test fails, verify that the command line specified by _commandLine 
                 // (above) correctly specifies a valid token; If this constraint is violated, most 
                 // all of the tests later in this file might fail with spurious errors.
-                var entitlement = SoftwareEntitlementBuilder.Build(_commandLine);
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
                 entitlement.Errors.Should()
                     .BeEmpty(because: "the command line represented by _commandLine should result in a valid token");
             }
         }
 
-        public class VirtualMachineIdProperty : SoftwareEntitlementBuilderTests
+        public class VirtualMachineIdProperty : NodeEntitlementsBuilderTests
         {
             [Fact]
             public void WhenMissing_BuildDoesNotReturnValue()
             {
                 _commandLine.VirtualMachineId = null;
-                var entitlement = SoftwareEntitlementBuilder.Build(_commandLine);
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
                 entitlement.HasValue.Should().BeFalse();
             }
 
@@ -50,7 +52,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void WhenMissing_BuildReturnsErrorForVirtualMachineId()
             {
                 _commandLine.VirtualMachineId = null;
-                var entitlement = SoftwareEntitlementBuilder.Build(_commandLine);
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
                 entitlement.Errors.Should().Contain(e => e.Contains("virtual machine identifier"));
             }
 
@@ -58,7 +60,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void WithId_BuildReturnsNoErrorForVirtualMachineId()
             {
                 _commandLine.VirtualMachineId = "virtualMachine";
-                var entitlement = SoftwareEntitlementBuilder.Build(_commandLine);
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
                 entitlement.Errors.Should().NotContain(e => e.Contains("virtual machine identifier"));
             }
 
@@ -67,12 +69,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var virtualMachineId = "virtualMachine";
                 _commandLine.VirtualMachineId = virtualMachineId;
-                var entitlement = SoftwareEntitlementBuilder.Build(_commandLine);
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
                 entitlement.Value.VirtualMachineId.Should().Be(virtualMachineId);
             }
         }
 
-        public class NotBeforeProperty : SoftwareEntitlementBuilderTests
+        public class NotBeforeProperty : NodeEntitlementsBuilderTests
         {
             private readonly string _validNotBefore =
                 DateTimeOffset.Now.ToString(TimestampParser.ExpectedFormat);
@@ -81,7 +83,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void WhenMissing_BuildReturnsValue()
             {
                 _commandLine.NotBefore = "";
-                var result = SoftwareEntitlementBuilder.Build(_commandLine);
+                var result = NodeEntitlementsBuilder.Build(_commandLine);
                 result.HasValue.Should().BeTrue();
             }
 
@@ -89,7 +91,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void WhenInvalid_BuildReturnsErrorForNotBefore()
             {
                 _commandLine.NotBefore = "Not a timestamp";
-                var entitlement = SoftwareEntitlementBuilder.Build(_commandLine);
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
                 entitlement.Errors.Should().Contain(e => e.Contains("NotBefore"));
             }
 
@@ -97,7 +99,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void WhenValid_BuildReturnsNoErrorForNotBefore()
             {
                 _commandLine.NotBefore = _validNotBefore;
-                var entitlement = SoftwareEntitlementBuilder.Build(_commandLine);
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
                 entitlement.Errors.Should().NotContain(e => e.Contains("NotBefore"));
             }
 
@@ -105,14 +107,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void WhenValid_PropertyIsSet()
             {
                 _commandLine.NotBefore = _validNotBefore;
-                var entitlement = SoftwareEntitlementBuilder.Build(_commandLine);
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
                 // Compare as formatted strings to avoid issues with extra seconds we don't care about
                 entitlement.Value.NotBefore.ToString(TimestampParser.ExpectedFormat)
                     .Should().Be(_validNotBefore);
             }
         }
 
-        public class NotAfterProperty : SoftwareEntitlementBuilderTests
+        public class NotAfterProperty : NodeEntitlementsBuilderTests
         {
             private readonly string _validNotAfter =
                 DateTimeOffset.Now.AddDays(7).ToString(TimestampParser.ExpectedFormat);
@@ -121,7 +123,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void WhenMissing_BuildReturnsValue()
             {
                 _commandLine.NotAfter = "";
-                var result = SoftwareEntitlementBuilder.Build(_commandLine);
+                var result = NodeEntitlementsBuilder.Build(_commandLine);
                 result.HasValue.Should().BeTrue();
             }
 
@@ -129,7 +131,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void WhenInvalid_BuildReturnsErrorForNotAfter()
             {
                 _commandLine.NotAfter = "Not a timestamp";
-                var entitlement = SoftwareEntitlementBuilder.Build(_commandLine);
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
                 entitlement.Errors.Should().Contain(e => e.Contains("NotAfter"));
             }
 
@@ -137,7 +139,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void WhenValid_BuildReturnsNoErrorForNotAfter()
             {
                 _commandLine.NotAfter = _validNotAfter;
-                var entitlement = SoftwareEntitlementBuilder.Build(_commandLine);
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
                 entitlement.Errors.Should().NotContain(e => e.Contains("NotAfter"));
             }
 
@@ -145,7 +147,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void WhenValid_PropertyIsSet()
             {
                 _commandLine.NotAfter = _validNotAfter;
-                var entitlement = SoftwareEntitlementBuilder.Build(_commandLine);
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
                 // Compare as formatted strings to avoid issues with extra seconds we don't care about
                 entitlement.Value.NotAfter.ToString(TimestampParser.ExpectedFormat)
                     .Should().Be(_validNotAfter);

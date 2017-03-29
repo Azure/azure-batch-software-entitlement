@@ -1,17 +1,19 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp1.0</TargetFramework>
+    <TargetFramework>netstandard1.5</TargetFramework>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>..\..\out\Microsoft.Azure.Batch.SoftwareEntitlement\Debug\netcoreapp1.0\</OutputPath>
+    <OutputPath>..\..\out\Microsoft.Azure.Batch.SoftwareEntitlement\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;NETSTANDARD1_5</DefineConstants>
     <DebugType>full</DebugType>
     <DebugSymbols>True</DebugSymbols>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>..\..\out\Microsoft.Azure.Batch.SoftwareEntitlement\Debug\netcoreapp1.0\</OutputPath>
+    <OutputPath>..\..\out\Microsoft.Azure.Batch.SoftwareEntitlement\Release\</OutputPath>
+    <DefineConstants>TRACE;RELEASE;NETSTANDARD1_5</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

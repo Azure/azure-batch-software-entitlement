@@ -1,15 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
-using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
     /// <summary>
-    /// Definition of a software entitlement
+    /// The software entitlements for a specific compute node
     /// </summary>
-    public class SoftwareEntitlement
+    public class NodeEntitlements
     {
         /// <summary>
         /// Gets the virtual machine identifier for the machine entitled to use the specified packages
@@ -32,9 +30,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public DateTimeOffset NotAfter { get; }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="SoftwareEntitlement"/> class
+        /// Initializes a new instance of the <see cref="NodeEntitlements"/> class
         /// </summary>
-        public SoftwareEntitlement()
+        public NodeEntitlements()
         {
             var now = DateTimeOffset.Now;
 
@@ -49,14 +47,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="virtualMachineId"></param>
         /// <returns></returns>
-        public SoftwareEntitlement WithVirtualMachineId(string virtualMachineId)
+        public NodeEntitlements WithVirtualMachineId(string virtualMachineId)
         {
             if (string.IsNullOrEmpty(virtualMachineId))
             {
                 throw new ArgumentNullException(nameof(virtualMachineId));
             }
 
-            return new SoftwareEntitlement(this, virtualMachineId: virtualMachineId);
+            return new NodeEntitlements(this, virtualMachineId: virtualMachineId);
         }
 
         /// <summary>
@@ -64,9 +62,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="notBefore">Earliest instant of availability.</param>
         /// <returns></returns>
-        public SoftwareEntitlement FromInstant(DateTimeOffset notBefore)
+        public NodeEntitlements FromInstant(DateTimeOffset notBefore)
         {
-            return new SoftwareEntitlement(this, notBefore: notBefore);
+            return new NodeEntitlements(this, notBefore: notBefore);
         }
 
         /// <summary>
@@ -74,13 +72,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="notAfter">Earliest instant of availability.</param>
         /// <returns></returns>
-        public SoftwareEntitlement UntilInstant(DateTimeOffset notAfter)
+        public NodeEntitlements UntilInstant(DateTimeOffset notAfter)
         {
-            return new SoftwareEntitlement(this, notAfter: notAfter);
+            return new NodeEntitlements(this, notAfter: notAfter);
         }
 
         /// <summary>
-        /// Cloning constructor to initialize a new instance of the <see cref="SoftwareEntitlement"/> 
+        /// Cloning constructor to initialize a new instance of the <see cref="NodeEntitlements"/> 
         /// class as a (near) copy of an existing one.
         /// </summary>
         /// <remarks>Specify any of the optional parameters to modify the clone from the original.</remarks>
@@ -88,8 +86,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="notBefore">Optionally specify a new value for <see cref="NotBefore"/>.</param>
         /// <param name="notAfter">Optionally specify a new value for <see cref="NotAfter"/>.</param>
         /// <param name="virtualMachineId">Optionally specify a new value for <see cref="VirtualMachineId"/>.</param>
-        private SoftwareEntitlement(
-            SoftwareEntitlement original,
+        private NodeEntitlements(
+            NodeEntitlements original,
             DateTimeOffset? notBefore = null,
             DateTimeOffset? notAfter = null,
             string virtualMachineId = null)

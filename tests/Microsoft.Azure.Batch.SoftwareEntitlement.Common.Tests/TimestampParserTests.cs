@@ -1,14 +1,10 @@
 ﻿using System;
-using System.Runtime.InteropServices.ComTypes;
 using FluentAssertions;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
-using NSubstitute;
 using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
 {
-    public class TimestampParserTests
+    public abstract class TimestampParserTests
     {
         public class ParseMethod : TimestampParserTests
         {

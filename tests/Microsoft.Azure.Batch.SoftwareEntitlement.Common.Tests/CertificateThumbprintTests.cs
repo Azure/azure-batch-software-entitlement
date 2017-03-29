@@ -41,8 +41,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenNull_ThrowsArgumentException()
             {
-                Assert.Throws<ArgumentException>(
-                    () => new CertificateThumbprint(null));
+                var exception =
+                    Assert.Throws<ArgumentException>(
+                        () => new CertificateThumbprint(null));
+                exception.ParamName.Should().Be("thumbprint");
             }
         }
 
