@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 using FluentAssertions;
 using Xunit;
 
@@ -63,6 +61,26 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _emptyEntitlement.UntilInstant(_finish)
                     .NotAfter.Should().Be(_finish);
+            }
+        }
+
+        public class AddApplicationMethod : NodeEntitlementsTests
+        {
+            [Fact]
+            public void GivenNull_ThrowsException()
+            {
+                var exception =
+                    Assert.Throws<ArgumentNullException>(
+                        () => _emptyEntitlement.AddApplication(null));
+                exception.ParamName.Should().Be("application");
+            }
+
+            [Fact]
+            public void GivenApplicationId_AddsToConfiguration()
+            {
+                var application = "contosoapp";
+                var entitlement = _emptyEntitlement.AddApplication(application);
+                entitlement.Applications.Should().Contain(application);
             }
         }
     }
