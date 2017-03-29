@@ -40,22 +40,22 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             var claims = new List<Claim>
             {
-                new Claim("vid", entitlements.VirtualMachineId)
+                new Claim(Claims.VirtualMachineId, entitlements.VirtualMachineId)
             };
 
             var signingCredentials = new SigningCredentials(SigningKey, SecurityAlgorithms.HmacSha256Signature);
             var claimsIdentity = new ClaimsIdentity(claims);
             var securityTokenDescriptor = new SecurityTokenDescriptor()
             {
-                //Audience = 
                 //AppliesToAddress = "http://my.website.com",
                 //TokenIssuerName = "http://my.tokenissuer.com",
-                SigningCredentials = signingCredentials,
                 Subject = claimsIdentity,
                 NotBefore = entitlements.NotBefore.UtcDateTime,
                 Expires = entitlements.NotAfter.UtcDateTime,
                 IssuedAt = DateTimeOffset.Now.UtcDateTime,
-                Issuer = "https://batch.azure.com/software-entitlement"
+                Issuer = Claims.Issuer,
+                Audience = Claims.Audience,
+                SigningCredentials = signingCredentials
             };
 
             var handler = new JwtSecurityTokenHandler();

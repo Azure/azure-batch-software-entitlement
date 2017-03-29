@@ -78,7 +78,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 var handler = new JwtSecurityTokenHandler();
                 var principal = handler.ValidateToken(tokenString, validationParameters, out var token);
 
-                var virtualMachineIdClaim = principal.FindFirst("vid");
+                var virtualMachineIdClaim = principal.FindFirst(Claims.VirtualMachineId);
 
                 var result = new NodeEntitlements()
                     .WithVirtualMachineId(virtualMachineIdClaim.Value)
