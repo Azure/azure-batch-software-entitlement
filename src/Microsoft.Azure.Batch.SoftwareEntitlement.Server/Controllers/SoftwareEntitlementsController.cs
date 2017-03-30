@@ -37,7 +37,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
                 Encoding.UTF8.GetBytes(plainTextSecurityKey));
 
             var verifier = new TokenVerifier(signingKey);
-            var verificationResult = verifier.Verify(entitlementRequest.Token);
+            var verificationResult = verifier.Verify(entitlementRequest.Token, entitlementRequest.ApplicationId);
             if (!verificationResult.HasValue)
             {
                 foreach (var e in verificationResult.Errors)

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using Microsoft.IdentityModel.Tokens;
 
@@ -24,6 +25,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         // Key used to sign the token
         private readonly SymmetricSecurityKey _signingKey;
 
+        // A application identifiers for testing
+        private readonly string _contosoFinanceApp = "contosofinance";
+        private readonly string _contosoITApp = "contosoit";
+        private readonly string _contosoHRApp = "contosohr";
+
         public TokenEnforcementTests()
         {
             // Hard coded key for testing; actual operation will use a cert
@@ -34,10 +40,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             _validEntitlements = new NodeEntitlements()
                 .WithVirtualMachineId("virtual-machine-identifier")
                 .FromInstant(_now)
-                .UntilInstant(_now + TimeSpan.FromDays(7));
+                .UntilInstant(_now + TimeSpan.FromDays(7))
+                .AddApplication(_contosoFinanceApp);
 
             _verifier = new TokenVerifier(_signingKey);
-            _generator = new TokenGenerator(_signingKey);
+            _generator = new TokenGenerator(_signingKey, NullLogger.Instance);
         }
 
         public class ConfigurationCheck : TokenEnforcementTests
@@ -48,7 +55,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void GivenValidEntitlement_ReturnsSuccess()
             {
                 var token = _generator.Generate(_validEntitlements);
-                var result = _verifier.Verify(token);
+                var result = _verifier.Verify(token, _contosoFinanceApp);
                 result.HasValue.Should().BeTrue();
             }
         }
@@ -63,7 +70,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void GivenValidEntitlement_HasExpectedNotBefore()
             {
                 var token = _generator.Generate(_validEntitlements);
-                var result = _verifier.Verify(token);
+                var result = _verifier.Verify(token, _contosoFinanceApp);
                 result.Value.NotBefore.Should().BeCloseTo(_validEntitlements.NotBefore, precision: 1000);
             }
 
@@ -71,7 +78,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void GivenValidEntitlement_HasExpectedNotAfter()
             {
                 var token = _generator.Generate(_validEntitlements);
-                var result = _verifier.Verify(token);
+                var result = _verifier.Verify(token, _contosoFinanceApp);
                 result.Value.NotAfter.Should().BeCloseTo(_validEntitlements.NotAfter, precision: 1000);
             }
 
@@ -82,7 +89,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                     .FromInstant(_now - _oneWeek)
                     .UntilInstant(_now - _oneDay);
                 var token = _generator.Generate(entitlement);
-                var result = _verifier.Verify(token);
+                var result = _verifier.Verify(token, _contosoFinanceApp);
                 result.Errors.Should().Contain(e => e.Contains("expired"));
             }
 
@@ -93,7 +100,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                     .FromInstant(_now + _oneDay)
                     .UntilInstant(_now + _oneWeek);
                 var token = _generator.Generate(entitlement);
-                var result = _verifier.Verify(token);
+                var result = _verifier.Verify(token, _contosoFinanceApp);
                 result.Errors.Should().Contain(e => e.Contains("will not be valid"));
             }
         }
@@ -104,8 +111,46 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void ValueEmbeddedInToken_IsReturnedByVerifier()
             {
                 var token = _generator.Generate(_validEntitlements);
-                var result = _verifier.Verify(token);
+                var result = _verifier.Verify(token, _contosoFinanceApp);
                 result.Value.VirtualMachineId.Should().Be(_validEntitlements.VirtualMachineId);
+            }
+        }
+
+        public class Appliations : TokenEnforcementTests
+        {
+            [Fact]
+            public void WhenEntitlementContainsOnlyTheRequestedApplication_ReturnsExpectedApplication()
+            {
+                var token = _generator.Generate(_validEntitlements);
+                var result = _verifier.Verify(token, _contosoFinanceApp);
+                result.Value.Applications.Should().Contain(_contosoFinanceApp);
+            }
+
+            [Fact]
+            public void WhenEntitlementContainsOnlyADifferentApplication_ReturnsError()
+            {
+                var token = _generator.Generate(_validEntitlements);
+                var result = _verifier.Verify(token, _contosoITApp);
+                result.Errors.Should().NotBeEmpty();
+            }
+
+            [Fact]
+            public void WhenEntitlementContainsMultipleApplicationsButNotTheRequestedApplication_ReturnsError()
+            {
+                var token = _generator.Generate(_validEntitlements);
+                var result = _verifier.Verify(token, _contosoITApp);
+                result.Errors.Should().NotBeEmpty();
+            }
+
+            [Fact]
+            public void WhenEntitlementContainsMultipleApplicationsIncludingTheRequestedApplication_ReturnsExpectedApplication()
+            {
+                var entitlement =
+                    _validEntitlements.AddApplication(_contosoHRApp)
+                        .AddApplication(_contosoITApp);
+                var token = _generator.Generate(entitlement);
+                var result = _verifier.Verify(token, _contosoHRApp);
+                result.Value.Applications.Should().Contain(_contosoHRApp);
             }
         }
     }

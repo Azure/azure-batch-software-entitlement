@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Text;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.IdentityModel.Tokens;
@@ -61,9 +62,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Verify the provided software entitlement token
         /// </summary>
         /// <param name="tokenString">A software entitlement token to verify.</param>
+        /// <param name="application">The specific application id of the application </param>
         /// <returns>Either a software entitlement describing the approved entitlement, or errors 
         /// explaining why it wasn't approved.</returns>
-        public Errorable<NodeEntitlements> Verify(string tokenString)
+        public Errorable<NodeEntitlements> Verify(string tokenString, string application)
         {
             var validationParameters = new TokenValidationParameters()
             {
@@ -78,12 +80,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 var handler = new JwtSecurityTokenHandler();
                 var principal = handler.ValidateToken(tokenString, validationParameters, out var token);
 
-                var virtualMachineIdClaim = principal.FindFirst(Claims.VirtualMachineId);
+                var applicationsClaim = principal.FindAll(Claims.Application);                
+                if (!applicationsClaim.Any(c => string.Equals(c.Value, application)))
+                {
+                    return Errorable.Failure<NodeEntitlements>(
+                        CreateApplicationNotEntitledMessage(application));
+                }
 
+                var virtualMachineIdClaim = principal.FindFirst(Claims.VirtualMachineId);
                 var result = new NodeEntitlements()
                     .WithVirtualMachineId(virtualMachineIdClaim.Value)
                     .FromInstant(new DateTimeOffset(token.ValidFrom))
-                    .UntilInstant(new DateTimeOffset(token.ValidTo));
+                    .UntilInstant(new DateTimeOffset(token.ValidTo))
+                    .AddApplication(application);
 
                 return Errorable.Success(result);
             }
@@ -121,5 +130,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var template = $"Token expired at {{0:{TimestampParser.ExpectedFormat}}}";
             return string.Format(template, expires);
         }
+
+        private string CreateApplicationNotEntitledMessage(string application)
+        {
+            return $"Token does not grant entitlement for {application}";
+        }
+
+
     }
 }
