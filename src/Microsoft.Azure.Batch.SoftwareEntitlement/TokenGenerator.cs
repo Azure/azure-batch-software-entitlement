@@ -45,6 +45,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 throw new ArgumentNullException(nameof(entitlements));
             }
 
+            _logger.LogDebug($"Virtual machine Id: {entitlements.VirtualMachineId}");
             var claims = new List<Claim>
             {
                 new Claim(Claims.VirtualMachineId, entitlements.VirtualMachineId)
@@ -52,9 +53,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             foreach (var app in entitlements.Applications)
             {
+                _logger.LogDebug($"Application Id: {app}");
                 var claim = new Claim(Claims.Application, app);
                 claims.Add(claim);
             }
+
+            _logger.LogDebug($"Not Before: {entitlements.NotBefore}");
+            _logger.LogDebug($"Not After: {entitlements.NotAfter}");
 
             var signingCredentials = new SigningCredentials(SigningKey, SecurityAlgorithms.HmacSha256Signature);
             var claimsIdentity = new ClaimsIdentity(claims);
