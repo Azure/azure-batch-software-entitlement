@@ -4,6 +4,8 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
+using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -12,6 +14,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     /// </summary>
     public class TokenGenerator
     {
+        // Reference to a logger for diagnostics
+        private readonly ILogger _logger;
+
         /// <summary>
         /// Gets the key that will be used to sign the token
         /// </summary>
@@ -21,8 +26,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Initializes a new instance of the <see cref="TokenGenerator"/> class
         /// </summary>
         /// <param name="signingKey">Key to use to sign the token.</param>
-        public TokenGenerator(SecurityKey signingKey)
+        /// <param name="logger">Logger to use for diagnostics</param>
+        public TokenGenerator(SecurityKey signingKey, ILogger logger)
         {
+            _logger = logger;
             SigningKey = signingKey ?? throw new ArgumentNullException(nameof(signingKey));
         }
 
@@ -43,12 +50,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 new Claim(Claims.VirtualMachineId, entitlements.VirtualMachineId)
             };
 
+            foreach (var app in entitlements.Applications)
+            {
+                var claim = new Claim(Claims.Application, app);
+                claims.Add(claim);
+            }
+
             var signingCredentials = new SigningCredentials(SigningKey, SecurityAlgorithms.HmacSha256Signature);
             var claimsIdentity = new ClaimsIdentity(claims);
-            var securityTokenDescriptor = new SecurityTokenDescriptor()
+            var securityTokenDescriptor = new SecurityTokenDescriptor
             {
-                //AppliesToAddress = "http://my.website.com",
-                //TokenIssuerName = "http://my.tokenissuer.com",
                 Subject = claimsIdentity,
                 NotBefore = entitlements.NotBefore.UtcDateTime,
                 Expires = entitlements.NotAfter.UtcDateTime,
@@ -60,6 +71,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             var handler = new JwtSecurityTokenHandler();
             var token = handler.CreateToken(securityTokenDescriptor);
+
+            _logger.LogDebug($"Raw token: {token}");
+
             return handler.WriteToken(token);
         }
     }

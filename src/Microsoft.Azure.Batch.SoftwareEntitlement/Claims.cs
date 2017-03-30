@@ -1,15 +1,15 @@
-﻿using System;
-using System.Collections.Concurrent;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Microsoft.Azure.Batch.SoftwareEntitlement
+﻿namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
     /// <summary>
     /// Values used to define the claims used in our software entitlement token
     /// </summary>
-    public class Claims
+    public static class Claims
     {
+        /// <summary>
+        /// The identifier to use for application entitlement claims
+        /// </summary>
+        public const string Application = "app";
+
         /// <summary>
         /// The audience for each software entitlement token (essentially we self sign)
         /// </summary>
@@ -24,7 +24,5 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Identifier use for the claim specifying the permitted virtual machine
         /// </summary>
         public const string VirtualMachineId = "vmid";
-
-
     }
 }

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using FluentAssertions;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IdentityModel.Tokens;
 using Xunit;
 
@@ -25,14 +26,23 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var exception =
                     Assert.Throws<ArgumentNullException>(
-                        () => new TokenGenerator(null));
+                        () => new TokenGenerator(null, NullLogger.Instance));
+                exception.ParamName.Should().Be("signingKey");
+            }
+
+            [Fact]
+            public void GivenNullLogger_ThrowsArgumentNullException()
+            {
+                var exception =
+                    Assert.Throws<ArgumentNullException>(
+                        () => new TokenGenerator(_signingKey, null));
                 exception.ParamName.Should().Be("signingKey");
             }
 
             [Fact]
             public void GivenKey_InitializesProperty()
             {
-                var generator = new TokenGenerator(_signingKey);
+                var generator = new TokenGenerator(_signingKey, NullLogger.Instance);
                 generator.SigningKey.Should().Be(_signingKey);
             }
         }
@@ -43,7 +53,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
             public Generate()
             {
-                _generator = new TokenGenerator(_signingKey);
+                _generator = new TokenGenerator(_signingKey, NullLogger.Instance);
             }
 
             [Fact]

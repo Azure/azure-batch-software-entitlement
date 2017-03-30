@@ -80,6 +80,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var application = "contosoapp";
                 var entitlement = _emptyEntitlement.AddApplication(application);
+                entitlement.Applications.Should().HaveCount(1);
+                entitlement.Applications.Should().Contain(application);
+            }
+
+            [Fact]
+            public void GivenDuplicateApplicationId_DoesNotAddToConfiguration()
+            {
+                var application = "contosoapp";
+                var entitlement =
+                    _emptyEntitlement.AddApplication(application)
+                        .AddApplication(application);
+                entitlement.Applications.Should().HaveCount(1);
                 entitlement.Applications.Should().Contain(application);
             }
         }

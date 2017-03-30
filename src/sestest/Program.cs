@@ -60,7 +60,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var signingKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(plainTextSecurityKey));
 
-            var generator = new TokenGenerator(signingKey);
+            var generator = new TokenGenerator(signingKey, GlobalLogger.Logger);
             var token = generator.Generate(entitlements);
             if (token == null)
             {
