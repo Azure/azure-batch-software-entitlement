@@ -36,7 +36,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var exception =
                     Assert.Throws<ArgumentNullException>(
                         () => new TokenGenerator(_signingKey, null));
-                exception.ParamName.Should().Be("signingKey");
+                exception.ParamName.Should().Be("logger");
             }
 
             [Fact]

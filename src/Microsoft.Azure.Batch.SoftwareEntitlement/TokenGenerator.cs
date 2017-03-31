@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 using Microsoft.IdentityModel.Tokens;
-using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
@@ -29,7 +27,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="logger">Logger to use for diagnostics</param>
         public TokenGenerator(SecurityKey signingKey, ILogger logger)
         {
-            _logger = logger;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             SigningKey = signingKey ?? throw new ArgumentNullException(nameof(signingKey));
         }
 
