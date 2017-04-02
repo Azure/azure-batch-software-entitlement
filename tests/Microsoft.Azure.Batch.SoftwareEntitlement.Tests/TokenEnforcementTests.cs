@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Net;
 using System.Text;
 using FluentAssertions;
@@ -45,16 +44,43 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             _signingKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(plainTextSecurityKey));
 
-            _validEntitlements = new NodeEntitlements()
-                .WithVirtualMachineId("virtual-machine-identifier")
-                .FromInstant(_now)
-                .UntilInstant(_now + TimeSpan.FromDays(7))
-                .WithIpAddress(_approvedAddress)
-                .WithIdentifier(_entitlementIdentifer)
-                .AddApplication(_contosoFinanceApp);
-
+            _validEntitlements = CreateEntitlements();
             _verifier = new TokenVerifier(_signingKey);
             _generator = new TokenGenerator(_signingKey, NullLogger.Instance);
+        }
+
+        private NodeEntitlements CreateEntitlements(EntitlementOptions options = EntitlementOptions.None)
+        {
+            var result = new NodeEntitlements()
+                .WithVirtualMachineId("virtual-machine-identifier")
+                .FromInstant(_now)
+                .UntilInstant(_now + TimeSpan.FromDays(7));
+
+            if (!options.HasFlag(EntitlementOptions.OmitIpAddress))
+            {
+                result = result.WithIpAddress(_approvedAddress);
+            }
+
+            if (!options.HasFlag(EntitlementOptions.OmitIdentifier))
+            {
+                result = result.WithIdentifier(_entitlementIdentifer);
+            }
+
+            if (!options.HasFlag(EntitlementOptions.OmitApplication))
+            {
+                result = result.AddApplication(_contosoFinanceApp);
+            }
+
+            return result;
+        }
+
+        [Flags]
+        private enum EntitlementOptions
+        {
+            None = 0,
+            OmitIpAddress = 1,
+            OmitIdentifier = 2,
+            OmitApplication = 4
         }
 
         public class ConfigurationCheck : TokenEnforcementTests
@@ -121,9 +147,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
         public class VirtualMachineIdentifier : TokenEnforcementTests
         {
-            //TODO: When no vmid in token
             [Fact]
-            public void ValueEmbeddedInToken_IsReturnedByVerifier()
+            public void WhenIdentifierIncluded_IsReturnedByVerifier()
             {
                 var token = _generator.Generate(_validEntitlements);
                 var result = _verifier.Verify(token, _contosoFinanceApp, _approvedAddress);
@@ -132,7 +157,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
         }
 
-        public class Appliations : TokenEnforcementTests
+        public class Applications : TokenEnforcementTests
         {
             [Fact]
             public void WhenEntitlementContainsOnlyTheRequestedApplication_ReturnsExpectedApplication()
@@ -149,7 +174,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var token = _generator.Generate(_validEntitlements);
                 var result = _verifier.Verify(token, _contosoITApp, _approvedAddress);
                 result.HasValue.Should().BeFalse();
-                result.Errors.Should().NotBeEmpty();
+                result.Errors.Should().Contain(e => e.Contains(_contosoITApp));
             }
 
             [Fact]
@@ -172,11 +197,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 result.HasValue.Should().BeTrue();
                 result.Value.Applications.Should().Contain(_contosoHRApp);
             }
+
+            [Fact]
+            public void WhenEntitlementContainsNoApplications_ReturnsError()
+            {
+                var entitlements = CreateEntitlements(EntitlementOptions.OmitApplication);
+                var token = _generator.Generate(entitlements);
+                var result = _verifier.Verify(token, _contosoITApp, _approvedAddress);
+                result.HasValue.Should().BeFalse();
+                result.Errors.Should().Contain(e => e.Contains(_contosoITApp));
+            }
         }
 
         public class IpAddressProperty : TokenEnforcementTests
         {
-            //TODO: When no ip address in token
             [Fact]
             public void WhenEntitlementContainsIp_ReturnsIpAddress()
             {
@@ -196,11 +230,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 result.HasValue.Should().BeFalse();
                 result.Errors.Should().NotBeEmpty();
             }
+
+            [Fact]
+            public void WhenEntitlementHasNoIp_ReturnsError()
+            {
+                var entitlements = CreateEntitlements(EntitlementOptions.OmitIpAddress);
+                var token = _generator.Generate(entitlements);
+                var result = _verifier.Verify(token, _contosoFinanceApp, _approvedAddress);
+                result.HasValue.Should().BeFalse();
+                result.Errors.Should().Contain(e => e.Contains(_approvedAddress.ToString()));
+            }
         }
 
         public class IdentifierProperty : TokenEnforcementTests
         {
-            //TODO: When no identifier in token
             [Fact]
             public void WhenValidEntitlementSpecifiesIdentifier_ReturnsIdentifier()
             {
@@ -208,6 +251,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var result = _verifier.Verify(token, _contosoFinanceApp, _approvedAddress);
                 result.HasValue.Should().BeTrue();
                 result.Value.Identifier.Should().Be(_entitlementIdentifer);
+            }
+
+            [Fact]
+            public void WhenIdentifierOmitted_ReturnsError()
+            {
+                var entitlements = CreateEntitlements(EntitlementOptions.OmitIdentifier);
+                var token = _generator.Generate(entitlements);
+                var result = _verifier.Verify(token, _contosoFinanceApp, _approvedAddress);
+                result.HasValue.Should().BeFalse();
+                result.Errors.Should().Contain(e => e.Contains("identifier"));
             }
         }
     }

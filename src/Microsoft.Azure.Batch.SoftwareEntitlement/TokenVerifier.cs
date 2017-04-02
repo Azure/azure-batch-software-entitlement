@@ -90,14 +90,26 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 }
 
                 var ipAddressClaim = principal.FindFirst(Claims.IpAddress);
-                if (!ipAddressClaim.Value.Equals(ipAddress.ToString()))
+                if (ipAddressClaim == null || !ipAddressClaim.Value.Equals(ipAddress.ToString()))
                 {
                     return Errorable.Failure<NodeEntitlements>(
                         CreateMachineNotEntitledMessage(ipAddress));
                 }
 
                 var entitlementIdClaim = principal.FindFirst(Claims.EntitlementId);
+                if (entitlementIdClaim == null)
+                {
+                    return Errorable.Failure<NodeEntitlements>(
+                        CreateIdentifierNotPresentMessage());
+                }
+
                 var virtualMachineIdClaim = principal.FindFirst(Claims.VirtualMachineId);
+                if (virtualMachineIdClaim == null)
+                {
+                    return Errorable.Failure<NodeEntitlements>(
+                        CreateVirtualMachineIdentifierNotPresentMessage());
+                }
+
                 var result = new NodeEntitlements()
                     .WithVirtualMachineId(virtualMachineIdClaim.Value)
                     .FromInstant(new DateTimeOffset(token.ValidFrom))
@@ -151,6 +163,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         private string CreateMachineNotEntitledMessage(IPAddress address)
         {
             return $"Token does not grant entitlement for {address}";
+        }
+
+        private string CreateIdentifierNotPresentMessage()
+        {
+            return "Entitlement identifier missing from entitlement token.";
+        }
+
+        private string CreateVirtualMachineIdentifierNotPresentMessage()
+        {
+            return "Virtual machine identifier missing from entitlement token.";
         }
     }
 }
