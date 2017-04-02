@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
+using System.Net;
 using System.Text;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.IdentityModel.Tokens;
@@ -63,9 +64,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="tokenString">A software entitlement token to verify.</param>
         /// <param name="application">The specific application id of the application </param>
+        /// <param name="ipAddress"></param>
         /// <returns>Either a software entitlement describing the approved entitlement, or errors 
         /// explaining why it wasn't approved.</returns>
-        public Errorable<NodeEntitlements> Verify(string tokenString, string application)
+        public Errorable<NodeEntitlements> Verify(string tokenString, string application, IPAddress ipAddress)
         {
             var validationParameters = new TokenValidationParameters()
             {
@@ -80,19 +82,29 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 var handler = new JwtSecurityTokenHandler();
                 var principal = handler.ValidateToken(tokenString, validationParameters, out var token);
 
-                var applicationsClaim = principal.FindAll(Claims.Application);                
+                var applicationsClaim = principal.FindAll(Claims.Application);
                 if (!applicationsClaim.Any(c => string.Equals(c.Value, application)))
                 {
                     return Errorable.Failure<NodeEntitlements>(
                         CreateApplicationNotEntitledMessage(application));
                 }
 
+                var ipAddressClaim = principal.FindFirst(Claims.IpAddress);
+                if (!ipAddressClaim.Value.Equals(ipAddress.ToString()))
+                {
+                    return Errorable.Failure<NodeEntitlements>(
+                        CreateMachineNotEntitledMessage(ipAddress));
+                }
+
+                var entitlementIdClaim = principal.FindFirst(Claims.EntitlementId);
                 var virtualMachineIdClaim = principal.FindFirst(Claims.VirtualMachineId);
                 var result = new NodeEntitlements()
                     .WithVirtualMachineId(virtualMachineIdClaim.Value)
                     .FromInstant(new DateTimeOffset(token.ValidFrom))
                     .UntilInstant(new DateTimeOffset(token.ValidTo))
-                    .AddApplication(application);
+                    .AddApplication(application)
+                    .WithIdentifier(entitlementIdClaim.Value)
+                    .WithIpAddress(ipAddress);
 
                 return Errorable.Success(result);
             }
@@ -136,6 +148,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return $"Token does not grant entitlement for {application}";
         }
 
-
+        private string CreateMachineNotEntitledMessage(IPAddress address)
+        {
+            return $"Token does not grant entitlement for {address}";
+        }
     }
 }

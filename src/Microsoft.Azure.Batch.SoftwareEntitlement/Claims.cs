@@ -16,6 +16,16 @@
         public const string Audience = "https://batch.azure.com/software-entitlement";
 
         /// <summary>
+        /// The identifier to use for the actual entitlement id
+        /// </summary>
+        public const string EntitlementId = "id";
+
+        /// <summary>
+        /// The identifier to use for the ip address of the entitled machine
+        /// </summary>
+        public const string IpAddress = "ip";
+
+        /// <summary>
         /// The issuer of each software entitlement token
         /// </summary>
         public const string Issuer = "https://batch.azure.com/software-entitlement";

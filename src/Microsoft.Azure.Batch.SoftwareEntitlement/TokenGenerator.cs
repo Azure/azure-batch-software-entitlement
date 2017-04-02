@@ -46,7 +46,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             _logger.LogDebug($"Virtual machine Id: {entitlements.VirtualMachineId}");
             var claims = new List<Claim>
             {
-                new Claim(Claims.VirtualMachineId, entitlements.VirtualMachineId)
+                new Claim(Claims.VirtualMachineId, entitlements.VirtualMachineId),
+                new Claim(Claims.EntitlementId, entitlements.Identifier),
+                new Claim(Claims.IpAddress, entitlements.IpAddress.ToString())
             };
 
             foreach (var app in entitlements.Applications)
