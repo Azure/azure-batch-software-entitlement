@@ -43,21 +43,23 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 throw new ArgumentNullException(nameof(entitlements));
             }
 
-            _logger.LogDebug($"Virtual machine Id: {entitlements.VirtualMachineId}");
             var claims = new List<Claim>();
 
             if (!string.IsNullOrEmpty(entitlements.VirtualMachineId))
             {
+                _logger.LogDebug($"Virtual machine Id: {entitlements.VirtualMachineId}");
                 claims.Add(new Claim(Claims.VirtualMachineId, entitlements.VirtualMachineId));
             }
 
             if (!string.IsNullOrEmpty(entitlements.Identifier))
             {
+                _logger.LogDebug($"Entitlement Id: {entitlements.Identifier}");
                 claims.Add(new Claim(Claims.EntitlementId, entitlements.Identifier));
             }
 
             if (entitlements.IpAddress != null)
             {
+                _logger.LogDebug($"Virtual machine Id: {entitlements.IpAddress}");
                 claims.Add(new Claim(Claims.IpAddress, entitlements.IpAddress.ToString()));
             }
 

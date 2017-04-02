@@ -1,9 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net;
-using System.Text;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.IdentityModel.Tokens;
 
@@ -85,29 +83,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 var applicationsClaim = principal.FindAll(Claims.Application);
                 if (!applicationsClaim.Any(c => string.Equals(c.Value, application)))
                 {
-                    return Errorable.Failure<NodeEntitlements>(
-                        CreateApplicationNotEntitledMessage(application));
+                    return ApplicationNotEntitledError(application);
                 }
 
                 var ipAddressClaim = principal.FindFirst(Claims.IpAddress);
                 if (ipAddressClaim == null || !ipAddressClaim.Value.Equals(ipAddress.ToString()))
                 {
-                    return Errorable.Failure<NodeEntitlements>(
-                        CreateMachineNotEntitledMessage(ipAddress));
+                    return MachineNotEntitledError(ipAddress);
                 }
 
                 var entitlementIdClaim = principal.FindFirst(Claims.EntitlementId);
                 if (entitlementIdClaim == null)
                 {
-                    return Errorable.Failure<NodeEntitlements>(
-                        CreateIdentifierNotPresentMessage());
+                    return IdentifierNotPresentError();
                 }
 
                 var virtualMachineIdClaim = principal.FindFirst(Claims.VirtualMachineId);
                 if (virtualMachineIdClaim == null)
                 {
-                    return Errorable.Failure<NodeEntitlements>(
-                        CreateVirtualMachineIdentifierNotPresentMessage());
+                    return VirtualMachineIdentifierNotPresentError();
                 }
 
                 var result = new NodeEntitlements()
@@ -122,13 +116,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
             catch (SecurityTokenNotYetValidException exception)
             {
-                return Errorable.Failure<NodeEntitlements>(
-                    CreateTokenNotYetValidMessage(exception.NotBefore));
+                return TokenNotYetValidError(exception.NotBefore);
             }
             catch (SecurityTokenExpiredException exception)
             {
-                return Errorable.Failure<NodeEntitlements>(
-                    CreateTokenExpiredMessage(exception.Expires));
+                return TokenExpiredError(exception.Expires);
             }
         }
 
@@ -143,36 +135,42 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             SigningKey = signingKey ?? original.SigningKey;
         }
 
-        private static string CreateTokenNotYetValidMessage(DateTime exceptionNotBefore)
+        private static Errorable<NodeEntitlements> TokenNotYetValidError(DateTime exceptionNotBefore)
         {
             var template = $"Token will not be valid until {{0:{TimestampParser.ExpectedFormat}}}";
-            return string.Format(template, exceptionNotBefore);
+            return Errorable.Failure<NodeEntitlements>(
+                string.Format(template, exceptionNotBefore));
         }
 
-        private static string CreateTokenExpiredMessage(DateTime expires)
+        private static Errorable<NodeEntitlements> TokenExpiredError(DateTime expires)
         {
             var template = $"Token expired at {{0:{TimestampParser.ExpectedFormat}}}";
-            return string.Format(template, expires);
+            return Errorable.Failure<NodeEntitlements>(
+                string.Format(template, expires));
         }
 
-        private string CreateApplicationNotEntitledMessage(string application)
+        private Errorable<NodeEntitlements> ApplicationNotEntitledError(string application)
         {
-            return $"Token does not grant entitlement for {application}";
+            return Errorable.Failure<NodeEntitlements>(
+                $"Token does not grant entitlement for {application}");
         }
 
-        private string CreateMachineNotEntitledMessage(IPAddress address)
+        private Errorable<NodeEntitlements> MachineNotEntitledError(IPAddress address)
         {
-            return $"Token does not grant entitlement for {address}";
+            return Errorable.Failure<NodeEntitlements>(
+                $"Token does not grant entitlement for {address}");
         }
 
-        private string CreateIdentifierNotPresentMessage()
+        private Errorable<NodeEntitlements> IdentifierNotPresentError()
         {
-            return "Entitlement identifier missing from entitlement token.";
+            return Errorable.Failure<NodeEntitlements>(
+                "Entitlement identifier missing from entitlement token.");
         }
 
-        private string CreateVirtualMachineIdentifierNotPresentMessage()
+        private Errorable<NodeEntitlements> VirtualMachineIdentifierNotPresentError()
         {
-            return "Virtual machine identifier missing from entitlement token.";
+            return Errorable.Failure<NodeEntitlements>(
+                "Virtual machine identifier missing from entitlement token.");
         }
     }
 }
