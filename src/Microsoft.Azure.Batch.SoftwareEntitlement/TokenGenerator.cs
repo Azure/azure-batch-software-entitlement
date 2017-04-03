@@ -43,6 +43,34 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 throw new ArgumentNullException(nameof(entitlements));
             }
 
+            var claims = CreateClaims(entitlements);
+
+            _logger.LogDebug($"Not Before: {entitlements.NotBefore}");
+            _logger.LogDebug($"Not After: {entitlements.NotAfter}");
+
+            var signingCredentials = new SigningCredentials(SigningKey, SecurityAlgorithms.HmacSha256Signature);
+            var claimsIdentity = new ClaimsIdentity(claims);
+            var securityTokenDescriptor = new SecurityTokenDescriptor
+            {
+                Subject = claimsIdentity,
+                NotBefore = entitlements.NotBefore.UtcDateTime,
+                Expires = entitlements.NotAfter.UtcDateTime,
+                IssuedAt = DateTimeOffset.Now.UtcDateTime,
+                Issuer = Claims.Issuer,
+                Audience = Claims.Audience,
+                SigningCredentials = signingCredentials
+            };
+
+            var handler = new JwtSecurityTokenHandler();
+            var token = handler.CreateToken(securityTokenDescriptor);
+
+            _logger.LogDebug($"Raw token: {token}");
+
+            return handler.WriteToken(token);
+        }
+
+        private List<Claim> CreateClaims(NodeEntitlements entitlements)
+        {
             var claims = new List<Claim>();
 
             if (!string.IsNullOrEmpty(entitlements.VirtualMachineId))
@@ -69,29 +97,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 var claim = new Claim(Claims.Application, app);
                 claims.Add(claim);
             }
-
-            _logger.LogDebug($"Not Before: {entitlements.NotBefore}");
-            _logger.LogDebug($"Not After: {entitlements.NotAfter}");
-
-            var signingCredentials = new SigningCredentials(SigningKey, SecurityAlgorithms.HmacSha256Signature);
-            var claimsIdentity = new ClaimsIdentity(claims);
-            var securityTokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = claimsIdentity,
-                NotBefore = entitlements.NotBefore.UtcDateTime,
-                Expires = entitlements.NotAfter.UtcDateTime,
-                IssuedAt = DateTimeOffset.Now.UtcDateTime,
-                Issuer = Claims.Issuer,
-                Audience = Claims.Audience,
-                SigningCredentials = signingCredentials
-            };
-
-            var handler = new JwtSecurityTokenHandler();
-            var token = handler.CreateToken(securityTokenDescriptor);
-
-            _logger.LogDebug($"Raw token: {token}");
-
-            return handler.WriteToken(token);
+            return claims;
         }
     }
 }
