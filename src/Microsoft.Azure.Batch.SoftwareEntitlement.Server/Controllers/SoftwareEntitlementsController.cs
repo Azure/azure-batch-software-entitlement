@@ -7,12 +7,17 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
 {
-    [Produces("application/json")]
     [Route("softwareEntitlements")]
     public class SoftwareEntitlementsController : Controller
     {
         // A reference to our logger
         private readonly ILogger _logger;
+
+        // Key used to check the signature of tokens
+        private readonly SecurityKey _signingKey;
+
+        // Verifier used to check tokens
+        private readonly TokenVerifier _verifier;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SoftwareEntitlementsController"/> class
@@ -21,9 +26,17 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         public SoftwareEntitlementsController(ILogger logger)
         {
             _logger = logger;
+
+            // Hard coded for now, will use certificates later on
+            var plainTextSecurityKey = "This is my shared, not so secret, secret!";
+            _signingKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(plainTextSecurityKey));
+
+            _verifier = new TokenVerifier(_signingKey);
         }
 
         [HttpPost]
+        [Produces("application/json")]
         public IActionResult RequestEntitlement(
             [FromBody]SoftwareEntitlementRequest entitlementRequest)
         {
@@ -31,13 +44,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             _logger.LogDebug($"Application id: {entitlementRequest.ApplicationId}");
             _logger.LogDebug($"Request token: {entitlementRequest.Token}");
 
-            // Hard coded for now, will use certificates later on
-            var plainTextSecurityKey = "This is my shared, not so secret, secret!";
-            var signingKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(plainTextSecurityKey));
+            var remoteAddress = HttpContext.Connection.RemoteIpAddress;
+            _logger.LogDebug($"Remote Address: {remoteAddress}");
 
-            var verifier = new TokenVerifier(signingKey);
-            var verificationResult = verifier.Verify(entitlementRequest.Token);
+            var verificationResult = _verifier.Verify(entitlementRequest.Token, entitlementRequest.ApplicationId, remoteAddress);
             if (!verificationResult.HasValue)
             {
                 foreach (var e in verificationResult.Errors)

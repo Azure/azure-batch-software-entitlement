@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Collections.Immutable;
+using System.Net;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -30,6 +30,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public DateTimeOffset NotAfter { get; }
 
         /// <summary>
+        /// The set of applications that are entitled to run
+        /// </summary>
+        public ImmutableHashSet<string> Applications { get; }
+
+        /// <summary>
+        /// The IP address of the machine authorized to use this entitlement
+        /// </summary>
+        public IPAddress IpAddress { get; }
+
+        /// <summary>
+        /// The unique identifier for this entitlement
+        /// </summary>
+        public string Identifier { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="NodeEntitlements"/> class
         /// </summary>
         public NodeEntitlements()
@@ -40,13 +55,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             Created = now;
             NotBefore = now;
             NotAfter = now + TimeSpan.FromDays(7);
+            Applications = ImmutableHashSet<string>.Empty;
         }
 
         /// <summary>
         /// Specify the virtual machine Id of the machine 
         /// </summary>
         /// <param name="virtualMachineId"></param>
-        /// <returns></returns>
+        /// <returns>A new entitlement.</returns>
         public NodeEntitlements WithVirtualMachineId(string virtualMachineId)
         {
             if (string.IsNullOrEmpty(virtualMachineId))
@@ -61,7 +77,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Specify an instant before which the token will not be valid
         /// </summary>
         /// <param name="notBefore">Earliest instant of availability.</param>
-        /// <returns></returns>
+        /// <returns>A new entitlement.</returns>
         public NodeEntitlements FromInstant(DateTimeOffset notBefore)
         {
             return new NodeEntitlements(this, notBefore: notBefore);
@@ -78,6 +94,51 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
+        /// Add an application into the list of entitled applications
+        /// </summary>
+        /// <param name="application">Identifier of the application to add.</param>
+        /// <returns>A new entitlement.</returns>
+        public NodeEntitlements AddApplication(string application)
+        {
+            if (application == null)
+            {
+                throw new ArgumentNullException(nameof(application));
+            }
+
+            return new NodeEntitlements(this, applications: Applications.Add(application));
+        }
+
+        /// <summary>
+        /// Specify the IPAddress of the entitled machine
+        /// </summary>
+        /// <param name="address">IP Address of the machine to run the entitled application(s).</param>
+        /// <returns>A new entitlement</returns>
+        public NodeEntitlements WithIpAddress(IPAddress address)
+        {
+            if (address == null)
+            {
+                throw new ArgumentNullException(nameof(address));
+            }
+
+            return new NodeEntitlements(this, address: address);
+        }
+
+        /// <summary>
+        /// Specify the entitlement Id to use
+        /// </summary>
+        /// <param name="identifier">The entitlement identifier to use for correlating activity.</param>
+        /// <returns>A new entitlement</returns>
+        public NodeEntitlements WithIdentifier(string identifier)
+        {
+            if (string.IsNullOrEmpty(identifier))
+            {
+                throw new ArgumentException("Expect to have an identifier", nameof(identifier));
+            }
+
+            return new NodeEntitlements(this, identifier: identifier);
+        }
+
+        /// <summary>
         /// Cloning constructor to initialize a new instance of the <see cref="NodeEntitlements"/> 
         /// class as a (near) copy of an existing one.
         /// </summary>
@@ -86,17 +147,26 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="notBefore">Optionally specify a new value for <see cref="NotBefore"/>.</param>
         /// <param name="notAfter">Optionally specify a new value for <see cref="NotAfter"/>.</param>
         /// <param name="virtualMachineId">Optionally specify a new value for <see cref="VirtualMachineId"/>.</param>
+        /// <param name="applications">The set of applications entitled to run.</param>
+        /// <param name="identifier">Identifier to use for this entitlement.</param>
+        /// <param name="address">Address of the entitled machine.</param>
         private NodeEntitlements(
             NodeEntitlements original,
             DateTimeOffset? notBefore = null,
             DateTimeOffset? notAfter = null,
-            string virtualMachineId = null)
+            string virtualMachineId = null,
+            ImmutableHashSet<string> applications = null,
+            string identifier = null,
+            IPAddress address = null)
         {
             Created = original.Created;
 
             NotBefore = notBefore ?? original.NotBefore;
             NotAfter = notAfter ?? original.NotAfter;
             VirtualMachineId = virtualMachineId ?? original.VirtualMachineId;
+            Applications = applications ?? original.Applications;
+            Identifier = identifier ?? original.Identifier;
+            IpAddress = address ?? original.IpAddress;
         }
     }
 }

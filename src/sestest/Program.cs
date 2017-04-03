@@ -60,7 +60,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var signingKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(plainTextSecurityKey));
 
-            var generator = new TokenGenerator(signingKey);
+            var generator = new TokenGenerator(signingKey, GlobalLogger.Logger);
             var token = generator.Generate(entitlements);
             if (token == null)
             {
@@ -72,9 +72,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
-        /// Serve mode - run as a standalone webapp  
+        /// Serve mode - run as a standalone web server
         /// </summary>
-        /// <param name="commandLine">Options from the commandline.</param>
+        /// <param name="commandLine">Options from the command-line.</param>
         /// <returns>Exit code to return from this process.</returns>
         public static int Serve(ServerCommandLine commandLine)
         {

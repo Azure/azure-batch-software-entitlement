@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Text;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IdentityModel.Tokens;
 using Xunit;
 
@@ -11,6 +13,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
     {
         // Key used to sign tokens
         private readonly SymmetricSecurityKey _signingKey;
+
+        // Logger that does nothing
+        private readonly ILogger _nullLogger = NullLogger.Instance;
+
         public TokenGeneratorTests()
         {
             var plainTextSecurityKey = "This is my shared, not so secret, secret!";
@@ -25,14 +31,23 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var exception =
                     Assert.Throws<ArgumentNullException>(
-                        () => new TokenGenerator(null));
+                        () => new TokenGenerator(null, _nullLogger));
                 exception.ParamName.Should().Be("signingKey");
+            }
+
+            [Fact]
+            public void GivenNullLogger_ThrowsArgumentNullException()
+            {
+                var exception =
+                    Assert.Throws<ArgumentNullException>(
+                        () => new TokenGenerator(_signingKey, null));
+                exception.ParamName.Should().Be("logger");
             }
 
             [Fact]
             public void GivenKey_InitializesProperty()
             {
-                var generator = new TokenGenerator(_signingKey);
+                var generator = new TokenGenerator(_signingKey, _nullLogger);
                 generator.SigningKey.Should().Be(_signingKey);
             }
         }
@@ -43,7 +58,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
             public Generate()
             {
-                _generator = new TokenGenerator(_signingKey);
+                _generator = new TokenGenerator(_signingKey, _nullLogger);
             }
 
             [Fact]
