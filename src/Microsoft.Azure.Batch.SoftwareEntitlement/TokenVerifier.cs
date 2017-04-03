@@ -175,7 +175,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 return false;
             }
 
-            var parsedAddress = IPAddress.Parse(ipAddressClaim.Value);
+            if (!IPAddress.TryParse(ipAddressClaim.Value, out var parsedAddress))
+            {
+                return false;
+            }
+
             if (!address.Equals(parsedAddress))
             {
                 return false;
