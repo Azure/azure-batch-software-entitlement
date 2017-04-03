@@ -2,6 +2,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net;
+using System.Security.Claims;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.IdentityModel.Tokens;
 
@@ -69,10 +70,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             var validationParameters = new TokenValidationParameters()
             {
-                ValidateAudience = false,
-                ValidateIssuer = false,
+                ValidateAudience = true,
+                ValidAudience = Claims.Audience,
+                ValidateIssuer = true,
+                ValidIssuer = Claims.Issuer,
                 ValidateLifetime = true,
-                IssuerSigningKey = SigningKey
+                IssuerSigningKey = SigningKey,
+                RequireExpirationTime = true,
+                RequireSignedTokens = true,
+                ClockSkew = TimeSpan.FromSeconds(60)
             };
 
             try
@@ -80,14 +86,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 var handler = new JwtSecurityTokenHandler();
                 var principal = handler.ValidateToken(tokenString, validationParameters, out var token);
 
-                var applicationsClaim = principal.FindAll(Claims.Application);
-                if (!applicationsClaim.Any(c => string.Equals(c.Value, application)))
+                if (!VerifyApplication(principal, application))
                 {
                     return ApplicationNotEntitledError(application);
                 }
 
-                var ipAddressClaim = principal.FindFirst(Claims.IpAddress);
-                if (ipAddressClaim == null || !ipAddressClaim.Value.Equals(ipAddress.ToString()))
+                if (!VerifyIpAddress(principal, ipAddress))
                 {
                     return MachineNotEntitledError(ipAddress);
                 }
@@ -122,6 +126,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             {
                 return TokenExpiredError(exception.Expires);
             }
+            catch (SecurityTokenException exception)
+            {
+                return InvalidTokenError(exception.Message);
+            }
         }
 
         private TokenVerifier(
@@ -133,6 +141,47 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             VirtualMachineId = virtualMachineId ?? original.VirtualMachineId;
             CurrentInstant = currentInstant ?? original.CurrentInstant;
             SigningKey = signingKey ?? original.SigningKey;
+        }
+
+        /// <summary>
+        /// Verify the application requesting the entitlement is one specified
+        /// </summary>
+        /// <param name="principal">Principal from the decoded token.</param>
+        /// <param name="application">Application that desires to use the entitlement.</param>
+        /// <returns>True if the entitlement specifies the passed application, false otherwise.</returns>
+        private bool VerifyApplication(ClaimsPrincipal principal, string application)
+        {
+            var applicationsClaim = principal.FindAll(Claims.Application);
+            if (!applicationsClaim.Any(c => string.Equals(c.Value, application, StringComparison.OrdinalIgnoreCase)))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Verify that the IP address requesting the entitlement is the one the entitlement was 
+        /// issued to
+        /// </summary>
+        /// <param name="principal">Principal from the decoded token.</param>
+        /// <param name="address">IpAddress requesting verification of the token.</param>
+        /// <returns>True if the entitlement was issued to the specified IP address, false otherwise.</returns>
+        private bool VerifyIpAddress(ClaimsPrincipal principal, IPAddress address)
+        {
+            var ipAddressClaim = principal.FindFirst(Claims.IpAddress);
+            if (ipAddressClaim == null)
+            {
+                return false;
+            }
+
+            var parsedAddress = IPAddress.Parse(ipAddressClaim.Value);
+            if (!address.Equals(parsedAddress))
+            {
+                return false;
+            }
+
+            return true;
         }
 
         private static Errorable<NodeEntitlements> TokenNotYetValidError(DateTime exceptionNotBefore)
@@ -147,6 +196,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var template = $"Token expired at {{0:{TimestampParser.ExpectedFormat}}}";
             return Errorable.Failure<NodeEntitlements>(
                 string.Format(template, expires));
+        }
+
+        private static Errorable<NodeEntitlements> InvalidTokenError(string reason)
+        {
+            return Errorable.Failure<NodeEntitlements>(
+                $"Invalid token ({reason})");
         }
 
         private Errorable<NodeEntitlements> ApplicationNotEntitledError(string application)
