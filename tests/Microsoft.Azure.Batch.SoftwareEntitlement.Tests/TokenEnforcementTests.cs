@@ -31,8 +31,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         private readonly string _contosoHRApp = "contosohr";
 
         // IP addresses to use 
-        private readonly IPAddress _otherAddress = IPAddress.Parse("40.84.199.233");
-        private readonly IPAddress _approvedAddress = IPAddress.Parse("191.239.213.197");
+        private readonly IPAddress _otherAddress = IPAddress.Parse("203.0.113.42");
+        private readonly IPAddress _approvedAddress = IPAddress.Parse("203.0.113.45");
 
         // Name for the approved entitlement
         private readonly string _entitlementIdentifer = "mystery-identifier";

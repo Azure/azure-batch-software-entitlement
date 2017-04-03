@@ -100,7 +100,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         public class WithIpAddressMethod : NodeEntitlementsTests
         {
             // An IPAddress to use for testing
-            private readonly IPAddress _address = IPAddress.Parse("191.239.213.197");
+            private readonly IPAddress _address = IPAddress.Parse("203.0.113.42");
 
             [Fact]
             public void GivenNull_ThrowsException()
