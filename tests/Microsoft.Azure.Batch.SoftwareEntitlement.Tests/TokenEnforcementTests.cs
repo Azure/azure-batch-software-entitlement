@@ -2,6 +2,7 @@
 using System.Net;
 using System.Text;
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 using Microsoft.IdentityModel.Tokens;
@@ -37,6 +38,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         // Name for the approved entitlement
         private readonly string _entitlementIdentifer = "mystery-identifier";
 
+        // Logger that does nothing
+        private readonly ILogger _nullLogger = NullLogger.Instance;
+
         public TokenEnforcementTests()
         {
             // Hard coded key for testing; actual operation will use a cert
@@ -46,7 +50,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
             _validEntitlements = CreateEntitlements();
             _verifier = new TokenVerifier(_signingKey);
-            _generator = new TokenGenerator(_signingKey, NullLogger.Instance);
+            _generator = new TokenGenerator(_signingKey, _nullLogger);
         }
 
         private NodeEntitlements CreateEntitlements(EntitlementOptions options = EntitlementOptions.None)
