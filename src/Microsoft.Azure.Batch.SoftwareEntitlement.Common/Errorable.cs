@@ -86,7 +86,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="whenSuccessful">Function to call when we have a value.</param>
         /// <param name="whenFailure">Function to call when we have errors.</param>
         /// <returns></returns>
-        public abstract R Match<R>(Func<T,R> whenSuccessful, Func<IEnumerable<string>, R> whenFailure);
+        public abstract R Match<R>(Func<T, R> whenSuccessful, Func<IEnumerable<string>, R> whenFailure);
 
         /// <summary>
         /// Private constructor to prevent other subclasses

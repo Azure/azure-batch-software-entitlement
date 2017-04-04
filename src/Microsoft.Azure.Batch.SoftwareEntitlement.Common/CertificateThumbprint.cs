@@ -70,6 +70,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             return Equals((CertificateThumbprint)obj);
         }
 
+        public static bool operator ==(CertificateThumbprint left, CertificateThumbprint right)
+            => left.Equals(right);
+
+        public static bool operator !=(CertificateThumbprint left, CertificateThumbprint right)
+            => !left.Equals(right);
+
         /// <summary>
         /// Returns the hash code for this instance.
         /// </summary>

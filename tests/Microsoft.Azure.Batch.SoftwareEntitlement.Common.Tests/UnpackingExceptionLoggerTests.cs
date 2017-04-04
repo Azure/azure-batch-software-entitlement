@@ -10,7 +10,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
 {
     public abstract class UnpackingExceptionLoggerTests
     {
-        public abstract class Constructor : UnpackingExceptionLoggerTests
+        public class Constructor : UnpackingExceptionLoggerTests
         {
             [Fact]
             public void GivenNoInnerLogger_ThrowsArgumentNullException()

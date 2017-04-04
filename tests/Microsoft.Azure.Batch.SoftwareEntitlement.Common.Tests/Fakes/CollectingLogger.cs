@@ -36,7 +36,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests.Fakes
 
         public bool IsEnabled(LogLevel logLevel)
         {
-            throw new NotImplementedException();
+            return true;
         }
 
         /// <summary>
