@@ -31,6 +31,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Initializes a new instance of the <see cref="TokenVerifier"/> class
         /// </summary>
+        /// <param name="signingKey">Key to use when verifying the signature of the token.</param>
         public TokenVerifier(SecurityKey signingKey)
         {
             SigningKey = signingKey ?? throw new ArgumentNullException(nameof(signingKey));

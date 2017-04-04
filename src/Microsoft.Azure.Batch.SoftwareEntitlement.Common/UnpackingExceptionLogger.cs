@@ -24,6 +24,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <summary>
         /// Writes a log entry
         /// </summary>
+        /// <typeparam name="TState">Type of the log entry to be written.</typeparam>
         /// <param name="logLevel">Entry will be written on this level.</param>
         /// <param name="eventId">Id of the event.</param>
         /// <param name="state">The entry to be written. Can be also an object.</param>
@@ -51,6 +52,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <summary>
         /// Begins a logical operation scope.
         /// </summary>
+        /// <typeparam name="TState">Type of the scope identifier.</typeparam>
         /// <param name="state">The identifier for the scope.</param>
         /// <returns>An IDisposable that ends the logical operation scope on dispose.</returns>
         public IDisposable BeginScope<TState>(TState state)

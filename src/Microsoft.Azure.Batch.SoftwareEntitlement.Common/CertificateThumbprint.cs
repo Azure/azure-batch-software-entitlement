@@ -14,6 +14,28 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         private readonly string _thumbprint;
 
         /// <summary>
+        /// Compare two thumb-prints for equality
+        /// </summary>
+        /// <param name="left">First certificate thumbprint to test.</param>
+        /// <param name="right">Second certificate thumbprint to test.</param>
+        /// <returns>True if they represent the same thumbprint, false otherwise.</returns>
+        public static bool operator ==(CertificateThumbprint left, CertificateThumbprint right)
+        {
+            return left.Equals(right);
+        }
+
+        /// <summary>
+        /// Compare two thumb-prints for inequality
+        /// </summary>
+        /// <param name="left">First certificate thumbprint to test.</param>
+        /// <param name="right">Second certificate thumbprint to test.</param>
+        /// <returns>True if they represent different thumbprints, false otherwise.</returns>
+        public static bool operator !=(CertificateThumbprint left, CertificateThumbprint right)
+        {
+            return !left.Equals(right);
+        }
+
+        /// <summary>
         /// Initializes a new instance of the CertificateThumbprint class
         /// </summary>
         /// <param name="thumbprint">Thumbprint to wrap</param>
@@ -45,7 +67,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 return false;
             }
 
-            return Equals((CertificateThumbprint) obj);
+            return Equals((CertificateThumbprint)obj);
         }
 
         /// <summary>

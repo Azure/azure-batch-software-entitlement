@@ -15,10 +15,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             private readonly DateTimeOffset _timestamp;
 
             // Invalid timestamp for testing
-            private string _invalidTimestamp = "not a timestamp";
+            private readonly string _invalidTimestamp = "not a timestamp";
 
             // Name of the value we're parsing
-            private string _name = "Demo";
+            private readonly string _name = "Demo";
 
             public ParseMethod()
             {
