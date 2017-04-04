@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests.Fakes
@@ -37,6 +38,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests.Fakes
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Begins a logical operation scope.
+        /// </summary>
+        /// <typeparam name="TState">Type of the information describing the scope.</typeparam>
+        /// <param name="state">Information describing the scope.</param>
+        /// <returns>An IDisposable that ends the logical operation scope on dispose.</returns>
+        [SuppressMessage("General", "RCS1079:Throwing of new NotImplementedException.", Justification = "BeginScope() is not used by our tests")]
         public IDisposable BeginScope<TState>(TState state)
         {
             throw new NotImplementedException();

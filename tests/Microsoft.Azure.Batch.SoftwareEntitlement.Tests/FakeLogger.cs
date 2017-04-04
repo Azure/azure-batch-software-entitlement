@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
 
@@ -45,6 +46,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
         public bool IsEnabled(LogLevel logLevel) => true;
 
+        [SuppressMessage(
+            "General", 
+            "RCS1079:Throwing of new NotImplementedException.", 
+            Justification = "BeginScope() is not used by our tests")]
         public IDisposable BeginScope<TState>(TState state)
             => throw new NotImplementedException("Fake!");
     }
