@@ -99,3 +99,11 @@ Microsoft::Azure::Batch::SoftwareEntitlement::Cleanup();
 
 ## Limitations
 The root certificate in the server's SSL certificate chain cannot be referenced by the ```ssl_cert_thumbprint```.
+
+## Troubleshooting
+
+### Cannot open include file: 'curl/curl.h'
+
+Cannot open include file: 'curl/curl.h' may indicate that you don't have the appropriate version of [**libcurl**](https://curl.haxx.se/libcurl/c/libcurl.html) installed for your target platform. (This can happen if you install the x64 version of `libcurl` but then ask for an `x86` build.)
+
+**Solution**: Install `libcurl` for your target platform.
