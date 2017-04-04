@@ -104,17 +104,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             _logger.LogTable(
                 LogLevel.Information,
-                withPrivateKey.Select(cert => DescribeCertificate(cert)));
+                withPrivateKey.Select(DescribeCertificate).ToList());
 
             return 0;
         }
 
-        private static string DescribeCertificate(X509Certificate2 cert)
+        private static IList<string> DescribeCertificate(X509Certificate2 cert)
         {
-            var subjectName = cert.SubjectName.Name;
-            var friendlyName = cert.FriendlyName;
-            var thumbprint = cert.Thumbprint;
-            return $"{subjectName}\t{friendlyName}\t{thumbprint}";
+            return new List<string>
+            {
+                cert.SubjectName.Name,
+                cert.FriendlyName,
+                cert.Thumbprint
+            };
         }
 
         /// <summary>

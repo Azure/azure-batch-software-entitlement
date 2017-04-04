@@ -18,32 +18,32 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenOneColumn_LogsExpectedRows()
             {
-                var lines = new List<string>
+                var lines = new List<IList<string>>
                 {
-                    "alpha",
-                    "beta",
-                    "gamma",
-                    "delta"
+                    new List<string> {"alpha"},
+                    new List<string> {"beta"},
+                    new List<string> {"gamma"},
+                    new List<string> {"delta"}
                 };
                 _logger.LogTable(LogLevel.Information, lines);
                 _logger.Events.Should().HaveCount(4);
                 _logger.Events.Should().OnlyContain(e => e.Level == LogLevel.Information);
-                _logger.Events.Select(e => e.Message).Should().ContainInOrder(lines);
+                _logger.Events.Select(e => e.Message).Should().ContainInOrder("alpha", "beta", "gamma", "delta");
             }
 
             [Fact]
             public void GivenTwoColumns_LogsExpectedRows()
             {
-                var lines = new List<string>
+                var lines = new List<IList<string>>
                 {
-                    "alpha\tMercury",
-                    "beta\tVenus",
-                    "gamma\tEarth",
-                    "delta\tMars",
-                    "epsilon\tJupiter",
-                    "sigma\tSaturn",
-                    "phi\tUranus",
-                    "omicron\tNeptune"
+                    new List<string> {"alpha", "Mercury"},
+                    new List<string> {"beta", "Venus"},
+                    new List<string> {"gamma", "Earth"},
+                    new List<string> {"delta", "Mars"},
+                    new List<string> {"epsilon", "Jupiter"},
+                    new List<string> {"sigma", "Saturn"},
+                    new List<string> {"phi", "Uranus"},
+                    new List<string> {"omicron", "Neptune"}
                 };
                 _logger.LogTable(LogLevel.Information, lines);
                 _logger.Events.Should().HaveCount(8);
@@ -62,16 +62,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenStringsWithBlankLeadingColumns_LogsExpectedRows()
             {
-                var lines = new List<string>
+                var lines = new List<IList<string>>
                 {
-                    "alpha\tMercury",
-                    "beta\tVenus",
-                    "\tEarth",
-                    "delta\tMars",
-                    "\tJupiter",
-                    "sigma\tSaturn",
-                    "phi\tUranus",
-                    "omicron\tNeptune"
+                    new List<string> {"alpha", "Mercury"},
+                    new List<string> {"beta", "Venus"},
+                    new List<string> {"", "Earth"},
+                    new List<string> {"delta", "Mars"},
+                    new List<string> {"", "Jupiter"},
+                    new List<string> {"sigma", "Saturn"},
+                    new List<string> {"phi", "Uranus"},
+                    new List<string> {"omicron", "Neptune"}
                 };
                 _logger.LogTable(LogLevel.Information, lines);
                 _logger.Events.Should().HaveCount(8);

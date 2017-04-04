@@ -12,28 +12,36 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
     public static class LoggerExtensions
     {
         /// <summary>
-        /// Log a series of lines as a table, splitting at tabs
+        /// Log a list of lines as a nicely formatted table
         /// </summary>
+        /// <remarks>
+        /// Each line is passed as a list of strings, one value per column.
+        /// </remarks>
         /// <param name="logger">Actual logger to use.</param>
         /// <param name="level">Log level for the output.</param>
         /// <param name="lines">Lines to format.</param>
-        public static void LogTable(this ILogger logger, LogLevel level, IEnumerable<string> lines)
+        public static void LogTable(this ILogger logger, LogLevel level, IEnumerable<IEnumerable<string>> lines)
         {
-            var rows = lines.Select(l => l.Split('\t')).ToList();
-            var columns = rows.Max(r => r.Length);
-            var widths = Enumerable.Range(0, columns)
-                .Select(index => rows.Max(r => index < r.Length ? r[index].Length : 0) + 3)
-                .ToList();
+            const int columnGap = 3;
+            var rows = lines.Select(r => r.ToList()).ToList();
 
-            string FormatRow(string[] cells, Exception exception)
+            int ColumnWidth(int columnIndex)
             {
-                return string.Join("", cells.Select((cell, index) => cell.PadRight(widths[index])))
+                return rows.Max(r => columnIndex < r.Count ? r[columnIndex].Length : 0) + columnGap;
+            }
+
+            var columnCount = rows.Max(r => r.Count);
+            var widths = Enumerable.Range(0, columnCount).Select(ColumnWidth).ToList();
+
+            string FormatRow(IEnumerable<string> cells)
+            {
+                return string.Concat(cells.Select((cell, index) => cell.PadRight(widths[index])))
                     .TrimEnd();
             }
 
             foreach (var row in rows)
             {
-                logger.Log(level, (EventId)0, row, null, FormatRow);
+                logger.Log(level, (EventId)0, row, null, (cells, ex) => FormatRow(cells));
             }
         }
     }
