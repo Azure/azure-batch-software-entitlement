@@ -21,6 +21,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests.Fakes
         /// <summary>
         /// Writes a log entry.
         /// </summary>
+        /// <typeparam name="TState">Type of the information to be logged.</typeparam>
         /// <param name="logLevel">Entry will be written on this level.</param>
         /// <param name="eventId">Id of the event.</param>
         /// <param name="state">The entry to be written. Can be also an object.</param>

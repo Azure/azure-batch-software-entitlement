@@ -23,7 +23,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <summary>
         /// Create a value that represents a failed operation
         /// </summary>
-        /// <typeparam name="T">The type of value that might have been contained.</typeparam>
         /// <param name="errors">Sequence of error messages.</param>
         public static Errorable<T> Failure<T>(IEnumerable<string> errors)
         {
@@ -36,7 +35,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <summary>
         /// Create a value that represents a failed operation
         /// </summary>
-        /// <typeparam name="T">The type of value that might have been contained.</typeparam>
         /// <param name="error">Sequence of error messages.</param>
         public static Errorable<T> Failure<T>(string error)
         {
@@ -48,7 +46,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
     /// <summary>
     /// A container that either contains a value or a set of errors
     /// </summary>
-    /// <typeparam name="T">The type of value contained in the successful case.</typeparam>
     public abstract class Errorable<T>
     {
         /// <summary>
