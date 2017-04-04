@@ -14,7 +14,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         private readonly string _thumbprint;
 
         /// <summary>
-        /// Compare two thumb-prints for equality
+        /// Compare two thumbprints for equality
         /// </summary>
         /// <param name="left">First certificate thumbprint to test.</param>
         /// <param name="right">Second certificate thumbprint to test.</param>
