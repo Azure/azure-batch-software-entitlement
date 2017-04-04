@@ -4,7 +4,7 @@
 
 # Write a divider line
 function Write-Divider {
-    Write-Output ("-" * $host.UI.RawUI.WindowSize.Width)
+    Write-Output ("-" * ($host.UI.RawUI.WindowSize.Width-2) )
 }
 
 # Write a header
