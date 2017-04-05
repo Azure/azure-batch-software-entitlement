@@ -20,9 +20,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="right">Second certificate thumbprint to test.</param>
         /// <returns>True if they represent the same thumbprint, false otherwise.</returns>
         public static bool operator ==(CertificateThumbprint left, CertificateThumbprint right)
-        {
-            return left.Equals(right);
-        }
+            => left.Equals(right);
 
         /// <summary>
         /// Compare two thumb-prints for inequality
@@ -31,9 +29,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="right">Second certificate thumbprint to test.</param>
         /// <returns>True if they represent different thumbprints, false otherwise.</returns>
         public static bool operator !=(CertificateThumbprint left, CertificateThumbprint right)
-        {
-            return !left.Equals(right);
-        }
+            => !left.Equals(right);
 
         /// <summary>
         /// Initializes a new instance of the CertificateThumbprint class
@@ -69,12 +65,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 
             return Equals((CertificateThumbprint)obj);
         }
-
-        public static bool operator ==(CertificateThumbprint left, CertificateThumbprint right)
-            => left.Equals(right);
-
-        public static bool operator !=(CertificateThumbprint left, CertificateThumbprint right)
-            => !left.Equals(right);
 
         /// <summary>
         /// Returns the hash code for this instance.
