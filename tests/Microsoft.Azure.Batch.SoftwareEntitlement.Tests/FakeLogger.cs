@@ -18,37 +18,45 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         /// <summary>
         /// Gets a value indicating whether this logger has logged any errors
         /// </summary>
-        public bool HasErrors => _counts[LogLevel.Error] > 0;
+        public bool HasErrors => ReadCount(LogLevel.Error) > 0;
 
         /// <summary>
         /// Gets a value indicating whether this logger has logged any warnings
         /// </summary>
-        public bool HasWarnings => _counts[LogLevel.Warning] > 0;
+        public bool HasWarnings => ReadCount(LogLevel.Warning)> 0;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FakeLogger"/> class
         /// </summary>
         public FakeLogger()
         {
-            _counts[LogLevel.None] = 0;
-            _counts[LogLevel.Critical] = 0;
-            _counts[LogLevel.Error] = 0;
-            _counts[LogLevel.Warning] = 0;
-            _counts[LogLevel.Information] = 0;
-            _counts[LogLevel.Debug] = 0;
-            _counts[LogLevel.Trace] = 0;
         }
 
         public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
         {
-            _counts[logLevel]++;
+            WriteCount(logLevel, ReadCount(logLevel) + 1);
         }
 
         public bool IsEnabled(LogLevel logLevel) => true;
 
+        private int ReadCount(LogLevel logLevel)
+        {
+            if (_counts.TryGetValue(logLevel, out var count))
+            {
+                return count;
+            }
+
+            return 0;
+        }
+
+        private void WriteCount(LogLevel logLevel, int count)
+        {
+            _counts[logLevel] = count;
+        }
+
         [SuppressMessage(
-            "General", 
-            "RCS1079:Throwing of new NotImplementedException.", 
+            "General",
+            "RCS1079:Throwing of new NotImplementedException.",
             Justification = "BeginScope() is not used by our tests")]
         public IDisposable BeginScope<TState>(TState state)
             => throw new NotImplementedException("Fake!");
