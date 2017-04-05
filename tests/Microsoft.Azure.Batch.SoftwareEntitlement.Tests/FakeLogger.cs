@@ -23,7 +23,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         /// <summary>
         /// Gets a value indicating whether this logger has logged any warnings
         /// </summary>
-        public bool HasWarnings => ReadCount(LogLevel.Warning)> 0;
+        public bool HasWarnings => ReadCount(LogLevel.Warning) > 0;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FakeLogger"/> class
@@ -54,11 +54,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             _counts[logLevel] = count;
         }
 
-        [SuppressMessage(
-            "General",
-            "RCS1079:Throwing of new NotImplementedException.",
-            Justification = "BeginScope() is not used by our tests")]
         public IDisposable BeginScope<TState>(TState state)
-            => throw new NotImplementedException("Fake!");
+            => throw new NotSupportedException("Fake!");
     }
 }

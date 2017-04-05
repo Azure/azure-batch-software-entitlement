@@ -50,10 +50,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests.Fakes
         /// <typeparam name="TState">The type of the scope identifier.</typeparam>
         /// <param name="state">The identifier for the scope.</param>
         /// <returns>An IDisposable that ends the logical operation scope on dispose.</returns>
-        [SuppressMessage("General", "RCS1079:Throwing of new NotImplementedException.", Justification = "BeginScope() is not used by our tests")]
         public IDisposable BeginScope<TState>(TState state)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("Not required for unit tests");
         }
     }
 
