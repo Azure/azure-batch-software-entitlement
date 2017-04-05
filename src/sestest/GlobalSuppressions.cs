@@ -7,11 +7,6 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage(
-    "General",
-    "RCS1118:Mark local variable as const.",
-    Justification = "Prefer not to use const in local scope")]
-
-[assembly: SuppressMessage(
     "Performance",
     "RCS1080:Use 'Count/Length' property instead of 'Any' method.",
-    Justification = "Prefer the clarity of Any()")]
+    Justification = "This project prefers the clarity of Any()")]

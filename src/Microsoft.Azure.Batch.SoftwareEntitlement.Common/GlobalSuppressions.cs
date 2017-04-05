@@ -9,4 +9,4 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage(
     "Naming",
     "CA1715:Type parameter names should be prefixed with 'T'",
-    Justification = "Prefer using single character capital letters for type parameters")]
+    Justification = "This project prefers using single character capital letters for type parameters")]

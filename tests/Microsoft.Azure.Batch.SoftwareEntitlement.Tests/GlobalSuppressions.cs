@@ -9,9 +9,4 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage(
     "Performance",
     "RCS1096:Use bitwise operation instead of calling 'HasFlag'.",
-    Justification = "Prefer the clarity of HasFlag()")]
-
-[assembly: SuppressMessage(
-    "General",
-    "RCS1118:Mark local variable as const.",
-    Justification = "Prefer not to use const in local scope")]
+    Justification = "This project prefers the clarity of HasFlag()")]

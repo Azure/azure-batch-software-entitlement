@@ -6,11 +6,6 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-[assembly: SuppressMessage(
-    "General",
-    "RCS1118:Mark local variable as const.",
-    Justification = "Prefer not to use const in local scope")]
-
 [assembly:SuppressMessage(
     "Design",
     "CA1052",
