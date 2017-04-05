@@ -34,6 +34,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests.Fakes
             _events.Add(logEvent);
         }
 
+        /// <summary>
+        /// Checks if the given <paramref name="logLevel" /> is enabled.
+        /// </summary>
+        /// <param name="logLevel">level to be checked.</param>
+        /// <returns><c>true</c> if enabled.</returns>
         public bool IsEnabled(LogLevel logLevel)
         {
             return true;
@@ -42,8 +47,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests.Fakes
         /// <summary>
         /// Begins a logical operation scope.
         /// </summary>
-        /// <typeparam name="TState">Type of the information describing the scope.</typeparam>
-        /// <param name="state">Information describing the scope.</param>
+        /// <typeparam name="TState">The type of the scope identifier.</typeparam>
+        /// <param name="state">The identifier for the scope.</param>
         /// <returns>An IDisposable that ends the logical operation scope on dispose.</returns>
         [SuppressMessage("General", "RCS1079:Throwing of new NotImplementedException.", Justification = "BeginScope() is not used by our tests")]
         public IDisposable BeginScope<TState>(TState state)
