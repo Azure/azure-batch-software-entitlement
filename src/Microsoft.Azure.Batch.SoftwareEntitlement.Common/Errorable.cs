@@ -85,11 +85,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <summary>
         /// Call one function or another depending on whether we have a value or some errors
         /// </summary>
+        /// <remarks>Both functions must return the same type.</remarks>
         /// <typeparam name="R">Type of value to return.</typeparam>
         /// <param name="whenSuccessful">Function to call when we have a value.</param>
         /// <param name="whenFailure">Function to call when we have errors.</param>
-        /// <returns></returns>
-        public abstract R Match<R>(Func<T,R> whenSuccessful, Func<IEnumerable<string>, R> whenFailure);
+        /// <returns>The result of the function that was called.</returns>
+        public abstract R Match<R>(Func<T, R> whenSuccessful, Func<IEnumerable<string>, R> whenFailure);
 
         /// <summary>
         /// Private constructor to prevent other subclasses

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests.Fakes
@@ -20,6 +21,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests.Fakes
         /// <summary>
         /// Writes a log entry.
         /// </summary>
+        /// <typeparam name="TState">Type of the information to be logged.</typeparam>
         /// <param name="logLevel">Entry will be written on this level.</param>
         /// <param name="eventId">Id of the event.</param>
         /// <param name="state">The entry to be written. Can be also an object.</param>
@@ -32,14 +34,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests.Fakes
             _events.Add(logEvent);
         }
 
+        /// <summary>
+        /// Checks if the given <paramref name="logLevel" /> is enabled.
+        /// </summary>
+        /// <param name="logLevel">level to be checked.</param>
+        /// <returns><c>true</c> if enabled.</returns>
         public bool IsEnabled(LogLevel logLevel)
         {
-            throw new NotImplementedException();
+            return true;
         }
 
+        /// <summary>
+        /// Begins a logical operation scope.
+        /// </summary>
+        /// <typeparam name="TState">The type of the scope identifier.</typeparam>
+        /// <param name="state">The identifier for the scope.</param>
+        /// <returns>An IDisposable that ends the logical operation scope on dispose.</returns>
         public IDisposable BeginScope<TState>(TState state)
         {
-            throw new NotImplementedException();
+            throw new NotSupportedException("Not required for unit tests");
         }
     }
 

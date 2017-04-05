@@ -44,7 +44,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         public TokenEnforcementTests()
         {
             // Hard coded key for testing; actual operation will use a cert
-            var plainTextSecurityKey = "This is my shared, not so secret, secret!";
+            const string plainTextSecurityKey = "This is my shared, not so secret, secret!";
             _signingKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(plainTextSecurityKey));
 

@@ -8,7 +8,7 @@
         /// <summary>
         /// A unique machine readable identifier for the reason the entitlement was rejected
         /// </summary>
-        public string Code { get; set; }   
+        public string Code { get; set; }
 
         /// <summary>
         /// A human readable message detailing the reason the entitlement was rejected

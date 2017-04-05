@@ -1,13 +1,11 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
-using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server;
-using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -16,20 +14,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     /// </summary>
     public sealed class SoftwareEntitlementServer
     {
-        // Reference to a logger for output of activity and diagnostics
-        private readonly ValidationLogger _logger;
-
         // Reference to the options that configure our operation
-        private ServerOptions _options;
+        private readonly ServerOptions _options;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SoftwareEntitlementServer"/> class
         /// </summary>
         /// <param name="options">Options to control our behavior.</param>
-        /// <param name="logger">Logger to use for output.</param>
-        public SoftwareEntitlementServer(ServerOptions options, ILogger logger)
+        public SoftwareEntitlementServer(ServerOptions options)
         {
-            _logger = new ValidationLogger(logger);
             _options = options;
         }
 

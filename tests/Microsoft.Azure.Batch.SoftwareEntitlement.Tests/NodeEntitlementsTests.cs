@@ -39,7 +39,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void GivenVirtualMachineId_ConfiguresProperty()
             {
-                var vmid = "Sample";
+                const string vmid = "Sample";
                 _emptyEntitlement.WithVirtualMachineId(vmid)
                     .VirtualMachineId.Should().Be(vmid);
             }
@@ -79,7 +79,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void GivenApplicationId_AddsToConfiguration()
             {
-                var application = "contosoapp";
+                const string application = "contosoapp";
                 var entitlement = _emptyEntitlement.AddApplication(application);
                 entitlement.Applications.Should().HaveCount(1);
                 entitlement.Applications.Should().Contain(application);
@@ -88,7 +88,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void GivenDuplicateApplicationId_DoesNotAddToConfiguration()
             {
-                var application = "contosoapp";
+                const string application = "contosoapp";
                 var entitlement =
                     _emptyEntitlement.AddApplication(application)
                         .AddApplication(application);

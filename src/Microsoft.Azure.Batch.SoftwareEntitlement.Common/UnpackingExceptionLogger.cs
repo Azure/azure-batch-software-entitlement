@@ -52,7 +52,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <summary>
         /// Begins a logical operation scope.
         /// </summary>
-        /// <typeparam name="TState">Type of the scope identifier.</typeparam>
+        /// <typeparam name="TState">The type of the scope identifier.</typeparam>
         /// <param name="state">The identifier for the scope.</param>
         /// <returns>An IDisposable that ends the logical operation scope on dispose.</returns>
         public IDisposable BeginScope<TState>(TState state)
