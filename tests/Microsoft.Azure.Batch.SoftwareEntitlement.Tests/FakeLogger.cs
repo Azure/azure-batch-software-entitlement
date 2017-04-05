@@ -26,7 +26,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         public bool HasWarnings => _counts[LogLevel.Warning] > 0;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ValidationLogger"/> class
+        /// Initializes a new instance of the <see cref="FakeLogger"/> class
         /// </summary>
         public FakeLogger()
         {
