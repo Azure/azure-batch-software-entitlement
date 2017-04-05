@@ -23,6 +23,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <summary>
         /// Create a value that represents a failed operation
         /// </summary>
+        /// <typeparam name="T">The type of value that might have been contained.</typeparam>
         /// <param name="errors">Sequence of error messages.</param>
         public static Errorable<T> Failure<T>(IEnumerable<string> errors)
         {
@@ -35,6 +36,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <summary>
         /// Create a value that represents a failed operation
         /// </summary>
+        /// <typeparam name="T">The type of value that might have been contained.</typeparam>
         /// <param name="error">Sequence of error messages.</param>
         public static Errorable<T> Failure<T>(string error)
         {
@@ -46,6 +48,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
     /// <summary>
     /// A container that either contains a value or a set of errors
     /// </summary>
+    /// <typeparam name="T">The type of value contained in the successful case.</typeparam>
     public abstract class Errorable<T>
     {
         /// <summary>
@@ -82,10 +85,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <summary>
         /// Call one function or another depending on whether we have a value or some errors
         /// </summary>
+        /// <remarks>Both functions must return the same type.</remarks>
         /// <typeparam name="R">Type of value to return.</typeparam>
         /// <param name="whenSuccessful">Function to call when we have a value.</param>
         /// <param name="whenFailure">Function to call when we have errors.</param>
-        /// <returns></returns>
+        /// <returns>The result of the function that was called.</returns>
         public abstract R Match<R>(Func<T, R> whenSuccessful, Func<IEnumerable<string>, R> whenFailure);
 
         /// <summary>
