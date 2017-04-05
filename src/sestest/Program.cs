@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using CommandLine;
@@ -101,19 +102,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var withPrivateKey = allCertificates.Where(c => c.HasPrivateKey).ToList();
             _logger.LogInformation("Found {count} certificates with private keys", withPrivateKey.Count);
 
-            foreach (var cert in withPrivateKey)
-            {
-                var name = string.IsNullOrEmpty(cert.FriendlyName)
-                        ? cert.SubjectName.Name
-                        : cert.FriendlyName;
-
-                _logger.LogInformation(
-                    "{Name} - {Thumbprint}",
-                    name,
-                    cert.Thumbprint);
-            }
+            _logger.LogTable(
+                LogLevel.Information,
+                withPrivateKey.Select(DescribeCertificate).ToList());
 
             return 0;
+        }
+
+        private static IList<string> DescribeCertificate(X509Certificate2 cert)
+        {
+            return new List<string>
+            {
+                cert.SubjectName.Name,
+                cert.FriendlyName,
+                cert.Thumbprint
+            };
         }
 
         /// <summary>
@@ -187,7 +190,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
             catch (Exception ex)
             {
-                _logger.LogError("Exception", ex, ex.Message);
+                _logger.LogError((EventId)0, ex, ex.Message);
                 return -1;
             }
         }

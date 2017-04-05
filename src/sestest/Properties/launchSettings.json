@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "sestest": {
+      "commandName": "Project",
+      "commandLineArgs": "list-certificates"
+    }
+  }
+}
