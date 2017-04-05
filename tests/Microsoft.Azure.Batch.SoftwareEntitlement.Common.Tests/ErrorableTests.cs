@@ -73,7 +73,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void WhenSuccess_IncludesError()
             {
-                var errorMessage = "Not the answer";
+                const string errorMessage = "Not the answer";
                 var result = _success.AddError(errorMessage);
                 result.Errors.Should().Contain(errorMessage);
             }
@@ -81,7 +81,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void WhenFailure_IncludesError()
             {
-                var errorMessage = "Not the answer";
+                const string errorMessage = "Not the answer";
                 var result = _failure.AddError(errorMessage);
                 result.Errors.Should().Contain(errorMessage);
             }
@@ -119,7 +119,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void WhenFailure_CallsActionWithExpectedErrors()
             {
-                var error = "Error";
+                const string error = "Error";
                 var errorable = Errorable.Failure<int>(error);
                 errorable.Match(
                     v => throw new InvalidOperationException("Should not be called"),
@@ -155,7 +155,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void WhenFailure_CallsFunctionWithExpectedErrors()
             {
-                var error = "Error";
+                const string error = "Error";
                 var errorable = Errorable.Failure<int>(error);
                 var result = errorable.Match<int>(
                     v => throw new InvalidOperationException("Should not be called"),
@@ -169,7 +169,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void WhenFailure_ReturnsExpectedValueFromFunction()
             {
-                var error = "Error";
+                const string error = "Error";
                 var errorable = Errorable.Failure<int>(error);
                 var result = errorable.Match<int>(
                     v => throw new InvalidOperationException("Should not be called"),

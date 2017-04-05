@@ -57,7 +57,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         private static int GenerateToken(NodeEntitlements entitlements)
         {
             // Hard coded for now, will use certificates later on
-            var plainTextSecurityKey = "This is my shared, not so secret, secret!";
+            const string plainTextSecurityKey = "This is my shared, not so secret, secret!";
             var signingKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(plainTextSecurityKey));
 

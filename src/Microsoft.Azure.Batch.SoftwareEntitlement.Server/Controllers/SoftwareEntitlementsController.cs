@@ -28,7 +28,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             _logger = logger;
 
             // Hard coded for now, will use certificates later on
-            var plainTextSecurityKey = "This is my shared, not so secret, secret!";
+            const string plainTextSecurityKey = "This is my shared, not so secret, secret!";
             _signingKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(plainTextSecurityKey));
 
