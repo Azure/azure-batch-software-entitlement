@@ -9,4 +9,4 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage(
     "Performance",
     "RCS1096:Use bitwise operation instead of calling 'HasFlag'.",
-    Justification = "This project prefers the clarity of HasFlag()")]
+    Justification = "This project prefers the clarity of HasFlag().")]

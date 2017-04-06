@@ -10,3 +10,4 @@ using System.Diagnostics.CodeAnalysis;
     "Performance",
     "RCS1080:Use 'Count/Length' property instead of 'Any' method.",
     Justification = "This project prefers the clarity of Any().")]
+

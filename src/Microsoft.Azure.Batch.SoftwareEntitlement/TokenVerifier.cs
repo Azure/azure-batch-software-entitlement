@@ -115,7 +115,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     .UntilInstant(new DateTimeOffset(token.ValidTo))
                     .AddApplication(application)
                     .WithIdentifier(entitlementIdClaim.Value)
-                    .WithIpAddress(ipAddress);
+                    .AddIpAddress(ipAddress);
 
                 return Errorable.Success(result);
             }
@@ -170,23 +170,28 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>True if the entitlement was issued to the specified IP address, false otherwise.</returns>
         private bool VerifyIpAddress(ClaimsPrincipal principal, IPAddress address)
         {
-            var ipAddressClaim = principal.FindFirst(Claims.IpAddress);
-            if (ipAddressClaim == null)
+            var ipAddressClaims = principal.FindAll(Claims.IpAddress).ToList();
+            if (ipAddressClaims == null || !ipAddressClaims.Any())
             {
                 return false;
             }
 
-            if (!IPAddress.TryParse(ipAddressClaim.Value, out var parsedAddress))
+            foreach (var ipClaim in ipAddressClaims)
             {
-                return false;
+                if (!IPAddress.TryParse(ipClaim.Value, out var parsedAddress))
+                {
+                    // Skip any IP addresses in the token that are invalid
+                    continue;
+                }
+
+                if (address.Equals(parsedAddress))
+                {
+                    // We have a match!
+                    return true;
+                }
             }
 
-            if (!address.Equals(parsedAddress))
-            {
-                return false;
-            }
-
-            return true;
+            return false;
         }
 
         private static Errorable<NodeEntitlements> TokenNotYetValidError(DateTime exceptionNotBefore)

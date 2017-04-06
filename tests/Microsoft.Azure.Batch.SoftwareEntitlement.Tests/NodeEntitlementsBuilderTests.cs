@@ -13,8 +13,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         private readonly GenerateCommandLine _commandLine = new GenerateCommandLine
         {
             VirtualMachineId = "Sample",
-            Address = "127.0.0.1",
-            ApplicationIds = new List<string> {"contosoapp"}
+            Addresses = new List<string> { "127.0.0.1" },
+            ApplicationIds = new List<string> { "contosoapp" }
         };
 
         public class BuildMethod : NodeEntitlementsBuilderTests

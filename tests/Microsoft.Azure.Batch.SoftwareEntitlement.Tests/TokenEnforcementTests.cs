@@ -62,7 +62,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
             if (!options.HasFlag(EntitlementOptions.OmitIpAddress))
             {
-                result = result.WithIpAddress(_approvedAddress);
+                result = result.AddIpAddress(_approvedAddress);
             }
 
             if (!options.HasFlag(EntitlementOptions.OmitIdentifier))
@@ -221,14 +221,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var token = _generator.Generate(_validEntitlements);
                 var result = _verifier.Verify(token, _contosoFinanceApp, _approvedAddress);
                 result.HasValue.Should().BeTrue();
-                result.Value.IpAddress.Should().Be(_approvedAddress);
+                result.Value.IpAddresses.Should().Contain(_approvedAddress);
             }
 
             [Fact]
             public void WhenEntitlementContainsOtherIp_ReturnsError()
             {
-                var entitlements =
-                    _validEntitlements.WithIpAddress(_otherAddress);
+                var entitlements = CreateEntitlements(EntitlementOptions.OmitIpAddress)
+                    .AddIpAddress(_otherAddress);
                 var token = _generator.Generate(entitlements);
                 var result = _verifier.Verify(token, _contosoFinanceApp, _approvedAddress);
                 result.HasValue.Should().BeFalse();

@@ -22,8 +22,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option("not-after", HelpText = "The moment at which the token expires and the application is no longer entitled to execute (format 'hh:mm d-mmm/-yyyy'; 24 hour clock; local time; defaults to 7 days).")]
         public string NotAfter { get; set; }
 
-        [Option("address", HelpText = "The externally visible IP address of the machine entitled to execute the application.")]
-        public string Address { get; set; }
+        [Option("address", HelpText = "The externally visible IP addresses of the machine entitled to execute the application(s).")]
+        public IList<string> Addresses { get; set; }
 
         //TODO: Document where this looks to find the certificate (in a cross platform way)
         [Option('s', "sign", HelpText = "Certificate thumbprint of the certificate used to sign the token.")]
@@ -39,6 +39,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public GenerateCommandLine()
         {
             ApplicationIds = new List<string>();
+            Addresses = new List<string>();
         }
     }
 }

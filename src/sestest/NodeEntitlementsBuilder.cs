@@ -83,8 +83,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             Configure(VirtualMachineId, url => entitlement.WithVirtualMachineId(url));
             Configure(NotBefore, notBefore => entitlement.FromInstant(notBefore));
             Configure(NotAfter, notAfter => entitlement.UntilInstant(notAfter));
-            Configure(Address, address => entitlement.WithIpAddress(address));
             ConfigureAll(Application, app => entitlement.AddApplication(app));
+            ConfigureAll(Addresses, address => entitlement.AddIpAddress(address));
 
             if (errors.Any())
             {
@@ -126,19 +126,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return _timestampParser.TryParse(_commandLine.NotAfter, "NotAfter");
         }
 
-        private Errorable<IPAddress> Address()
+        private IEnumerable<Errorable<IPAddress>> Addresses()
         {
-            if (string.IsNullOrEmpty(_commandLine.Address))
+            if (_commandLine.Addresses == null || !_commandLine.Addresses.Any())
             {
-                return Errorable.Failure<IPAddress>("No IP Address specified.");
+                yield return Errorable.Failure<IPAddress>("No IP Addresses specified.");
+                yield break;
             }
 
-            if (!IPAddress.TryParse(_commandLine.Address, out var address))
+            foreach (var address in _commandLine.Addresses)
             {
-                return Errorable.Failure<IPAddress>("IP address not in expected format.");
+                if (!IPAddress.TryParse(address, out var ip))
+                {
+                    yield return Errorable.Failure<IPAddress>($"IP address '{address}' not in expected format (IPv4 and IPv6 supported).");
+                }
+                else
+                {
+                    yield return Errorable.Success(ip);
+                }
             }
-
-            return Errorable.Success(address);
         }
 
         private IEnumerable<Errorable<string>> Application()

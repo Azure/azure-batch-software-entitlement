@@ -97,25 +97,40 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
         }
 
-        public class WithIpAddressMethod : NodeEntitlementsTests
+        public class AddIpAddressMethod : NodeEntitlementsTests
         {
-            // An IPAddress to use for testing
-            private readonly IPAddress _address = IPAddress.Parse("203.0.113.42");
+            // sample IPAddresses to use for testing (sample addresses as per RFC5735)
+            private readonly IPAddress _addressA = IPAddress.Parse("203.0.113.42");
+            private readonly IPAddress _addressB = IPAddress.Parse("203.0.113.42");
 
             [Fact]
             public void GivenNull_ThrowsException()
             {
                 var exception =
                     Assert.Throws<ArgumentNullException>(
-                        () => _emptyEntitlement.WithIpAddress(null));
+                        () => _emptyEntitlement.AddIpAddress(null));
                 exception.ParamName.Should().Be("address");
             }
 
             [Fact]
             public void GivenIpAddress_ModifiesConfiguration()
             {
-                var entitlement = _emptyEntitlement.WithIpAddress(_address);
-                entitlement.IpAddress.Should().Be(_address);
+                var entitlement = _emptyEntitlement.AddIpAddress(_addressA);
+                entitlement.IpAddresses.Should().Contain(_addressA);
+            }
+
+            [Fact]
+            public void GivenSecondIpAddress_ModifiesConfiguration()
+            {
+                var entitlement = _emptyEntitlement.AddIpAddress(_addressB);
+                entitlement.IpAddresses.Should().Contain(_addressB);
+            }
+
+            [Fact]
+            public void GivenSecondIpAddress_RetainsFirst()
+            {
+                var entitlement = _emptyEntitlement.AddIpAddress(_addressB);
+                entitlement.IpAddresses.Should().Contain(_addressA);
             }
         }
 

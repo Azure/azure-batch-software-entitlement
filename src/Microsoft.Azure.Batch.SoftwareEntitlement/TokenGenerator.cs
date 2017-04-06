@@ -85,10 +85,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 claims.Add(new Claim(Claims.EntitlementId, entitlements.Identifier));
             }
 
-            if (entitlements.IpAddress != null)
+            foreach(var ip in entitlements.IpAddresses)
             {
-                _logger.LogDebug($"IP Address: {entitlements.IpAddress}");
-                claims.Add(new Claim(Claims.IpAddress, entitlements.IpAddress.ToString()));
+                _logger.LogDebug($"IP Address: {ip}");
+                claims.Add(new Claim(Claims.IpAddress, ip.ToString()));
             }
 
             foreach (var app in entitlements.Applications)
