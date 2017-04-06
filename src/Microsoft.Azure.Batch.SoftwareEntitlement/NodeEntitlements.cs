@@ -60,9 +60,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
-        /// Specify the virtual machine Id of the machine 
+        /// Specify the virtual machine Id of the machine
         /// </summary>
-        /// <param name="virtualMachineId"></param>
+        /// <param name="virtualMachineId">Virtual machine ID to include in the entitlement.</param>
         /// <returns>A new entitlement.</returns>
         public NodeEntitlements WithVirtualMachineId(string virtualMachineId)
         {
@@ -140,7 +140,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
-        /// Cloning constructor to initialize a new instance of the <see cref="NodeEntitlements"/> 
+        /// Cloning constructor to initialize a new instance of the <see cref="NodeEntitlements"/>
         /// class as a (near) copy of an existing one.
         /// </summary>
         /// <remarks>Specify any of the optional parameters to modify the clone from the original.</remarks>

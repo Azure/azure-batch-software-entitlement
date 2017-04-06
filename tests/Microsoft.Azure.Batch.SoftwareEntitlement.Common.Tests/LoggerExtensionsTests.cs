@@ -20,10 +20,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             {
                 var lines = new List<IList<string>>
                 {
-                    new List<string> {"alpha"},
-                    new List<string> {"beta"},
-                    new List<string> {"gamma"},
-                    new List<string> {"delta"}
+                    new List<string> { "alpha" },
+                    new List<string> { "beta" },
+                    new List<string> { "gamma" },
+                    new List<string> { "delta" }
                 };
                 _logger.LogTable(LogLevel.Information, lines);
                 _logger.Events.Should().HaveCount(4);
@@ -36,14 +36,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             {
                 var lines = new List<IList<string>>
                 {
-                    new List<string> {"alpha", "Mercury"},
-                    new List<string> {"beta", "Venus"},
-                    new List<string> {"gamma", "Earth"},
-                    new List<string> {"delta", "Mars"},
-                    new List<string> {"epsilon", "Jupiter"},
-                    new List<string> {"sigma", "Saturn"},
-                    new List<string> {"phi", "Uranus"},
-                    new List<string> {"omicron", "Neptune"}
+                    new List<string> { "alpha", "Mercury" },
+                    new List<string> { "beta", "Venus" },
+                    new List<string> { "gamma", "Earth" },
+                    new List<string> { "delta", "Mars" },
+                    new List<string> { "epsilon", "Jupiter" },
+                    new List<string> { "sigma", "Saturn" },
+                    new List<string> { "phi", "Uranus" },
+                    new List<string> { "omicron", "Neptune" }
                 };
                 _logger.LogTable(LogLevel.Information, lines);
                 _logger.Events.Should().HaveCount(8);
@@ -64,14 +64,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             {
                 var lines = new List<IList<string>>
                 {
-                    new List<string> {"alpha", "Mercury"},
-                    new List<string> {"beta", "Venus"},
-                    new List<string> {"", "Earth"},
-                    new List<string> {"delta", "Mars"},
-                    new List<string> {"", "Jupiter"},
-                    new List<string> {"sigma", "Saturn"},
-                    new List<string> {"phi", "Uranus"},
-                    new List<string> {"omicron", "Neptune"}
+                    new List<string> { "alpha", "Mercury" },
+                    new List<string> { "beta", "Venus" },
+                    new List<string> { string.Empty, "Earth" },
+                    new List<string> { "delta", "Mars" },
+                    new List<string> { string.Empty, "Jupiter" },
+                    new List<string> { "sigma", "Saturn" },
+                    new List<string> { "phi", "Uranus" },
+                    new List<string> { "omicron", "Neptune" }
                 };
                 _logger.LogTable(LogLevel.Information, lines);
                 _logger.Events.Should().HaveCount(8);

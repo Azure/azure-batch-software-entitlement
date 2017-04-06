@@ -17,7 +17,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// </summary>
         /// <param name="value">The string value to parse.</param>
         /// <param name="name">Name to use for the value if there is an error.</param>
-        /// <returns>A succesfully parsed <see cref="DateTimeOffset"/> or errors detailing what 
+        /// <returns>A succesfully parsed <see cref="DateTimeOffset"/> or errors detailing what
         /// went wrong.</returns>
         public Errorable<DateTimeOffset> TryParse(string value, string name)
         {

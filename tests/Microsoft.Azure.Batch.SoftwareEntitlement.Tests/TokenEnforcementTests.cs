@@ -18,21 +18,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         // Generator used to create a token
         private readonly TokenGenerator _generator;
 
-        // Verifier used to check the token 
+        // Verifier used to check the token
         private readonly TokenVerifier _verifier;
 
         // Current time - captured as a member so it doesn't change during a test
         private readonly DateTimeOffset _now = DateTimeOffset.Now;
-
-        // Key used to sign the token
-        private readonly SymmetricSecurityKey _signingKey;
 
         // A application identifiers for testing
         private readonly string _contosoFinanceApp = "contosofinance";
         private readonly string _contosoITApp = "contosoit";
         private readonly string _contosoHRApp = "contosohr";
 
-        // IP addresses to use 
+        // IP addresses to use
         private readonly IPAddress _otherAddress = IPAddress.Parse("203.0.113.42");
         private readonly IPAddress _approvedAddress = IPAddress.Parse("203.0.113.45");
 
@@ -91,7 +88,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         }
 
         /// <summary>
-        /// Options used to control the creation of an <see cref="NodeEntitlements"/> instance 
+        /// Options used to control the creation of an <see cref="NodeEntitlements"/> instance
         /// for testing.
         /// </summary>
         [Flags]

@@ -65,8 +65,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             var hostAssembly = typeof(Startup).GetTypeInfo().Assembly;
             var hostFileInfo = new FileInfo(hostAssembly.Location);
-            var hostDirectory = hostFileInfo.Directory;
-            return hostDirectory;
+            return hostFileInfo.Directory;
         }
     }
 }

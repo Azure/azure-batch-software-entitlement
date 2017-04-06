@@ -18,6 +18,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
     public static class Program
     {
+        // Logger used for program output
         private static ILogger _logger;
 
         // Store used to scan for and obtain certificates
@@ -205,7 +206,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Run a command with full logging
         /// </summary>
-        /// <typeparam name="T">Type of parametrs provided for this command to run</typeparam>
+        /// <typeparam name="T">Type of parameters provided for this command to run</typeparam>
         /// <param name="command">Actual command to run.</param>
         /// <param name="commandLine">Parameters provided on the command line.</param>
         /// <returns>Exit code for this command.</returns>

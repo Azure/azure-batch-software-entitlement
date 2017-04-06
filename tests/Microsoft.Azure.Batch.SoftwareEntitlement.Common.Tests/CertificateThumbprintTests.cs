@@ -10,22 +10,22 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
     public class CertificateThumbprintTests
     {
         // One thumbprint string to use for testing
-        protected readonly string _thumbprintA = "NO TA CE RT IF IC AT EN OT HI NG TO SE EH ER EM OV EA LO NG";
+        private readonly string _thumbprintA = "NO TA CE RT IF IC AT EN OT HI NG TO SE EH ER EM OV EA LO NG";
 
         // A variation on _thumbprintA for testing
-        protected readonly string _thumbprintAwithoutSpaces;
+        private readonly string _thumbprintAwithoutSpaces;
 
         // Another thumbprint string to use for testing
-        protected readonly string _thumbprintB = "TH IS IS NO TT HE CE RT IF IC AT EY OU AR EL OO KI NG FO RX";
+        private readonly string _thumbprintB = "TH IS IS NO TT HE CE RT IF IC AT EY OU AR EL OO KI NG FO RX";
 
         // A thumbprint for testing
-        protected readonly CertificateThumbprint _testThumbprint;
+        private readonly CertificateThumbprint _testThumbprint;
 
         // Another thumbprint for testing, identical to the one above
-        protected readonly CertificateThumbprint _identicalThumbprint;
+        private readonly CertificateThumbprint _identicalThumbprint;
 
         // Another thumbprint, this one differs from the two above
-        protected readonly CertificateThumbprint _otherThumbprint;
+        private readonly CertificateThumbprint _otherThumbprint;
 
         public CertificateThumbprintTests()
         {

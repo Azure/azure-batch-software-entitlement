@@ -96,7 +96,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             private readonly Errorable<int> _failure = Errorable.Failure<int>("Error");
 
             // A sequence of errors to test with
-            private readonly IEnumerable<string> _errors = new List<string> {"err", "error"};
+            private readonly IEnumerable<string> _errors = new List<string> { "err", "error" };
 
             [Fact]
             public void WhenSuccess_DiscardsValue()
@@ -170,7 +170,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     v =>
                     {
                         v.Should().Be(43);
-                        return 128; // Needs a return value so this is a Func<int,int> 
+                        return 128; // Needs a return value so this is a Func<int,int>
                     },
                     errors => throw new InvalidOperationException("Should not be called"));
             }

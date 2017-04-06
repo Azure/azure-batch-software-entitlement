@@ -99,7 +99,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 claims.Add(new Claim(Claims.EntitlementId, entitlements.Identifier));
             }
 
-            foreach(var ip in entitlements.IpAddresses)
+            foreach (var ip in entitlements.IpAddresses)
             {
                 _logger.LogDebug($"IP Address: {ip}");
                 claims.Add(new Claim(Claims.IpAddress, ip.ToString()));

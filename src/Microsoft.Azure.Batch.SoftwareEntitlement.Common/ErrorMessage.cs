@@ -3,7 +3,7 @@
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
     /// <summary>
-    /// An error message returned as part of the response to an unsuccessful request for a 
+    /// An error message returned as part of the response to an unsuccessful request for a
     /// software entitlement
     /// </summary>
     public class ErrorMessage
