@@ -23,7 +23,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public string NotAfter { get; set; }
 
         [Option("address", HelpText = "The externally visible IP address of the machine entitled to execute the application.")]
-        public IPAddress Address { get; set; }
+        public string Address { get; set; }
 
         //TODO: Document where this looks to find the certificate (in a cross platform way)
         [Option('s', "sign", HelpText = "Certificate thumbprint of the certificate used to sign the token.")]

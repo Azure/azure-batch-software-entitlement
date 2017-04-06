@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -68,6 +69,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             Configure(VirtualMachineId, url => entitlement.WithVirtualMachineId(url));
             Configure(NotBefore, notBefore => entitlement.FromInstant(notBefore));
             Configure(NotAfter, notAfter => entitlement.UntilInstant(notAfter));
+            Configure(Address, address => entitlement.WithIpAddress(address));
 
             if (errors.Any())
             {
@@ -108,5 +110,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             return _timestampParser.TryParse(_commandLine.NotAfter, "NotAfter");
         }
+
+        private Errorable<IPAddress> Address()
+        {
+            if (string.IsNullOrEmpty(_commandLine.Address))
+            {
+                return Errorable.Failure<IPAddress>("No IP Address specified.");
+            }
+
+            if (!IPAddress.TryParse(_commandLine.Address, out var address))
+            {
+                return Errorable.Failure<IPAddress>("IP address not in expected format.");
+            }
+
+            return Errorable.Success(address);
+        }
+
     }
 }
