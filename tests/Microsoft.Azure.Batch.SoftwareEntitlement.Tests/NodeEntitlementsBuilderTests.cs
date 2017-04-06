@@ -155,5 +155,50 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                     .Should().Be(_validNotAfter);
             }
         }
+
+        public class ApplicationsProperty : NodeEntitlementsBuilderTests
+        {
+            private const string ContosoHrApp = "contosoHR";
+            private const string ContosoItApp = "contosoIT";
+
+            [Fact]
+            public void WhenEmpty_BuildDoesNotReturnValue()
+            {
+                _commandLine.ApplicationIds.Clear();
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
+                entitlement.HasValue.Should().BeFalse();
+            }
+
+            [Fact]
+            public void WhenEmpty_BuildReturnsErrorForApplication()
+            {
+                _commandLine.ApplicationIds.Clear();
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
+                entitlement.Errors.Should().Contain(e => e.Contains("application"));
+            }
+
+            [Fact]
+            public void WhenSingleApplication_PropertyIsSet()
+            {
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
+                entitlement.Value.Applications.Should().BeEquivalentTo(_commandLine.ApplicationIds);
+            }
+
+            [Fact]
+            public void WhenSingleApplication_ReturnsNoErrorForApplication()
+            {
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
+                entitlement.Errors.Should().NotContain(e => e.Contains("application"));
+            }
+
+            [Fact]
+            public void WhenMultipleApplications_PropertyIsSet()
+            {
+                _commandLine.ApplicationIds.Add(ContosoHrApp);
+                _commandLine.ApplicationIds.Add(ContosoItApp);
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
+                entitlement.Value.Applications.Should().BeEquivalentTo(_commandLine.ApplicationIds);
+            }
+        }
     }
 }

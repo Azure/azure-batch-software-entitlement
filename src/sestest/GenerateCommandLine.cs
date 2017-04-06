@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Net;
 using CommandLine;
-using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -10,7 +9,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     public sealed class GenerateCommandLine : CommandLineBase
     {
         [Option("application-id", HelpText = "Unique identifier(s) for the applications(s) to include in the entitlement (comma separated).", Separator = ',')]
-        public IEnumerable<string> ApplicationIds { get; set; }
+        public IList<string> ApplicationIds { get; set; }
 
         [Option("vmid", HelpText = "Unique identifier for the Azure virtual machine (mandatory).")]
         public string VirtualMachineId { get; set; }
