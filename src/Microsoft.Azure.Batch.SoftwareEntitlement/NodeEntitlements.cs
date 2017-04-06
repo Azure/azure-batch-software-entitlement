@@ -106,7 +106,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 throw new ArgumentNullException(nameof(application));
             }
 
-            return new NodeEntitlements(this, applications: Applications.Add(application));
+            return new NodeEntitlements(this, applications: Applications.Add(application.Trim()));
         }
 
         /// <summary>

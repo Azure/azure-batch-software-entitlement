@@ -83,8 +83,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             Configure(VirtualMachineId, url => entitlement.WithVirtualMachineId(url));
             Configure(NotBefore, notBefore => entitlement.FromInstant(notBefore));
             Configure(NotAfter, notAfter => entitlement.UntilInstant(notAfter));
-            ConfigureAll(Application, app => entitlement.AddApplication(app));
             ConfigureAll(Addresses, address => entitlement.AddIpAddress(address));
+            ConfigureAll(Applications, app => entitlement.AddApplication(app));
 
             if (errors.Any())
             {
@@ -147,17 +147,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
         }
 
-        private IEnumerable<Errorable<string>> Application()
+        private IEnumerable<Errorable<string>> Applications()
         {
             var apps = _commandLine.ApplicationIds.ToList();
-            if (!_commandLine.ApplicationIds.Any())
+            if (_commandLine.ApplicationIds == null || !_commandLine.ApplicationIds.Any())
             {
                 yield return Errorable.Failure<string>("No applications specified.");
+                yield break;
             }
 
             foreach (var app in apps)
             {
-                yield return Errorable.Success(app);
+                yield return Errorable.Success(app.Trim());
             }
         }
     }

@@ -67,6 +67,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
         public class AddApplicationMethod : NodeEntitlementsTests
         {
+            private const string Application = "contosoapp";
+
             [Fact]
             public void GivenNull_ThrowsException()
             {
@@ -79,21 +81,27 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void GivenApplicationId_AddsToConfiguration()
             {
-                const string application = "contosoapp";
-                var entitlement = _emptyEntitlement.AddApplication(application);
+                var entitlement = _emptyEntitlement.AddApplication(Application);
                 entitlement.Applications.Should().HaveCount(1);
-                entitlement.Applications.Should().Contain(application);
+                entitlement.Applications.Should().Contain(Application);
             }
 
             [Fact]
             public void GivenDuplicateApplicationId_DoesNotAddToConfiguration()
             {
-                const string application = "contosoapp";
                 var entitlement =
-                    _emptyEntitlement.AddApplication(application)
-                        .AddApplication(application);
+                    _emptyEntitlement.AddApplication(Application)
+                        .AddApplication(Application);
                 entitlement.Applications.Should().HaveCount(1);
-                entitlement.Applications.Should().Contain(application);
+                entitlement.Applications.Should().Contain(Application);
+            }
+
+            [Fact]
+            public void GivenApplicationIdWithWhitespace_RemovesWhitespace()
+            {
+                var entitlement = _emptyEntitlement.AddApplication("  " + Application + "  ");
+                entitlement.Applications.Should().HaveCount(1);
+                entitlement.Applications.Should().Contain(Application.Trim());
             }
         }
 
