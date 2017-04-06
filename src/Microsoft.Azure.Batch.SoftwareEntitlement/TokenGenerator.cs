@@ -87,7 +87,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             if (entitlements.IpAddress != null)
             {
-                _logger.LogDebug($"Virtual machine Id: {entitlements.IpAddress}");
+                _logger.LogDebug($"IP Address: {entitlements.IpAddress}");
                 claims.Add(new Claim(Claims.IpAddress, entitlements.IpAddress.ToString()));
             }
 

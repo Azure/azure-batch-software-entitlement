@@ -158,7 +158,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 _logger = GlobalLogger.CreateLogger(commandLine.LogLevel, file);
             }
 
-            _logger.LogInformation("Software Entitlement Service Command Line Utility");
+            _logger.LogInformation("Software Entitlement Service Test Utility");
         }
 
         /// <summary>
