@@ -66,10 +66,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     whenFailure: e => errors.AddRange(e));
             }
 
+            // readConfiguration - function to read all the configuration values
+            // applyConfiguration - function to modify our configuration with each value read
+            void ConfigureAll<V>(
+                Func<IEnumerable<Errorable<V>>> readConfiguration,
+                Func<V, NodeEntitlements> applyConfiguration)
+            {
+                foreach (var configuration in readConfiguration())
+                {
+                    configuration.Match(
+                            whenSuccessful: value => entitlement = applyConfiguration(value),
+                            whenFailure: e => errors.AddRange(e));
+                }
+            }
+
             Configure(VirtualMachineId, url => entitlement.WithVirtualMachineId(url));
             Configure(NotBefore, notBefore => entitlement.FromInstant(notBefore));
             Configure(NotAfter, notAfter => entitlement.UntilInstant(notAfter));
             Configure(Address, address => entitlement.WithIpAddress(address));
+            ConfigureAll(Application, app => entitlement.AddApplication(app));
 
             if (errors.Any())
             {
@@ -126,5 +141,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return Errorable.Success(address);
         }
 
+        private IEnumerable<Errorable<string>> Application()
+        {
+            var apps = _commandLine.ApplicationIds.ToList();
+            if (!_commandLine.ApplicationIds.Any())
+            {
+                yield return Errorable.Failure<string>("No applications specified.");
+            }
+
+            foreach (var app in apps)
+            {
+                yield return Errorable.Success(app);
+            }
+        }
     }
 }

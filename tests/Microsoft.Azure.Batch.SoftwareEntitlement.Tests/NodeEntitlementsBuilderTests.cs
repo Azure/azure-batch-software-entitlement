@@ -12,7 +12,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         // A valid set of command line arguments for testing
         private readonly GenerateCommandLine _commandLine = new GenerateCommandLine
         {
-            VirtualMachineId = "Sample"
+            VirtualMachineId = "Sample",
+            Address = "127.0.0.1",
+            ApplicationIds = new List<string> {"contosoapp"}
         };
 
         public class BuildMethod : NodeEntitlementsBuilderTests
@@ -67,7 +69,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WithId_PropertyIsSet()
             {
-                var virtualMachineId = "virtualMachine";
+                const string virtualMachineId = "virtualMachine";
                 _commandLine.VirtualMachineId = virtualMachineId;
                 var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
                 entitlement.Value.VirtualMachineId.Should().Be(virtualMachineId);
