@@ -65,11 +65,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             }
 
             var entitlement = verificationResult.Value;
-
-            var entitlementId = entitlementRequest.ApplicationId + "-" + Guid.NewGuid().ToString("D");
             var response = new SoftwareEntitlementSuccessfulResponse
             {
-                EntitlementId = entitlementId,
+                EntitlementId = entitlement.Identifier,
                 VirtualMachineId = entitlement.VirtualMachineId
             };
 
