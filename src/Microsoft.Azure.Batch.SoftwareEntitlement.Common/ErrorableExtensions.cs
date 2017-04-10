@@ -53,5 +53,44 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 whenFailure(allErrors);
             }
         }
+
+        /// <summary>
+        /// Combine two <see cref="Errorable{T}"/> values and return a result.
+        /// </summary>
+        /// <remarks>Any errors already present are preserved.</remarks>
+        /// <typeparam name="T">Type of value possibly present in <paramref name="first"/>.</typeparam>
+        /// <typeparam name="A">Type of value possibly present in <paramref name="second"/>.</typeparam>
+        /// <param name="first">First errorable value.</param>
+        /// <param name="second">Second errorable value.</param>
+        /// <param name="whenSuccessful">Function to combine both values when available.</param>
+        public static Errorable<R> Combine<T, A, R>(
+            this Errorable<T> first,
+            Errorable<A> second,
+            Func<T, A, R> whenSuccessful)
+        {
+            if (first == null)
+            {
+                throw new ArgumentNullException(nameof(first));
+            }
+
+            if (second == null)
+            {
+                throw new ArgumentNullException(nameof(second));
+            }
+
+            if (whenSuccessful == null)
+            {
+                throw new ArgumentNullException(nameof(whenSuccessful));
+            }
+
+            if (first.HasValue && second.HasValue)
+            {
+                return Errorable.Success(whenSuccessful(first.Value, second.Value));
+            }
+
+            var allErrors = first.Errors.Union(second.Errors);
+            return Errorable.Failure<R>(allErrors);
+        }
+        }
     }
 }

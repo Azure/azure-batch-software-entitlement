@@ -76,6 +76,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         public abstract Errorable<T> AddError(string error);
 
         /// <summary>
+        /// Add a sequence of errors
+        /// </summary>
+        /// <remarks>Will abandon any wrapped value if these are first errors encountered.</remarks>
+        /// <param name="errors">Errors to record.</param>
+        /// <returns>A new instance with unique errors included.</returns>
+        public abstract Errorable<T> AddErrors(IEnumerable<string> errors);
+
+        /// <summary>
         /// Take an action depending on whether we have a value or some errors
         /// </summary>
         /// <param name="whenSuccessful">Action to take when we have a value.</param>
@@ -121,6 +129,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 return new FailureImplementation(errors);
             }
 
+            public override Errorable<T> AddErrors(IEnumerable<string> errors)
+            {
+                var errorSet = errors.Aggregate(
+                    ImmutableHashSet<string>.Empty,
+                    (s,e) => s.Add(e));
+                return new FailureImplementation(errorSet);
+            }
+
             /// <summary>
             /// Take an action depending on whether we have a value or some errors
             /// </summary>
@@ -164,6 +180,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             public override Errorable<T> AddError(string error)
             {
                 return new FailureImplementation(Errors.Add(error));
+            }
+
+            public override Errorable<T> AddErrors(IEnumerable<string> errors)
+            {
+                var errorSet = errors.Aggregate(
+                    Errors,
+                    (s, e) => s.Add(e));
+                return new FailureImplementation(errorSet);
             }
 
             /// <summary>
