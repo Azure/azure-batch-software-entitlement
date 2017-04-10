@@ -11,24 +11,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
     /// </summary>
     public class ErrorableExtensionTests
     {
-        // A safe default action for when a test doesn't care about success
-        private void DefaultSuccessAction(int left, int right) { }
-
-        // A safe default action for when a test doesn't care about failure
-        private void DefaultFailureAction(IEnumerable<string> errors) { }
-
-        // A success action that throws an exception to fail a test
-        private void AbortSuccessAction(int left, int right)
-        {
-            throw new InvalidOperationException();
-        }
-
-        // A failure action that throws an exception to fail a test
-        private void AbortFailureAction(IEnumerable<string> errors)
-        {
-            throw new InvalidOperationException();
-        }
-
         public class CombineWithErrorableAndActions : ErrorableExtensionTests
         {
             // Known errorable values for testing
@@ -386,6 +368,26 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                 var result = _firstFailure.Combine(_firstFailure, _firstFailure, WhenSuccessfullAbort);
                 result.Errors.Should().BeEquivalentTo(_firstFailure.Errors);
             }
+
+            // A safe default action for when a test doesn't care about success
+            private void WhenSuccessfulDoNothing(int left, int right) { }
+
+            // A safe default action for when a test doesn't care about failure
+            private void WhenFailureDoNothing(IEnumerable<string> errors) { }
+
+            // A success action that throws an exception to fail a test
+            private void WhenSuccessfullAbort(int left, int right)
+            {
+                throw new InvalidOperationException();
+            }
+
+            // A failure action that throws an exception to fail a test
+            private void WhenFailureAbort(IEnumerable<string> errors)
+            {
+                throw new InvalidOperationException();
+            }
+        }
+
         public class CombineWithErrorableAndFuncs : ErrorableExtensionTests
         {
             // Known errorable values for testing
