@@ -85,7 +85,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     receivedErrors.AddRange(errors);
                 }
 
-                _success.Combine(_otherFailure, WhenSuccessfullAbort, WhenFailure);
+                _success.Combine(_otherFailure, WhenSuccessfulAbort, WhenFailure);
 
                 receivedErrors.Should().BeEquivalentTo(_otherFailure.Errors);
             }
@@ -100,7 +100,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     receivedErrors.AddRange(errors);
                 }
 
-                _failure.Combine(_otherSuccess, WhenSuccessfullAbort, WhenFailure);
+                _failure.Combine(_otherSuccess, WhenSuccessfulAbort, WhenFailure);
 
                 receivedErrors.Should().BeEquivalentTo(_failure.Errors);
             }
@@ -115,7 +115,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     receivedErrors.AddRange(errors);
                 }
 
-                _failure.Combine(_otherFailure, WhenSuccessfullAbort, WhenFailure);
+                _failure.Combine(_otherFailure, WhenSuccessfulAbort, WhenFailure);
 
                 receivedErrors.Should().BeEquivalentTo(_failure.Errors.Union(_otherFailure.Errors));
             }
@@ -130,7 +130,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     receivedErrors.AddRange(errors);
                 }
 
-                _failure.Combine(_failure, WhenSuccessfullAbort, WhenFailure);
+                _failure.Combine(_failure, WhenSuccessfulAbort, WhenFailure);
 
                 receivedErrors.Should().BeEquivalentTo(_failure.Errors);
             }
@@ -146,7 +146,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             }
 
             // A success action that throws an exception to fail a test
-            private void WhenSuccessfullAbort(int left, int right)
+            private void WhenSuccessfulAbort(int left, int right)
             {
                 throw new InvalidOperationException();
             }
@@ -219,28 +219,28 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenSuccessAndFailure_ReturnsExistingErrors()
             {
-                var result = _success.Combine(_otherFailure, WhenSuccessfullAbort);
+                var result = _success.Combine(_otherFailure, WhenSuccessfulAbort);
                 result.Errors.Should().BeEquivalentTo(_otherFailure.Errors);
             }
 
             [Fact]
             public void GivenFailureAndSuccess_ReturnsExistingErrors()
             {
-                var result = _failure.Combine(_otherSuccess, WhenSuccessfullAbort);
+                var result = _failure.Combine(_otherSuccess, WhenSuccessfulAbort);
                 result.Errors.Should().BeEquivalentTo(_failure.Errors);
             }
 
             [Fact]
             public void GivenFailureAndFailure_ReturnsCombinedErrors()
             {
-                var result = _failure.Combine(_otherFailure, WhenSuccessfullAbort);
+                var result = _failure.Combine(_otherFailure, WhenSuccessfulAbort);
                 result.Errors.Should().BeEquivalentTo(_failure.Errors.Union(_otherFailure.Errors));
             }
 
             [Fact]
             public void GivenFailureAndFailure_CallsFailureActionWithUniqueErrors()
             {
-                var result = _failure.Combine(_failure, WhenSuccessfullAbort);
+                var result = _failure.Combine(_failure, WhenSuccessfulAbort);
                 result.Errors.Should().BeEquivalentTo(_failure.Errors);
             }
 
@@ -248,7 +248,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             private int WhenSuccessfulDoNothing(int left, int right) => 0;
 
             // A success action that throws an exception to fail a test
-            private int WhenSuccessfullAbort(int left, int right) => throw new InvalidOperationException();
+            private int WhenSuccessfulAbort(int left, int right) => throw new InvalidOperationException();
         }
 
         public class CombineWithTwoErrorablesAndFuncs : ErrorableExtensionTests
@@ -325,28 +325,28 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenSuccessAndSuccessAndFailure_ReturnsExistingErrors()
             {
-                var result = _success.Combine(_otherSuccess, _yetAnotherFailure, WhenSuccessfullAbort);
+                var result = _success.Combine(_otherSuccess, _yetAnotherFailure, WhenSuccessfulAbort);
                 result.Errors.Should().BeEquivalentTo(_yetAnotherFailure.Errors);
             }
 
             [Fact]
             public void GivenSuccessAndFailureAndSuccess_ReturnsExistingErrors()
             {
-                var result = _success.Combine(_otherFailure, _yetAnotherSuccess, WhenSuccessfullAbort);
+                var result = _success.Combine(_otherFailure, _yetAnotherSuccess, WhenSuccessfulAbort);
                 result.Errors.Should().BeEquivalentTo(_otherFailure.Errors);
             }
 
             [Fact]
             public void GivenFailureAndSuccessAndSuccess_ReturnsExistingErrors()
             {
-                var result = _failure.Combine(_otherSuccess, _yetAnotherSuccess, WhenSuccessfullAbort);
+                var result = _failure.Combine(_otherSuccess, _yetAnotherSuccess, WhenSuccessfulAbort);
                 result.Errors.Should().BeEquivalentTo(_failure.Errors);
             }
 
             [Fact]
             public void GivenFailureAndFailureAndFailure_ReturnsCombinedErrors()
             {
-                var result = _failure.Combine(_otherFailure, _yetAnotherFailure, WhenSuccessfullAbort);
+                var result = _failure.Combine(_otherFailure, _yetAnotherFailure, WhenSuccessfulAbort);
                 result.Errors.Should().BeEquivalentTo(
                     _failure.Errors.Union(_otherFailure.Errors).Union(_yetAnotherFailure.Errors));
             }
@@ -354,7 +354,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenFailureAndFailureAndFailure_CallsFailureActionWithUniqueErrors()
             {
-                var result = _failure.Combine(_failure, _failure, WhenSuccessfullAbort);
+                var result = _failure.Combine(_failure, _failure, WhenSuccessfulAbort);
                 result.Errors.Should().BeEquivalentTo(_failure.Errors);
             }
 
@@ -362,7 +362,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             private int WhenSuccessfulDoNothing(int alpha, int beta, int gamma) => 0;
 
             // A success action that throws an exception to fail a test
-            private int WhenSuccessfullAbort(int alpha, int beta, int gamma)
+            private int WhenSuccessfulAbort(int alpha, int beta, int gamma)
             {
                 throw new InvalidOperationException();
             }
