@@ -293,23 +293,23 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenSuccessAndSuccessAndSuccess_CallsSuccessActionWithExpectedValues()
             {
-                var receivedFu = 0;
-                var receivedBar = 0;
-                var receivedBaz = 0;
+                var receivedAlpha = 0;
+                var receivedBeta = 0;
+                var receivedGamma = 0;
 
-                int WhenSuccessful(int fu, int bar, int baz)
+                int WhenSuccessful(int alpha, int beta, int gamma)
                 {
-                    receivedFu = fu;
-                    receivedBar = bar;
-                    receivedBaz = baz;
-                    return (fu * 100) + (bar * 10) + baz;
+                    receivedAlpha = alpha;
+                    receivedBeta = beta;
+                    receivedGamma = gamma;
+                    return 0;
                 }
 
                 _success.Combine(_otherSuccess, _yetAnotherSuccess, WhenSuccessful);
 
-                receivedFu.Should().Be(_success.Value);
-                receivedBar.Should().Be(_otherSuccess.Value);
-                receivedBaz.Should().Be(_yetAnotherSuccess.Value);
+                receivedAlpha.Should().Be(_success.Value);
+                receivedBeta.Should().Be(_otherSuccess.Value);
+                receivedGamma.Should().Be(_yetAnotherSuccess.Value);
             }
 
             [Fact]
