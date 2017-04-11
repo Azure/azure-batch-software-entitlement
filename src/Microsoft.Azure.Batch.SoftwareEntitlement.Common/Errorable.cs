@@ -82,7 +82,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <remarks>Will abandon any wrapped value if these are first errors encountered.</remarks>
         /// <param name="errors">Errors to record.</param>
         /// <returns>A new instance with unique errors included.</returns>
-        public abstract Errorable<T> AddErrors(IEnumerable<string> errors);
+        public Errorable<T> AddErrors(IEnumerable<string> errors)
+        {
+            var errorSet = errors.Aggregate(
+                Errors,
+                (s, e) => s.Add(e));
+            return new FailureImplementation(errorSet);
+        }
 
         /// <summary>
         /// Take an action depending on whether we have a value or some errors
@@ -130,14 +136,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 return new FailureImplementation(errors);
             }
 
-            public override Errorable<T> AddErrors(IEnumerable<string> errors)
-            {
-                var errorSet = errors.Aggregate(
-                    ImmutableHashSet<string>.Empty,
-                    (s, e) => s.Add(e));
-                return new FailureImplementation(errorSet);
-            }
-
             /// <summary>
             /// Take an action depending on whether we have a value or some errors
             /// </summary>
@@ -162,7 +160,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         }
 
         /// <summary>
-        /// An implementation of <see cref="Errorable{T}"/> that represents a set of errors from a 
+        /// An implementation of <see cref="Errorable{T}"/> that represents a set of errors from a
         /// failed operation
         /// </summary>
         internal sealed class FailureImplementation : Errorable<T>
@@ -181,14 +179,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             public override Errorable<T> AddError(string error)
             {
                 return new FailureImplementation(Errors.Add(error));
-            }
-
-            public override Errorable<T> AddErrors(IEnumerable<string> errors)
-            {
-                var errorSet = errors.Aggregate(
-                    Errors,
-                    (s, e) => s.Add(e));
-                return new FailureImplementation(errorSet);
             }
 
             /// <summary>
