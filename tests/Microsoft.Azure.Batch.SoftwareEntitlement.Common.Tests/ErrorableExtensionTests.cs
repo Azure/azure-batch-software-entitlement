@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using FluentAssertions;
 using Xunit;
 
@@ -9,17 +8,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
     /// <summary>
     /// Tests for the extension methods available for <see cref="Errorable{T}"/>
     /// </summary>
-    public class ErrorableExtensionTests
+    public abstract class ErrorableExtensionTests
     {
+        // Known errorable values for testing
+        private readonly Errorable<int> _missing = null;
+        private readonly Errorable<int> _success = Errorable.Success(4);
+        private readonly Errorable<int> _failure = Errorable.Failure<int>("failure");
+        private readonly Errorable<int> _otherSuccess = Errorable.Success(2);
+        private readonly Errorable<int> _otherFailure = Errorable.Failure<int>("other failure");
+        private readonly Errorable<int> _yetAnotherSuccess = Errorable.Success(8);
+        private readonly Errorable<int> _yetAnotherFailure = Errorable.Failure<int>("yet another failure");
+
         public class CombineWithErrorableAndActions : ErrorableExtensionTests
         {
-            // Known errorable values for testing
-            private readonly Errorable<int> _missing = null;
-            private readonly Errorable<int> _success = Errorable.Success(4);
-            private readonly Errorable<int> _failure = Errorable.Failure<int>("failure");
-            private readonly Errorable<int> _otherSuccess = Errorable.Success(2);
-            private readonly Errorable<int> _otherFailure = Errorable.Failure<int>("other failure");
-
             [Fact]
             public void GivenNullForFirstErrorable_ThrowsArgumentNullException()
             {
@@ -135,10 +136,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             }
 
             // A safe default action for when a test doesn't care about success
-            private void WhenSuccessfulDoNothing(int left, int right) { }
+            private void WhenSuccessfulDoNothing(int left, int right)
+            {
+            }
 
             // A safe default action for when a test doesn't care about failure
-            private void WhenFailureDoNothing(IEnumerable<string> errors) { }
+            private void WhenFailureDoNothing(IEnumerable<string> errors)
+            {
+            }
 
             // A success action that throws an exception to fail a test
             private void WhenSuccessfullAbort(int left, int right)
@@ -155,13 +160,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
 
         public class CombineWithErrorableAndFuncs : ErrorableExtensionTests
         {
-            // Known errorable values for testing
-            private readonly Errorable<int> _missing = null;
-            private readonly Errorable<int> _success = Errorable.Success(4);
-            private readonly Errorable<int> _failure = Errorable.Failure<int>("failure");
-            private readonly Errorable<int> _otherSuccess = Errorable.Success(2);
-            private readonly Errorable<int> _otherFailure = Errorable.Failure<int>("other failure");
-
             [Fact]
             public void GivenNullForFirstErrorable_ThrowsArgumentNullException()
             {
@@ -211,7 +209,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenSuccessAndSuccess_ReturnsExpectedResult()
             {
-                var result = _success.Combine(_otherSuccess, (l, r) => l * 10 + r);
+                int WhenSuccessful(int alpha, int beta) => (alpha * 10) + beta;
+
+                var result = _success.Combine(_otherSuccess, WhenSuccessful);
                 result.HasValue.Should().BeTrue();
                 result.Value.Should().Be(42);
             }
@@ -253,15 +253,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
 
         public class CombineWithTwoErrorablesAndFuncs : ErrorableExtensionTests
         {
-            // Known errorable values for testing
-            private readonly Errorable<int> _missing = null;
-            private readonly Errorable<int> _success = Errorable.Success(4);
-            private readonly Errorable<int> _failure = Errorable.Failure<int>("failure");
-            private readonly Errorable<int> _otherSuccess = Errorable.Success(2);
-            private readonly Errorable<int> _otherFailure = Errorable.Failure<int>("other failure");
-            private readonly Errorable<int> _yetAnotherSuccess = Errorable.Success(8);
-            private readonly Errorable<int> _yetAnotherFailure = Errorable.Failure<int>("yet another failure");
-
             [Fact]
             public void GivenNullForFirstErrorable_ThrowsArgumentNullException()
             {
@@ -324,10 +315,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenSuccessAndSuccessAndSuccess_ReturnsExpectedResult()
             {
-                int WhenSuccessful(int fu, int bar, int baz)
-                {
-                    return fu * 100 + bar * 10 + baz;
-                }
+                int WhenSuccessful(int alpha, int beta, int gamma) => (alpha * 100) + (beta * 10) + gamma;
 
                 var result = _success.Combine(_otherSuccess, _yetAnotherSuccess, WhenSuccessful);
                 result.HasValue.Should().BeTrue();
@@ -372,7 +360,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
 
             // A safe default action for when a test doesn't care about success
             private int WhenSuccessfulDoNothing(int alpha, int beta, int gamma) => 0;
-            
+
             // A success action that throws an exception to fail a test
             private int WhenSuccessfullAbort(int alpha, int beta, int gamma)
             {

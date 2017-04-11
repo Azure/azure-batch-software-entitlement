@@ -15,6 +15,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// </summary>
         /// <typeparam name="T">The type of value contained.</typeparam>
         /// <param name="value">Result value to wrap.</param>
+        /// <returns>An errorable containing the provided value.</returns>
         public static Errorable<T> Success<T>(T value)
         {
             return new Errorable<T>.SuccessImplementation(value);
@@ -25,11 +26,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// </summary>
         /// <typeparam name="T">The type of value that might have been contained.</typeparam>
         /// <param name="errors">Sequence of error messages.</param>
+        /// <returns>An errorable containing the specified errors.</returns>
         public static Errorable<T> Failure<T>(IEnumerable<string> errors)
         {
-            var errorSet = errors.Aggregate(
-                ImmutableHashSet<string>.Empty,
-                (s, e) => s.Add(e));
+            var errorSet = ImmutableHashSet<string>.Empty.Union(errors);
             return new Errorable<T>.FailureImplementation(errorSet);
         }
 
@@ -38,6 +38,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// </summary>
         /// <typeparam name="T">The type of value that might have been contained.</typeparam>
         /// <param name="error">Sequence of error messages.</param>
+        /// <returns>An errorable containing the specified error.</returns>
         public static Errorable<T> Failure<T>(string error)
         {
             var errors = ImmutableHashSet<string>.Empty.Add(error);
@@ -52,7 +53,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
     public abstract class Errorable<T>
     {
         /// <summary>
-        /// Gets a value indicating if we have a value
+        /// Gets a value indicating whether we have a value
         /// </summary>
         public abstract bool HasValue { get; }
 
@@ -153,7 +154,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             /// <typeparam name="R">Type of value to return.</typeparam>
             /// <param name="whenSuccessful">Function to call when we have a value.</param>
             /// <param name="whenFailure">Function to call when we have errors.</param>
-            /// <returns></returns>
+            /// <returns>The result of applying the appropriate function.</returns>
             public override R Match<R>(Func<T, R> whenSuccessful, Func<IEnumerable<string>, R> whenFailure)
             {
                 return whenSuccessful(Value);
@@ -206,7 +207,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             /// <typeparam name="R">Type of value to return.</typeparam>
             /// <param name="whenSuccessful">Function to call when we have a value.</param>
             /// <param name="whenFailure">Function to call when we have errors.</param>
-            /// <returns></returns>
+            /// <returns>The result of applying the appropriate function.</returns>
             public override R Match<R>(Func<T, R> whenSuccessful, Func<IEnumerable<string>, R> whenFailure)
             {
                 return whenFailure(Errors);

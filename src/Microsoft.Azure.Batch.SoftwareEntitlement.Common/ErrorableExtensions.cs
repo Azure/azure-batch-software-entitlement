@@ -9,7 +9,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
     public static class ErrorableExtensions
     {
         /// <summary>
-        /// Combine two <see cref="Errorable{T}"/> values 
+        /// Combine two <see cref="Errorable{T}"/> values
         /// </summary>
         /// <typeparam name="T">Type of value possibly present in <paramref name="first"/>.</typeparam>
         /// <typeparam name="A">Type of value possibly present in <paramref name="second"/>.</typeparam>
@@ -60,9 +60,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <remarks>Any errors already present are preserved.</remarks>
         /// <typeparam name="T">Type of value possibly present in <paramref name="first"/>.</typeparam>
         /// <typeparam name="A">Type of value possibly present in <paramref name="second"/>.</typeparam>
+        /// <typeparam name="R">Type of return value.</typeparam>
         /// <param name="first">First errorable value.</param>
         /// <param name="second">Second errorable value.</param>
-        /// <param name="whenSuccessful">Function to combine both values when available.</param>
+        /// <param name="combinerFunc">Function to combine both values when available.</param>
+        /// <returns>An errorable containing either the result of combining both available values,
+        /// or a combined set of errors.</returns>
         public static Errorable<R> Combine<T, A, R>(
             this Errorable<T> first,
             Errorable<A> second,
@@ -85,7 +88,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 
             if (first.HasValue && second.HasValue)
             {
-                return Errorable.Success(whenSuccessful(first.Value, second.Value));
+                return Errorable.Success(
+                    whenSuccessful(first.Value, second.Value));
             }
 
             var allErrors = first.Errors.Union(second.Errors);
@@ -98,11 +102,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <remarks>Any errors already present are preserved.</remarks>
         /// <typeparam name="T">Type of value possibly present in <paramref name="first"/>.</typeparam>
         /// <typeparam name="A">Type of value possibly present in <paramref name="second"/>.</typeparam>
-        /// <typeparam name="B">Type of value possibly present in <paramref name="second"/>.</typeparam>
+        /// <typeparam name="B">Type of value possibly present in <paramref name="third"/>.</typeparam>
+        /// <typeparam name="R">Type of return value.</typeparam>
         /// <param name="first">First errorable value.</param>
         /// <param name="second">Second errorable value.</param>
         /// <param name="third">Third errorable value.</param>
-        /// <param name="whenSuccessful">Function to combine all three values when available.</param>
+        /// <param name="combinerFunc">Function to combine all three values when available.</param>
+        /// <returns>An errorable containing either the result of combining both available values,
+        /// or a combined set of errors.</returns>
         public static Errorable<R> Combine<T, A, B, R>(
             this Errorable<T> first,
             Errorable<A> second,
@@ -131,10 +138,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 
             if (first.HasValue && second.HasValue && third.HasValue)
             {
-                return Errorable.Success(whenSuccessful(first.Value, second.Value, third.Value));
+                return Errorable.Success(
+                    whenSuccessful(first.Value, second.Value, third.Value));
             }
 
-            var allErrors = first.Errors.Union(second.Errors).Union(third.Errors);
+            var allErrors = first.Errors.Union(second.Errors)
+                .Union(third.Errors);
             return Errorable.Failure<R>(allErrors);
         }
     }
