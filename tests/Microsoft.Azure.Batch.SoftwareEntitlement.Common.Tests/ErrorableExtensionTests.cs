@@ -181,10 +181,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenNullForSuccessAction_ThrowsArgumentNullException()
             {
+                Func<int, int, int> combinerFunc = null;
                 var exception =
                     Assert.Throws<ArgumentNullException>(
-                        () => _success.Combine(_otherSuccess, (Func<int, int, int>)null));
-                exception.ParamName.Should().Be("whenSuccessful");
+                        () => _success.Combine(_otherSuccess, combinerFunc));
+                exception.ParamName.Should().Be("combinerFunc");
             }
 
             [Fact]
@@ -283,11 +284,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenNullForSuccessAction_ThrowsArgumentNullException()
             {
-                Func<int, int, int, string> whenSuccessful = null;
+                Func<int, int, int, string> combinerFunc = null;
                 var exception =
                     Assert.Throws<ArgumentNullException>(
-                        () => _success.Combine(_otherSuccess, _yetAnotherSuccess, whenSuccessful));
-                exception.ParamName.Should().Be("whenSuccessful");
+                        () => _success.Combine(_otherSuccess, _yetAnotherSuccess, combinerFunc));
+                exception.ParamName.Should().Be("combinerFunc");
             }
 
             [Fact]
