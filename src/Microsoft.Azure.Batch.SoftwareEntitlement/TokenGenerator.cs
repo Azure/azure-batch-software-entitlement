@@ -97,6 +97,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 var claim = new Claim(Claims.Application, app);
                 claims.Add(claim);
             }
+
             return claims;
         }
     }

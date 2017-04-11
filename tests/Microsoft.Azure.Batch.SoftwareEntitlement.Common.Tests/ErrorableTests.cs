@@ -96,7 +96,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             private readonly Errorable<int> _failure = Errorable.Failure<int>("Error");
 
             // A sequence of errors to test with
-            private readonly List<string> _errors = new List<string>() {"err", "error"};
+            private readonly IEnumerable<string> _errors = new List<string> {"err", "error"};
 
             [Fact]
             public void WhenSuccess_DiscardsValue()

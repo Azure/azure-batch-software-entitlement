@@ -134,7 +134,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             {
                 var errorSet = errors.Aggregate(
                     ImmutableHashSet<string>.Empty,
-                    (s,e) => s.Add(e));
+                    (s, e) => s.Add(e));
                 return new FailureImplementation(errorSet);
             }
 
