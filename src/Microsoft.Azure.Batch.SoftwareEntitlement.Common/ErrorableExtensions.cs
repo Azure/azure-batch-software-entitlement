@@ -69,7 +69,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         public static Errorable<R> Combine<T, A, R>(
             this Errorable<T> first,
             Errorable<A> second,
-            Func<T, A, R> whenSuccessful)
+            Func<T, A, R> combinerFunc)
         {
             if (first == null)
             {
@@ -81,15 +81,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 throw new ArgumentNullException(nameof(second));
             }
 
-            if (whenSuccessful == null)
+            if (combinerFunc == null)
             {
-                throw new ArgumentNullException(nameof(whenSuccessful));
+                throw new ArgumentNullException(nameof(combinerFunc));
             }
 
             if (first.HasValue && second.HasValue)
             {
                 return Errorable.Success(
-                    whenSuccessful(first.Value, second.Value));
+                    combinerFunc(first.Value, second.Value));
             }
 
             var allErrors = first.Errors.Union(second.Errors);
@@ -114,7 +114,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             this Errorable<T> first,
             Errorable<A> second,
             Errorable<B> third,
-            Func<T, A, B, R> whenSuccessful)
+            Func<T, A, B, R> combinerFunc)
         {
             if (first == null)
             {
@@ -131,15 +131,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 throw new ArgumentNullException(nameof(third));
             }
 
-            if (whenSuccessful == null)
+            if (combinerFunc == null)
             {
-                throw new ArgumentNullException(nameof(whenSuccessful));
+                throw new ArgumentNullException(nameof(combinerFunc));
             }
 
             if (first.HasValue && second.HasValue && third.HasValue)
             {
                 return Errorable.Success(
-                    whenSuccessful(first.Value, second.Value, third.Value));
+                    combinerFunc(first.Value, second.Value, third.Value));
             }
 
             var allErrors = first.Errors.Union(second.Errors)
