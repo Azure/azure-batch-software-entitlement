@@ -91,7 +91,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             var allErrors = first.Errors.Union(second.Errors);
             return Errorable.Failure<R>(allErrors);
         }
-        
+
         /// <summary>
         /// Combine three <see cref="Errorable{T}"/> values and return a result.
         /// </summary>
