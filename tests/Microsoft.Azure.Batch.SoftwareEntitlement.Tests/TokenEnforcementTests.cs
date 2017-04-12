@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Net;
 using System.Text;
+
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Xunit;
 using Microsoft.IdentityModel.Tokens;
+using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 {
@@ -60,7 +61,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 encryptingKey, "dir", SecurityAlgorithms.Aes256CbcHmacSha512);
 
             _validEntitlements = CreateEntitlements();
-            _verifier = new TokenVerifier(signingKey: signingKey, encryptingKey: encryptingKey);
+            _verifier = new TokenVerifier(_signingKey);
             _generator = new TokenGenerator(signingCredentials, encryptingCredentials, _nullLogger);
         }
 
