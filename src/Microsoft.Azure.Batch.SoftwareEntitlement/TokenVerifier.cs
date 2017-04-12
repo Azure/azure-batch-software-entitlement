@@ -88,6 +88,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 RequireSignedTokens = true,
                 ClockSkew = TimeSpan.FromSeconds(60),
                 IssuerSigningKey = SigningKey,
+                ValidateIssuerSigningKey = true,
                 TokenDecryptionKey = EncryptionKey
             };
 
