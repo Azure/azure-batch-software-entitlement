@@ -43,14 +43,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
         public TokenEnforcementTests()
         {
-            // Hard coded key for testing; actual operation will use a cert
-            const string plainTextSecurityKey = "This is my shared, not so secret, secret!";
-            _signingKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(plainTextSecurityKey));
+            // Hard coded key for unit testing only; actual operation will use a cert
+            const string plainTextSigningKey = "This is my shared, not so secret, secret that needs to be very long!";
+            var signingKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(plainTextSigningKey));
+
+            var signingCredentials = new SigningCredentials(
+                signingKey, SecurityAlgorithms.HmacSha256Signature);
+
+            // Hard coded key for unit testing only; actual operation will use a cert
+            const string plainTextEncryptionKey = "This is another not so secret, secret that needs to be very long!";
+            var encryptingKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(plainTextEncryptionKey));
+
+            var encryptingCredentials = new EncryptingCredentials(
+                encryptingKey, "dir", SecurityAlgorithms.Aes256CbcHmacSha512);
 
             _validEntitlements = CreateEntitlements();
-            _verifier = new TokenVerifier(_signingKey);
-            _generator = new TokenGenerator(_signingKey, _nullLogger);
+            _verifier = new TokenVerifier(signingKey: signingKey, encryptingKey: encryptingKey);
+            _generator = new TokenGenerator(signingCredentials, encryptingCredentials, _nullLogger);
         }
 
         private NodeEntitlements CreateEntitlements(EntitlementOptions options = EntitlementOptions.None)

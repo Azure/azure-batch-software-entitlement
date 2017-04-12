@@ -18,24 +18,37 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         // Key used to verify token signatures
         private readonly SymmetricSecurityKey _signingKey;
 
+        // Key used to encrypt tokens
+        private readonly SymmetricSecurityKey _encryptingKey;
+
         public TokenVerifierTests()
         {
-            const string plainTextSecurityKey = "This is my shared, not so secret, secret!";
-            _signingKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(plainTextSecurityKey));
+            const string plainTextSecurityKey = "This is my shared, not so secret, secret that needs to be really long!";
 
-            _verifier = new TokenVerifier(_signingKey);
+            _signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(plainTextSecurityKey));
+            _encryptingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(plainTextSecurityKey));
+
+            _verifier = new TokenVerifier(_signingKey, _encryptingKey);
         }
 
         public class Constructor : TokenVerifierTests
         {
             [Fact]
-            public void GivenNullKey_ShouldThrowArgumentNullException()
+            public void GivenNullSigningKey_ShouldThrowArgumentNullException()
             {
                 var exception =
                     Assert.Throws<ArgumentNullException>(
-                        () => new TokenVerifier(null));
+                        () => new TokenVerifier(null, _signingKey));
                 exception.ParamName.Should().Be("signingKey");
+            }
+
+            [Fact]
+            public void GivenNullEncryptingKey_ShouldThrowArgumentNullException()
+            {
+                var exception =
+                    Assert.Throws<ArgumentNullException>(
+                        () => new TokenVerifier(_signingKey, null));
+                exception.ParamName.Should().Be("encryptingKey");
             }
 
             [Fact]

@@ -29,12 +29,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public SecurityKey SigningKey { get; }
 
         /// <summary>
+        /// Gets the credentials that should have been used to encrypt the token
+        /// </summary>
+        public SecurityKey EncryptionKey { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="TokenVerifier"/> class
         /// </summary>
-        /// <param name="signingKey">Key to use when verifying the signature of the token.</param>
-        public TokenVerifier(SecurityKey signingKey)
+        /// <param name="signingKey">Credentials to use when verifying the signature of the token.</param>
+        /// <param name="encryptingKey">Credentials to use when decrypting the token.</param>
+        public TokenVerifier(SecurityKey signingKey, SecurityKey encryptingKey)
         {
             SigningKey = signingKey ?? throw new ArgumentNullException(nameof(signingKey));
+            EncryptionKey = encryptingKey ?? throw new ArgumentNullException(nameof(encryptingKey));
+
             CurrentInstant = DateTimeOffset.Now;
         }
 
@@ -76,10 +84,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 ValidateIssuer = true,
                 ValidIssuer = Claims.Issuer,
                 ValidateLifetime = true,
-                IssuerSigningKey = SigningKey,
                 RequireExpirationTime = true,
                 RequireSignedTokens = true,
-                ClockSkew = TimeSpan.FromSeconds(60)
+                ClockSkew = TimeSpan.FromSeconds(60),
+                IssuerSigningKey = SigningKey,
+                TokenDecryptionKey = EncryptionKey
             };
 
             try
@@ -135,13 +144,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         private TokenVerifier(
             TokenVerifier original,
+            SecurityKey encryptionKey = null,
+            SecurityKey signingKey = null,
             string virtualMachineId = null,
-            DateTimeOffset? currentInstant = null,
-            SecurityKey signingKey = null)
+            DateTimeOffset? currentInstant = null)
         {
+            EncryptionKey = encryptionKey ?? original.EncryptionKey;
+            SigningKey = signingKey ?? original.SigningKey;
             VirtualMachineId = virtualMachineId ?? original.VirtualMachineId;
             CurrentInstant = currentInstant ?? original.CurrentInstant;
-            SigningKey = signingKey ?? original.SigningKey;
         }
 
         /// <summary>
