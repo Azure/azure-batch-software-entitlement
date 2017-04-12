@@ -14,7 +14,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     public class TokenVerifier
     {
         /// <summary>
-        /// The virtual machine we're expecting to be specified in the token
+        /// Gets the virtual machine we're expecting to be specified in the token
         /// </summary>
         public string VirtualMachineId { get; }
 
@@ -47,7 +47,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
-        /// Configure the token verifier to expect a particular virtual machine identifier within 
+        /// Configure the token verifier to expect a particular virtual machine identifier within
         /// the software entitlement token
         /// </summary>
         /// <param name="virtualMachineId">Required virtual machine id for the token to be valid.</param>
@@ -72,8 +72,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="tokenString">A software entitlement token to verify.</param>
         /// <param name="application">The specific application id of the application </param>
-        /// <param name="ipAddress"></param>
-        /// <returns>Either a software entitlement describing the approved entitlement, or errors 
+        /// <param name="ipAddress">Address of the machine requesting token validation.</param>
+        /// <returns>Either a software entitlement describing the approved entitlement, or errors
         /// explaining why it wasn't approved.</returns>
         public Errorable<NodeEntitlements> Verify(string tokenString, string application, IPAddress ipAddress)
         {
@@ -173,12 +173,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
-        /// Verify that the IP address requesting the entitlement is the one the entitlement was 
+        /// Verify that the IP address requesting the entitlement is the one the entitlement was
         /// issued to
         /// </summary>
         /// <param name="principal">Principal from the decoded token.</param>
         /// <param name="address">IpAddress requesting verification of the token.</param>
-        /// <returns>True if the entitlement was issued to the specified IP address, false otherwise.</returns>
+        /// <returns>True if the entitlement was issued to the specified IP address, false
+        /// otherwise.</returns>
         private bool VerifyIpAddress(ClaimsPrincipal principal, IPAddress address)
         {
             var ipAddressClaims = principal.FindAll(Claims.IpAddress).ToList();
