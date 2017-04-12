@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Text;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -11,8 +10,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 {
     public class TokenGeneratorTests
     {
-        // Key used to sign tokens
-        private readonly SymmetricSecurityKey _signingKey;
+        // Credentials used to sign tokens
+        private readonly SigningCredentials _signingCredentials;
+
+        // Credentials used to encrypt tokens
+        private readonly EncryptingCredentials _encryptionCredentials;
 
         // Logger that does nothing
         private readonly ILogger _nullLogger = NullLogger.Instance;
@@ -20,19 +22,29 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         public TokenGeneratorTests()
         {
             const string plainTextSecurityKey = "This is my shared, not so secret, secret!";
-            _signingKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(plainTextSecurityKey));
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(plainTextSecurityKey));
+            _signingCredentials = new SigningCredentials(key, "fu");
+            _encryptionCredentials = new EncryptingCredentials(key, "bar", "baz");
         }
 
         public class Constructor : TokenGeneratorTests
         {
             [Fact]
-            public void GivenNullKey_ThrowsArgumentNullException()
+            public void GivenNullSigningKey_ThrowsArgumentNullException()
             {
                 var exception =
                     Assert.Throws<ArgumentNullException>(
-                        () => new TokenGenerator(null, _nullLogger));
-                exception.ParamName.Should().Be("signingKey");
+                        () => new TokenGenerator(null, _encryptionCredentials, _nullLogger));
+                exception.ParamName.Should().Be("signingCredentials");
+            }
+
+            [Fact]
+            public void GivenNullEncryptionKey_ThrowsArgumentNullException()
+            {
+                var exception =
+                    Assert.Throws<ArgumentNullException>(
+                        () => new TokenGenerator(_signingCredentials, null, _nullLogger));
+                exception.ParamName.Should().Be("encryptingCredentials");
             }
 
             [Fact]
@@ -40,15 +52,22 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var exception =
                     Assert.Throws<ArgumentNullException>(
-                        () => new TokenGenerator(_signingKey, null));
+                        () => new TokenGenerator(_signingCredentials, _encryptionCredentials, null));
                 exception.ParamName.Should().Be("logger");
             }
 
             [Fact]
-            public void GivenKey_InitializesProperty()
+            public void GivenSigningKey_InitializesProperty()
             {
-                var generator = new TokenGenerator(_signingKey, _nullLogger);
-                generator.SigningKey.Should().Be(_signingKey);
+                var generator = new TokenGenerator(_signingCredentials, _encryptionCredentials, _nullLogger);
+                generator.SigningCredentials.Should().Be(_signingCredentials);
+            }
+
+            [Fact]
+            public void GivenEncryptionKey_InitializesProperty()
+            {
+                var generator = new TokenGenerator(_signingCredentials, _encryptionCredentials, _nullLogger);
+                generator.EncryptingCredentials.Should().Be(_encryptionCredentials);
             }
         }
 
@@ -58,7 +77,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
             public Generate()
             {
-                _generator = new TokenGenerator(_signingKey, _nullLogger);
+                _generator = new TokenGenerator(_signingCredentials, _encryptionCredentials, _nullLogger);
             }
 
             [Fact]
