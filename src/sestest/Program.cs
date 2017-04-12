@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IdentityModel;
+using System.IdentityModel.Tokens;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -10,12 +12,16 @@ using CommandLine;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using SymmetricSecurityKey = Microsoft.IdentityModel.Tokens.SymmetricSecurityKey;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
     public static class Program
     {
         private static ILogger _logger;
+
+        // Store used to scan for and obtain certificates
+        private static readonly CertificateStore _certificateStore = new CertificateStore();
 
         public static int Main(string[] args)
         {
@@ -51,17 +57,39 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public static int Generate(GenerateCommandLine commandLine)
         {
             var entitlement = NodeEntitlementsBuilder.Build(commandLine);
-            return entitlement.Match(GenerateToken, LogErrors);
+            var signingCert = FindCertificate("signing", commandLine.SignatureThumbprint);
+            var encryptionCert = FindCertificate("encryption", commandLine.EncryptionThumbprint);
+
+            var result = entitlement.Combine(signingCert, encryptionCert, GenerateToken);
+
+            if (result.HasValue)
+            {
+                return result.Value;
+            }
+
+            return LogErrors(result.Errors);
         }
 
-        private static int GenerateToken(NodeEntitlements entitlements)
+        /// <summary>
+        /// Generate a token
+        /// </summary>
+        /// <param name="entitlements">Details of the entitlements to encode into the token.</param>
+        /// <param name="signingCert">Certificate to use when signing the token (optional).</param>
+        /// <param name="encryptionCert">Certificate to use when encrypting the token (optional).</param>
+        /// <returns></returns>
+        private static int GenerateToken(
+            NodeEntitlements entitlements,
+            X509Certificate2 signingCert = null,
+            X509Certificate2 encryptionCert = null)
         {
-            // Hard coded for now, will use certificates later on
-            const string plainTextSecurityKey = "This is my shared, not so secret, secret!";
-            var signingKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(plainTextSecurityKey));
+            var signingKey = new X509SecurityKey(signingCert);
+            var signingCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.RsaSha512Signature);
 
-            var generator = new TokenGenerator(signingKey, GlobalLogger.Logger);
+            var encryptionKey = new X509SecurityKey(encryptionCert);
+            var encryptingCredentials = new EncryptingCredentials(
+                encryptionKey, SecurityAlgorithms.RsaOAEP, SecurityAlgorithms.Aes256CbcHmacSha512);
+
+            var generator = new TokenGenerator(signingCredentials, encryptingCredentials, GlobalLogger.Logger);
             var token = generator.Generate(entitlements);
             if (token == null)
             {
@@ -193,6 +221,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 _logger.LogError((EventId)0, ex, ex.Message);
                 return -1;
             }
+        }
+
+        private static Errorable<X509Certificate2> FindCertificate(string purpose, string thumbprint)
+        {
+            if (string.IsNullOrEmpty(thumbprint))
+            {
+                // No certificate requested, so we successfully return null
+                return Errorable.Success<X509Certificate2>(null);
+            }
+
+            var t = new CertificateThumbprint(thumbprint);
+            return _certificateStore.FindByThumbprint(purpose, t);
         }
 
         private static int LogErrors(IEnumerable<string> errors)
