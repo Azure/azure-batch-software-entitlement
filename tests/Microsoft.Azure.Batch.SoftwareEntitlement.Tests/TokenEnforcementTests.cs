@@ -65,24 +65,24 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             _generator = new TokenGenerator(signingCredentials, encryptingCredentials, _nullLogger);
         }
 
-        private NodeEntitlements CreateEntitlements(EntitlementOptions options = EntitlementOptions.None)
+        private NodeEntitlements CreateEntitlements(EntitlementCreationOptions creationOptions = EntitlementCreationOptions.None)
         {
             var result = new NodeEntitlements()
                 .WithVirtualMachineId("virtual-machine-identifier")
                 .FromInstant(_now)
                 .UntilInstant(_now + TimeSpan.FromDays(7));
 
-            if (!options.HasFlag(EntitlementOptions.OmitIpAddress))
+            if (!creationOptions.HasFlag(EntitlementCreationOptions.OmitIpAddress))
             {
                 result = result.AddIpAddress(_approvedAddress);
             }
 
-            if (!options.HasFlag(EntitlementOptions.OmitIdentifier))
+            if (!creationOptions.HasFlag(EntitlementCreationOptions.OmitIdentifier))
             {
                 result = result.WithIdentifier(_entitlementIdentifer);
             }
 
-            if (!options.HasFlag(EntitlementOptions.OmitApplication))
+            if (!creationOptions.HasFlag(EntitlementCreationOptions.OmitApplication))
             {
                 result = result.AddApplication(_contosoFinanceApp);
             }
@@ -90,8 +90,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             return result;
         }
 
+        /// <summary>
+        /// Options used to control the creation of an <see cref="NodeEntitlements"/> instance 
+        /// for testing.
+        /// </summary>
         [Flags]
-        private enum EntitlementOptions
+        private enum EntitlementCreationOptions
         {
             None = 0,
             OmitIpAddress = 1,
@@ -217,7 +221,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WhenEntitlementContainsNoApplications_ReturnsError()
             {
-                var entitlements = CreateEntitlements(EntitlementOptions.OmitApplication);
+                var entitlements = CreateEntitlements(EntitlementCreationOptions.OmitApplication);
                 var token = _generator.Generate(entitlements);
                 var result = _verifier.Verify(token, _contosoITApp, _approvedAddress);
                 result.HasValue.Should().BeFalse();
@@ -239,7 +243,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WhenEntitlementContainsOtherIp_ReturnsError()
             {
-                var entitlements = CreateEntitlements(EntitlementOptions.OmitIpAddress)
+                var entitlements = CreateEntitlements(EntitlementCreationOptions.OmitIpAddress)
                     .AddIpAddress(_otherAddress);
                 var token = _generator.Generate(entitlements);
                 var result = _verifier.Verify(token, _contosoFinanceApp, _approvedAddress);
@@ -250,7 +254,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WhenEntitlementHasNoIp_ReturnsError()
             {
-                var entitlements = CreateEntitlements(EntitlementOptions.OmitIpAddress);
+                var entitlements = CreateEntitlements(EntitlementCreationOptions.OmitIpAddress);
                 var token = _generator.Generate(entitlements);
                 var result = _verifier.Verify(token, _contosoFinanceApp, _approvedAddress);
                 result.HasValue.Should().BeFalse();
@@ -272,7 +276,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WhenIdentifierOmitted_ReturnsError()
             {
-                var entitlements = CreateEntitlements(EntitlementOptions.OmitIdentifier);
+                var entitlements = CreateEntitlements(EntitlementCreationOptions.OmitIdentifier);
                 var token = _generator.Generate(entitlements);
                 var result = _verifier.Verify(token, _contosoFinanceApp, _approvedAddress);
                 result.HasValue.Should().BeFalse();
