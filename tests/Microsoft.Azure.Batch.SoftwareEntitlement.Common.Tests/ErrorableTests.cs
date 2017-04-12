@@ -87,6 +87,39 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             }
         }
 
+        public class AddErrorsMethod : ErrorableTests
+        {
+            // Reference to a success to use for testing
+            private readonly Errorable<int> _success = Errorable.Success(42);
+
+            // Reference to a failure to use for testing
+            private readonly Errorable<int> _failure = Errorable.Failure<int>("Error");
+
+            // A sequence of errors to test with
+            private readonly IEnumerable<string> _errors = new List<string> {"err", "error"};
+
+            [Fact]
+            public void WhenSuccess_DiscardsValue()
+            {
+                var result = _success.AddErrors(_errors);
+                result.HasValue.Should().BeFalse();
+            }
+
+            [Fact]
+            public void WhenSuccess_IncludesAllErrors()
+            {
+                var result = _success.AddErrors(_errors);
+                result.Errors.Should().BeEquivalentTo(_errors);
+            }
+
+            [Fact]
+            public void WhenFailure_IncludesAllErrors()
+            {
+                var result = _failure.AddErrors(_errors);
+                result.Errors.Should().Contain(_errors);
+            }
+        }
+
         public class ValueProperty : ErrorableTests
         {
             [Fact]
