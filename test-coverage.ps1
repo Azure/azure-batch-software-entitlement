@@ -31,7 +31,7 @@ Write-Header "Generating Report"
 & $reportGeneratorExe "-reports:.\out\Common.cover.xml;.\out\Ses.cover.xml" "-targetdir:.\out\cover\"
 
 $reportIndex = resolve-path .\out\cover\index.htm
-Write-Line
+Write-Divider
 Write-Output "Test coverage report file:   $reportIndex"
 
 & $reportIndex
