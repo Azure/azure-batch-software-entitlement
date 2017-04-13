@@ -33,7 +33,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             _identicalThumbprint = new CertificateThumbprint(_thumbprintA);
             _otherThumbprint = new CertificateThumbprint(_thumbprintB);
 
-            _thumbprintAwithoutSpaces = string.Join("", _thumbprintA.Where(c => c != ' '));
+            _thumbprintAwithoutSpaces = string.Join(string.Empty, _thumbprintA.Where(c => c != ' '));
         }
 
         public class Constructor : CertificateThumbprintTests

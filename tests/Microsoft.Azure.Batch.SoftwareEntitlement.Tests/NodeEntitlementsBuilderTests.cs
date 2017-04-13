@@ -84,7 +84,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WhenMissing_BuildReturnsValue()
             {
-                _commandLine.NotBefore = "";
+                _commandLine.NotBefore = string.Empty;
                 var result = NodeEntitlementsBuilder.Build(_commandLine);
                 result.HasValue.Should().BeTrue();
             }
@@ -124,7 +124,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WhenMissing_BuildReturnsValue()
             {
-                _commandLine.NotAfter = "";
+                _commandLine.NotAfter = string.Empty;
                 var result = NodeEntitlementsBuilder.Build(_commandLine);
                 result.HasValue.Should().BeTrue();
             }

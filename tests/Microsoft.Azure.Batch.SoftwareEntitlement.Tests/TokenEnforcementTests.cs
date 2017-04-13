@@ -58,7 +58,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 encryptingKey, "dir", SecurityAlgorithms.Aes256CbcHmacSha512);
 
             _validEntitlements = CreateEntitlements();
-            _verifier = new TokenVerifier(_signingKey);
+            _verifier = new TokenVerifier(signingKey, encryptingKey);
             _generator = new TokenGenerator(signingCredentials, encryptingCredentials, _nullLogger);
         }
 
