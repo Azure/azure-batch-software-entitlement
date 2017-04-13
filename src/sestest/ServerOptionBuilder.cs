@@ -60,6 +60,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             Configure(ServerUrl, url => options.WithServerUrl(url));
             Configure(ConnectionCertificate, cert => options.WithConnectionCertificate(cert));
+            Configure(SigningCertificate, cert => options.WithSigningCertificate(cert));
+            Configure(EncryptingCertificate, cert => options.WithConnectionCertificate(cert));
 
             if (errors.Any())
             {
@@ -104,6 +106,24 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         private Errorable<X509Certificate2> ConnectionCertificate()
         {
             return FindCertificate("connection", _commandLine.ConnectionCertificateThumbprint);
+        }
+
+        /// <summary>
+        /// Find the certificate to use for signing tokens
+        /// </summary>
+        /// <returns>Certificate, if found; error details otherwise.</returns>
+        private Errorable<X509Certificate2> SigningCertificate()
+        {
+            return FindCertificate("signing", _commandLine.SigningCertificateThumbprint);
+        }
+
+        /// <summary>
+        /// Find the certificate to use for encrypting tokens
+        /// </summary>
+        /// <returns>Certificate, if found; error details otherwise.</returns>
+        private Errorable<X509Certificate2> EncryptingCertificate()
+        {
+            return FindCertificate("encrypting", _commandLine.EncryptionCertificateThumbprint);
         }
 
         /// <summary>
