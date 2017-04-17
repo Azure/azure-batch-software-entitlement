@@ -184,11 +184,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         private bool VerifyIpAddress(ClaimsPrincipal principal, IPAddress address)
         {
             var ipAddressClaims = principal.FindAll(Claims.IpAddress).ToList();
-            if (ipAddressClaims == null || !ipAddressClaims.Any())
-            {
-                return false;
-            }
-
             foreach (var ipClaim in ipAddressClaims)
             {
                 if (!IPAddress.TryParse(ipClaim.Value, out var parsedAddress))
