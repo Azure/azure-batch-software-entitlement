@@ -136,13 +136,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             foreach (var address in _commandLine.Addresses)
             {
-                if (!IPAddress.TryParse(address, out var ip))
+                if (IPAddress.TryParse(address, out var ip))
                 {
-                    yield return Errorable.Failure<IPAddress>($"IP address '{address}' not in expected format (IPv4 and IPv6 supported).");
+                    yield return Errorable.Success(ip);
                 }
                 else
                 {
-                    yield return Errorable.Success(ip);
+                    yield return Errorable.Failure<IPAddress>($"IP address '{address}' not in expected format (IPv4 and IPv6 supported).");
                 }
             }
         }
