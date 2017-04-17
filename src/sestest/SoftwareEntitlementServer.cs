@@ -53,7 +53,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             var signingKey = CreateKey(_options.SigningCertificate);
             var encryptingKey = CreateKey(_options.EncryptionCertificate);
-            var controllerOptions = new SoftwareEntitlementControllerOptions(signingKey, encryptingKey);
+            var controllerOptions = new SoftwareEntitlementsController.Options(signingKey, encryptingKey);
             services.AddSingleton(controllerOptions);
         }
 

@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
     public class SoftwareEntitlementsController : Controller
     {
         // Configuration options
-        private readonly SoftwareEntitlementControllerOptions _options;
+        private readonly Options _options;
 
         // A reference to our logger
 
@@ -28,7 +28,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         /// </summary>
         /// <param name="options">Options to use when handling requests.</param>
         /// <param name="logger">Reference to our logger for diagnostics.</param>
-        public SoftwareEntitlementsController(SoftwareEntitlementControllerOptions options,  ILogger logger)
+        public SoftwareEntitlementsController(Options options, ILogger logger)
         {
             _options = options;
             _logger = logger;
@@ -38,7 +38,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         [HttpPost]
         [Produces("application/json")]
         public IActionResult RequestEntitlement(
-            [FromBody]SoftwareEntitlementRequest entitlementRequest)
+            [FromBody] SoftwareEntitlementRequest entitlementRequest)
         {
             _logger.LogInformation($"Request entitlement for {entitlementRequest.ApplicationId}");
             _logger.LogDebug($"Application id: {entitlementRequest.ApplicationId}");
@@ -73,29 +73,29 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
 
             return Ok(response);
         }
-    }
 
-    public class SoftwareEntitlementControllerOptions
-    {
-        /// <summary>
-        /// Gets the key to use when checking the signature on a token
-        /// </summary>
-        public SecurityKey SigningKey { get; }
-
-        /// <summary>
-        /// Gets the key to use when decrypting a token
-        /// </summary>
-        public SecurityKey EncryptionKey { get; }
-
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SoftwareEntitlementControllerOptions"/> class.
-        /// </summary>
-        /// <param name="signingKey">Key to use when checking token signatures.</param>
-        /// <param name="encryptionKey">Key to use when decrypting tokens.</param>
-        public SoftwareEntitlementControllerOptions(SecurityKey signingKey, SecurityKey encryptionKey)
+        public class Options
         {
-            SigningKey = signingKey;
-            EncryptionKey = encryptionKey;
+            /// <summary>
+            /// Gets the key to use when checking the signature on a token
+            /// </summary>
+            public SecurityKey SigningKey { get; }
+
+            /// <summary>
+            /// Gets the key to use when decrypting a token
+            /// </summary>
+            public SecurityKey EncryptionKey { get; }
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Options"/> class.
+            /// </summary>
+            /// <param name="signingKey">Key to use when checking token signatures.</param>
+            /// <param name="encryptionKey">Key to use when decrypting tokens.</param>
+            public Options(SecurityKey signingKey, SecurityKey encryptionKey)
+            {
+                SigningKey = signingKey;
+                EncryptionKey = encryptionKey;
+            }
         }
     }
 }
