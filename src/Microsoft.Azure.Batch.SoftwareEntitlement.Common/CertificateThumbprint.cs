@@ -78,8 +78,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <summary>
         /// Is this thumbprint equal to another thumbprint
         /// </summary>
-        /// <param name="other"></param>
-        /// <returns></returns>
+        /// <param name="other">Other thumbprint for comparison.</param>
+        /// <returns>True if the two thumbprints are equivalent, false otherwise.</returns>
         [Pure]
         public bool Equals(CertificateThumbprint other)
         {
@@ -102,9 +102,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <summary>
         /// Filter out any unsafe characters from a potential thumbprint
         /// </summary>
-        /// <remarks>When copying a thumbprint from MMC, it ends up with a zero width unicode 
-        /// character (actually, a "left-to-right indicator") which can get in the way of finding a 
-        /// certificate. Filtering the string works to avoid this problem. 
+        /// <remarks>When copying a thumbprint from MMC, it ends up with a zero width unicode
+        /// character (actually, a "left-to-right indicator") which can get in the way of finding a
+        /// certificate. Filtering the string works to avoid this problem.
         /// See http://stackoverflow.com/a/14852713/30280 for more.</remarks>
         /// <param name="thumbprint">Thumbprint to sanitize.</param>
         /// <returns>Sanitized string.</returns>

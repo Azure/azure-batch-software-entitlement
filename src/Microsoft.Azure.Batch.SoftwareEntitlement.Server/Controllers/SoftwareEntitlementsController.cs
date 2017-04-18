@@ -10,7 +10,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
     [Route("softwareEntitlements")]
     public class SoftwareEntitlementsController : Controller
     {
+        // Configuration options
+        private readonly Options _options;
+
         // A reference to our logger
+
         private readonly ILogger _logger;
 
         // Key used to check the signature of tokens
@@ -22,23 +26,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         /// <summary>
         /// Initializes a new instance of the <see cref="SoftwareEntitlementsController"/> class
         /// </summary>
+        /// <param name="options">Options to use when handling requests.</param>
         /// <param name="logger">Reference to our logger for diagnostics.</param>
-        public SoftwareEntitlementsController(ILogger logger)
+        public SoftwareEntitlementsController(Options options, ILogger logger)
         {
+            _options = options;
             _logger = logger;
-
-            // Hard coded for now, will use certificates later on
-            const string plainTextSecurityKey = "This is my shared, not so secret, secret!";
-            _signingKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(plainTextSecurityKey));
-
-            _verifier = new TokenVerifier(_signingKey);
+            _verifier = new TokenVerifier(_options.SigningKey, _options.EncryptionKey);
         }
 
         [HttpPost]
         [Produces("application/json")]
         public IActionResult RequestEntitlement(
-            [FromBody]SoftwareEntitlementRequest entitlementRequest)
+            [FromBody] SoftwareEntitlementRequest entitlementRequest)
         {
             _logger.LogInformation($"Request entitlement for {entitlementRequest.ApplicationId}");
             _logger.LogDebug($"Application id: {entitlementRequest.ApplicationId}");
@@ -65,15 +65,37 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             }
 
             var entitlement = verificationResult.Value;
-
-            var entitlementId = entitlementRequest.ApplicationId + "-" + Guid.NewGuid().ToString("D");
             var response = new SoftwareEntitlementSuccessfulResponse
             {
-                EntitlementId = entitlementId,
+                EntitlementId = entitlement.Identifier,
                 VirtualMachineId = entitlement.VirtualMachineId
             };
 
             return Ok(response);
+        }
+
+        public class Options
+        {
+            /// <summary>
+            /// Gets the key to use when checking the signature on a token
+            /// </summary>
+            public SecurityKey SigningKey { get; }
+
+            /// <summary>
+            /// Gets the key to use when decrypting a token
+            /// </summary>
+            public SecurityKey EncryptionKey { get; }
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Options"/> class.
+            /// </summary>
+            /// <param name="signingKey">Key to use when checking token signatures.</param>
+            /// <param name="encryptionKey">Key to use when decrypting tokens.</param>
+            public Options(SecurityKey signingKey, SecurityKey encryptionKey)
+            {
+                SigningKey = signingKey;
+                EncryptionKey = encryptionKey;
+            }
         }
     }
 }

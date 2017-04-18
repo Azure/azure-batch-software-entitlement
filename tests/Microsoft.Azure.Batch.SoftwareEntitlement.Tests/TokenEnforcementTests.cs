@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Net;
 using System.Text;
+
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Xunit;
 using Microsoft.IdentityModel.Tokens;
+using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 {
@@ -17,21 +18,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         // Generator used to create a token
         private readonly TokenGenerator _generator;
 
-        // Verifier used to check the token 
+        // Verifier used to check the token
         private readonly TokenVerifier _verifier;
 
         // Current time - captured as a member so it doesn't change during a test
         private readonly DateTimeOffset _now = DateTimeOffset.Now;
-
-        // Key used to sign the token
-        private readonly SymmetricSecurityKey _signingKey;
 
         // A application identifiers for testing
         private readonly string _contosoFinanceApp = "contosofinance";
         private readonly string _contosoITApp = "contosoit";
         private readonly string _contosoHRApp = "contosohr";
 
-        // IP addresses to use 
+        // IP addresses to use
         private readonly IPAddress _otherAddress = IPAddress.Parse("203.0.113.42");
         private readonly IPAddress _approvedAddress = IPAddress.Parse("203.0.113.45");
 
@@ -43,34 +41,45 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
         public TokenEnforcementTests()
         {
-            // Hard coded key for testing; actual operation will use a cert
-            const string plainTextSecurityKey = "This is my shared, not so secret, secret!";
-            _signingKey = new SymmetricSecurityKey(
-                Encoding.UTF8.GetBytes(plainTextSecurityKey));
+            // Hard coded key for unit testing only; actual operation will use a cert
+            const string plainTextSigningKey = "This is my shared, not so secret, secret that needs to be very long!";
+            var signingKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(plainTextSigningKey));
+
+            var signingCredentials = new SigningCredentials(
+                signingKey, SecurityAlgorithms.HmacSha256Signature);
+
+            // Hard coded key for unit testing only; actual operation will use a cert
+            const string plainTextEncryptionKey = "This is another not so secret, secret that needs to be very long!";
+            var encryptingKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(plainTextEncryptionKey));
+
+            var encryptingCredentials = new EncryptingCredentials(
+                encryptingKey, "dir", SecurityAlgorithms.Aes256CbcHmacSha512);
 
             _validEntitlements = CreateEntitlements();
-            _verifier = new TokenVerifier(_signingKey);
-            _generator = new TokenGenerator(_signingKey, _nullLogger);
+            _verifier = new TokenVerifier(signingKey, encryptingKey);
+            _generator = new TokenGenerator(_nullLogger, signingCredentials, encryptingCredentials);
         }
 
-        private NodeEntitlements CreateEntitlements(EntitlementOptions options = EntitlementOptions.None)
+        private NodeEntitlements CreateEntitlements(EntitlementCreationOptions creationOptions = EntitlementCreationOptions.None)
         {
             var result = new NodeEntitlements()
                 .WithVirtualMachineId("virtual-machine-identifier")
                 .FromInstant(_now)
                 .UntilInstant(_now + TimeSpan.FromDays(7));
 
-            if (!options.HasFlag(EntitlementOptions.OmitIpAddress))
+            if (!creationOptions.HasFlag(EntitlementCreationOptions.OmitIpAddress))
             {
-                result = result.WithIpAddress(_approvedAddress);
+                result = result.AddIpAddress(_approvedAddress);
             }
 
-            if (!options.HasFlag(EntitlementOptions.OmitIdentifier))
+            if (!creationOptions.HasFlag(EntitlementCreationOptions.OmitIdentifier))
             {
                 result = result.WithIdentifier(_entitlementIdentifer);
             }
 
-            if (!options.HasFlag(EntitlementOptions.OmitApplication))
+            if (!creationOptions.HasFlag(EntitlementCreationOptions.OmitApplication))
             {
                 result = result.AddApplication(_contosoFinanceApp);
             }
@@ -78,8 +87,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             return result;
         }
 
+        /// <summary>
+        /// Options used to control the creation of an <see cref="NodeEntitlements"/> instance
+        /// for testing.
+        /// </summary>
         [Flags]
-        private enum EntitlementOptions
+        private enum EntitlementCreationOptions
         {
             None = 0,
             OmitIpAddress = 1,
@@ -205,7 +218,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WhenEntitlementContainsNoApplications_ReturnsError()
             {
-                var entitlements = CreateEntitlements(EntitlementOptions.OmitApplication);
+                var entitlements = CreateEntitlements(EntitlementCreationOptions.OmitApplication);
                 var token = _generator.Generate(entitlements);
                 var result = _verifier.Verify(token, _contosoITApp, _approvedAddress);
                 result.HasValue.Should().BeFalse();
@@ -221,14 +234,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var token = _generator.Generate(_validEntitlements);
                 var result = _verifier.Verify(token, _contosoFinanceApp, _approvedAddress);
                 result.HasValue.Should().BeTrue();
-                result.Value.IpAddress.Should().Be(_approvedAddress);
+                result.Value.IpAddresses.Should().Contain(_approvedAddress);
             }
 
             [Fact]
             public void WhenEntitlementContainsOtherIp_ReturnsError()
             {
-                var entitlements =
-                    _validEntitlements.WithIpAddress(_otherAddress);
+                var entitlements = CreateEntitlements(EntitlementCreationOptions.OmitIpAddress)
+                    .AddIpAddress(_otherAddress);
                 var token = _generator.Generate(entitlements);
                 var result = _verifier.Verify(token, _contosoFinanceApp, _approvedAddress);
                 result.HasValue.Should().BeFalse();
@@ -238,7 +251,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WhenEntitlementHasNoIp_ReturnsError()
             {
-                var entitlements = CreateEntitlements(EntitlementOptions.OmitIpAddress);
+                var entitlements = CreateEntitlements(EntitlementCreationOptions.OmitIpAddress);
                 var token = _generator.Generate(entitlements);
                 var result = _verifier.Verify(token, _contosoFinanceApp, _approvedAddress);
                 result.HasValue.Should().BeFalse();
@@ -260,7 +273,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WhenIdentifierOmitted_ReturnsError()
             {
-                var entitlements = CreateEntitlements(EntitlementOptions.OmitIdentifier);
+                var entitlements = CreateEntitlements(EntitlementCreationOptions.OmitIdentifier);
                 var token = _generator.Generate(entitlements);
                 var result = _verifier.Verify(token, _contosoFinanceApp, _approvedAddress);
                 result.HasValue.Should().BeFalse();

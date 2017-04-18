@@ -1,11 +1,15 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server;
+using Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -33,6 +37,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             var contentDirectory = FindContentDirectory();
             var host = new WebHostBuilder()
+                .ConfigureServices(ConfigureServices)
                 .UseKestrel(ConfigureKestrel)
                 .UseContentRoot(contentDirectory.FullName)
                 .UseStartup<Startup>()
@@ -42,6 +47,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             // This sends output directly to the console which is a bit naff
             // but avoiding it would probably be brittle.
             host.Run();
+        }
+
+        private void ConfigureServices(IServiceCollection services)
+        {
+            var signingKey = CreateKey(_options.SigningCertificate);
+            var encryptingKey = CreateKey(_options.EncryptionCertificate);
+            var controllerOptions = new SoftwareEntitlementsController.Options(signingKey, encryptingKey);
+            services.AddSingleton(controllerOptions);
         }
 
         private void ConfigureKestrel(KestrelServerOptions options)
@@ -65,8 +78,17 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             var hostAssembly = typeof(Startup).GetTypeInfo().Assembly;
             var hostFileInfo = new FileInfo(hostAssembly.Location);
-            var hostDirectory = hostFileInfo.Directory;
-            return hostDirectory;
+            return hostFileInfo.Directory;
+        }
+
+        private SecurityKey CreateKey(X509Certificate2 certificate)
+        {
+            if (certificate == null)
+            {
+                return null;
+            }
+
+            return new X509SecurityKey(certificate);
         }
     }
 }

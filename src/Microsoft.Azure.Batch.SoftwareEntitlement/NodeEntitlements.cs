@@ -35,9 +35,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public ImmutableHashSet<string> Applications { get; }
 
         /// <summary>
-        /// The IP address of the machine authorized to use this entitlement
+        /// The IP addresses of the machine authorized to use this entitlement
         /// </summary>
-        public IPAddress IpAddress { get; }
+        public ImmutableHashSet<IPAddress> IpAddresses { get; }
 
         /// <summary>
         /// The unique identifier for this entitlement
@@ -56,12 +56,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             NotBefore = now;
             NotAfter = now + TimeSpan.FromDays(7);
             Applications = ImmutableHashSet<string>.Empty;
+            IpAddresses = ImmutableHashSet<IPAddress>.Empty;
         }
 
         /// <summary>
-        /// Specify the virtual machine Id of the machine 
+        /// Specify the virtual machine Id of the machine
         /// </summary>
-        /// <param name="virtualMachineId"></param>
+        /// <param name="virtualMachineId">Virtual machine ID to include in the entitlement.</param>
         /// <returns>A new entitlement.</returns>
         public NodeEntitlements WithVirtualMachineId(string virtualMachineId)
         {
@@ -105,7 +106,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 throw new ArgumentNullException(nameof(application));
             }
 
-            return new NodeEntitlements(this, applications: Applications.Add(application));
+            return new NodeEntitlements(this, applications: Applications.Add(application.Trim()));
         }
 
         /// <summary>
@@ -113,14 +114,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="address">IP Address of the machine to run the entitled application(s).</param>
         /// <returns>A new entitlement</returns>
-        public NodeEntitlements WithIpAddress(IPAddress address)
+        public NodeEntitlements AddIpAddress(IPAddress address)
         {
             if (address == null)
             {
                 throw new ArgumentNullException(nameof(address));
             }
 
-            return new NodeEntitlements(this, address: address);
+            return new NodeEntitlements(this, addresses: IpAddresses.Add(address));
         }
 
         /// <summary>
@@ -139,7 +140,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
-        /// Cloning constructor to initialize a new instance of the <see cref="NodeEntitlements"/> 
+        /// Cloning constructor to initialize a new instance of the <see cref="NodeEntitlements"/>
         /// class as a (near) copy of an existing one.
         /// </summary>
         /// <remarks>Specify any of the optional parameters to modify the clone from the original.</remarks>
@@ -149,7 +150,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="virtualMachineId">Optionally specify a new value for <see cref="VirtualMachineId"/>.</param>
         /// <param name="applications">The set of applications entitled to run.</param>
         /// <param name="identifier">Identifier to use for this entitlement.</param>
-        /// <param name="address">Address of the entitled machine.</param>
+        /// <param name="addresses">Addresses of the entitled machine.</param>
         private NodeEntitlements(
             NodeEntitlements original,
             DateTimeOffset? notBefore = null,
@@ -157,7 +158,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             string virtualMachineId = null,
             ImmutableHashSet<string> applications = null,
             string identifier = null,
-            IPAddress address = null)
+            ImmutableHashSet<IPAddress> addresses = null)
         {
             Created = original.Created;
 
@@ -166,7 +167,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             VirtualMachineId = virtualMachineId ?? original.VirtualMachineId;
             Applications = applications ?? original.Applications;
             Identifier = identifier ?? original.Identifier;
-            IpAddress = address ?? original.IpAddress;
+            IpAddresses = addresses ?? original.IpAddresses;
         }
     }
 }

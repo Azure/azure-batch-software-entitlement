@@ -1,9 +1,11 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using System;
+using System.IO;
+
+using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Events;
 using Serilog.Extensions.Logging;
-using System;
-using System.IO;
+
 using ILogger = Microsoft.Extensions.Logging.ILogger;
 using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 

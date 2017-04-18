@@ -117,7 +117,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <summary>
         /// An implementation of <see cref="Errorable{T}"/> that represents an actual value
         /// </summary>
-        internal class SuccessImplementation : Errorable<T>
+        internal sealed class SuccessImplementation : Errorable<T>
         {
             public SuccessImplementation(T value)
             {

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -65,9 +66,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     whenFailure: e => errors.AddRange(e));
             }
 
+            // readConfiguration - function to read all the configuration values
+            // applyConfiguration - function to modify our configuration with each value read
+            void ConfigureAll<V>(
+                Func<IEnumerable<Errorable<V>>> readConfiguration,
+                Func<V, NodeEntitlements> applyConfiguration)
+            {
+                foreach (var configuration in readConfiguration())
+                {
+                    configuration.Match(
+                            whenSuccessful: value => entitlement = applyConfiguration(value),
+                            whenFailure: e => errors.AddRange(e));
+                }
+            }
+
             Configure(VirtualMachineId, url => entitlement.WithVirtualMachineId(url));
             Configure(NotBefore, notBefore => entitlement.FromInstant(notBefore));
             Configure(NotAfter, notAfter => entitlement.UntilInstant(notAfter));
+            ConfigureAll(Addresses, address => entitlement.AddIpAddress(address));
+            ConfigureAll(Applications, app => entitlement.AddApplication(app));
 
             if (errors.Any())
             {
@@ -107,6 +124,42 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             return _timestampParser.TryParse(_commandLine.NotAfter, "NotAfter");
+        }
+
+        private IEnumerable<Errorable<IPAddress>> Addresses()
+        {
+            if (_commandLine.Addresses == null || !_commandLine.Addresses.Any())
+            {
+                yield return Errorable.Failure<IPAddress>("No IP Addresses specified.");
+                yield break;
+            }
+
+            foreach (var address in _commandLine.Addresses)
+            {
+                if (IPAddress.TryParse(address, out var ip))
+                {
+                    yield return Errorable.Success(ip);
+                }
+                else
+                {
+                    yield return Errorable.Failure<IPAddress>($"IP address '{address}' not in expected format (IPv4 and IPv6 supported).");
+                }
+            }
+        }
+
+        private IEnumerable<Errorable<string>> Applications()
+        {
+            var apps = _commandLine.ApplicationIds.ToList();
+            if (_commandLine.ApplicationIds == null || !_commandLine.ApplicationIds.Any())
+            {
+                yield return Errorable.Failure<string>("No applications specified.");
+                yield break;
+            }
+
+            foreach (var app in apps)
+            {
+                yield return Errorable.Success(app.Trim());
+            }
         }
     }
 }

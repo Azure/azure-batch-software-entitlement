@@ -60,19 +60,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenSuccessAndSuccess_CallsSuccessActionWithExpectedValues()
             {
-                var receivedLeft = 0;
-                var receivedRight = 0;
+                var receivedAlpha = 0;
+                var receivedBeta = 0;
 
-                void WhenSuccessful(int left, int right)
+                void WhenSuccessful(int alpha, int beta)
                 {
-                    receivedLeft = left;
-                    receivedRight = right;
+                    receivedAlpha = alpha;
+                    receivedBeta = beta;
                 }
 
                 _success.Combine(_otherSuccess, WhenSuccessful, WhenFailureAbort);
 
-                receivedLeft.Should().Be(_success.Value);
-                receivedRight.Should().Be(_otherSuccess.Value);
+                receivedAlpha.Should().Be(_success.Value);
+                receivedBeta.Should().Be(_otherSuccess.Value);
             }
 
             [Fact]

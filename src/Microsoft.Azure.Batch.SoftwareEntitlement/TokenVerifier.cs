@@ -14,7 +14,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     public class TokenVerifier
     {
         /// <summary>
-        /// The virtual machine we're expecting to be specified in the token
+        /// Gets the virtual machine we're expecting to be specified in the token
         /// </summary>
         public string VirtualMachineId { get; }
 
@@ -29,17 +29,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public SecurityKey SigningKey { get; }
 
         /// <summary>
+        /// Gets the credentials that should have been used to encrypt the token
+        /// </summary>
+        public SecurityKey EncryptionKey { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="TokenVerifier"/> class
         /// </summary>
-        /// <param name="signingKey">Key to use when verifying the signature of the token.</param>
-        public TokenVerifier(SecurityKey signingKey)
+        /// <param name="signingKey">Credentials to use when verifying the signature of the token.</param>
+        /// <param name="encryptingKey">Credentials to use when decrypting the token.</param>
+        public TokenVerifier(SecurityKey signingKey, SecurityKey encryptingKey)
         {
             SigningKey = signingKey ?? throw new ArgumentNullException(nameof(signingKey));
+            EncryptionKey = encryptingKey ?? throw new ArgumentNullException(nameof(encryptingKey));
+
             CurrentInstant = DateTimeOffset.Now;
         }
 
         /// <summary>
-        /// Configure the token verifier to expect a particular virtual machine identifier within 
+        /// Configure the token verifier to expect a particular virtual machine identifier within
         /// the software entitlement token
         /// </summary>
         /// <param name="virtualMachineId">Required virtual machine id for the token to be valid.</param>
@@ -64,22 +72,24 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="tokenString">A software entitlement token to verify.</param>
         /// <param name="application">The specific application id of the application </param>
-        /// <param name="ipAddress"></param>
-        /// <returns>Either a software entitlement describing the approved entitlement, or errors 
+        /// <param name="ipAddress">Address of the machine requesting token validation.</param>
+        /// <returns>Either a software entitlement describing the approved entitlement, or errors
         /// explaining why it wasn't approved.</returns>
         public Errorable<NodeEntitlements> Verify(string tokenString, string application, IPAddress ipAddress)
         {
-            var validationParameters = new TokenValidationParameters()
+            var validationParameters = new TokenValidationParameters
             {
                 ValidateAudience = true,
                 ValidAudience = Claims.Audience,
                 ValidateIssuer = true,
                 ValidIssuer = Claims.Issuer,
                 ValidateLifetime = true,
-                IssuerSigningKey = SigningKey,
                 RequireExpirationTime = true,
                 RequireSignedTokens = true,
-                ClockSkew = TimeSpan.FromSeconds(60)
+                ClockSkew = TimeSpan.FromSeconds(60),
+                IssuerSigningKey = SigningKey,
+                ValidateIssuerSigningKey = true,
+                TokenDecryptionKey = EncryptionKey
             };
 
             try
@@ -115,7 +125,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     .UntilInstant(new DateTimeOffset(token.ValidTo))
                     .AddApplication(application)
                     .WithIdentifier(entitlementIdClaim.Value)
-                    .WithIpAddress(ipAddress);
+                    .AddIpAddress(ipAddress);
 
                 return Errorable.Success(result);
             }
@@ -135,13 +145,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         private TokenVerifier(
             TokenVerifier original,
+            SecurityKey encryptionKey = null,
+            SecurityKey signingKey = null,
             string virtualMachineId = null,
-            DateTimeOffset? currentInstant = null,
-            SecurityKey signingKey = null)
+            DateTimeOffset? currentInstant = null)
         {
+            EncryptionKey = encryptionKey ?? original.EncryptionKey;
+            SigningKey = signingKey ?? original.SigningKey;
             VirtualMachineId = virtualMachineId ?? original.VirtualMachineId;
             CurrentInstant = currentInstant ?? original.CurrentInstant;
-            SigningKey = signingKey ?? original.SigningKey;
         }
 
         /// <summary>
@@ -162,31 +174,32 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
-        /// Verify that the IP address requesting the entitlement is the one the entitlement was 
+        /// Verify that the IP address requesting the entitlement is the one the entitlement was
         /// issued to
         /// </summary>
         /// <param name="principal">Principal from the decoded token.</param>
         /// <param name="address">IpAddress requesting verification of the token.</param>
-        /// <returns>True if the entitlement was issued to the specified IP address, false otherwise.</returns>
+        /// <returns>True if the entitlement was issued to the specified IP address, false
+        /// otherwise.</returns>
         private bool VerifyIpAddress(ClaimsPrincipal principal, IPAddress address)
         {
-            var ipAddressClaim = principal.FindFirst(Claims.IpAddress);
-            if (ipAddressClaim == null)
+            var ipAddressClaims = principal.FindAll(Claims.IpAddress).ToList();
+            foreach (var ipClaim in ipAddressClaims)
             {
-                return false;
+                if (!IPAddress.TryParse(ipClaim.Value, out var parsedAddress))
+                {
+                    // Skip any IP addresses in the token that are invalid
+                    continue;
+                }
+
+                if (address.Equals(parsedAddress))
+                {
+                    // We have a match!
+                    return true;
+                }
             }
 
-            if (!IPAddress.TryParse(ipAddressClaim.Value, out var parsedAddress))
-            {
-                return false;
-            }
-
-            if (!address.Equals(parsedAddress))
-            {
-                return false;
-            }
-
-            return true;
+            return false;
         }
 
         private static Errorable<NodeEntitlements> TokenNotYetValidError(DateTime exceptionNotBefore)

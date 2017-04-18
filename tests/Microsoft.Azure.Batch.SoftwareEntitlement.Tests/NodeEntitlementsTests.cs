@@ -67,6 +67,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
         public class AddApplicationMethod : NodeEntitlementsTests
         {
+            private const string Application = "contosoapp";
+
             [Fact]
             public void GivenNull_ThrowsException()
             {
@@ -79,43 +81,66 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void GivenApplicationId_AddsToConfiguration()
             {
-                const string application = "contosoapp";
-                var entitlement = _emptyEntitlement.AddApplication(application);
+                var entitlement = _emptyEntitlement.AddApplication(Application);
                 entitlement.Applications.Should().HaveCount(1);
-                entitlement.Applications.Should().Contain(application);
+                entitlement.Applications.Should().Contain(Application);
             }
 
             [Fact]
             public void GivenDuplicateApplicationId_DoesNotAddToConfiguration()
             {
-                const string application = "contosoapp";
-                var entitlement =
-                    _emptyEntitlement.AddApplication(application)
-                        .AddApplication(application);
+                var entitlement = _emptyEntitlement
+                    .AddApplication(Application)
+                    .AddApplication(Application);
                 entitlement.Applications.Should().HaveCount(1);
-                entitlement.Applications.Should().Contain(application);
+                entitlement.Applications.Should().Contain(Application);
+            }
+
+            [Fact]
+            public void GivenApplicationIdWithWhitespace_RemovesWhitespace()
+            {
+                var entitlement = _emptyEntitlement.AddApplication("  " + Application + "  ");
+                entitlement.Applications.Should().HaveCount(1);
+                entitlement.Applications.Should().Contain(Application.Trim());
             }
         }
 
-        public class WithIpAddressMethod : NodeEntitlementsTests
+        public class AddIpAddressMethod : NodeEntitlementsTests
         {
-            // An IPAddress to use for testing
-            private readonly IPAddress _address = IPAddress.Parse("203.0.113.42");
+            // sample IPAddresses to use for testing (sample addresses as per RFC5735)
+            private readonly IPAddress _addressA = IPAddress.Parse("203.0.113.42");
+            private readonly IPAddress _addressB = IPAddress.Parse("203.0.113.44");
 
             [Fact]
             public void GivenNull_ThrowsException()
             {
                 var exception =
                     Assert.Throws<ArgumentNullException>(
-                        () => _emptyEntitlement.WithIpAddress(null));
+                        () => _emptyEntitlement.AddIpAddress(null));
                 exception.ParamName.Should().Be("address");
             }
 
             [Fact]
             public void GivenIpAddress_ModifiesConfiguration()
             {
-                var entitlement = _emptyEntitlement.WithIpAddress(_address);
-                entitlement.IpAddress.Should().Be(_address);
+                var entitlement = _emptyEntitlement.AddIpAddress(_addressA);
+                entitlement.IpAddresses.Should().Contain(_addressA);
+            }
+
+            [Fact]
+            public void GivenSecondIpAddress_ModifiesConfiguration()
+            {
+                var entitlement = _emptyEntitlement.AddIpAddress(_addressB);
+                entitlement.IpAddresses.Should().Contain(_addressB);
+            }
+
+            [Fact]
+            public void GivenSecondIpAddress_RetainsFirst()
+            {
+                var entitlement = _emptyEntitlement
+                    .AddIpAddress(_addressA)
+                    .AddIpAddress(_addressB);
+                entitlement.IpAddresses.Should().Contain(_addressA);
             }
         }
 

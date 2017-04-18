@@ -2,8 +2,9 @@
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using Microsoft.IdentityModel.Tokens;
+
 using Microsoft.Extensions.Logging;
+using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -16,26 +17,37 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         private readonly ILogger _logger;
 
         /// <summary>
-        /// Gets the key that will be used to sign the token
+        /// Gets the credentials that will be used to sign generated tokens
         /// </summary>
-        public SecurityKey SigningKey { get; }
+        public SigningCredentials SigningCredentials { get; }
+
+        /// <summary>
+        /// Gets the credentials that will be used to encrypt generated tokens
+        /// </summary>
+        public EncryptingCredentials EncryptingCredentials { get; }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="TokenGenerator"/> class
         /// </summary>
-        /// <param name="signingKey">Key to use to sign the token.</param>
         /// <param name="logger">Logger to use for diagnostics</param>
-        public TokenGenerator(SecurityKey signingKey, ILogger logger)
+        /// <param name="signingCredentials">Credentials to use for signing tokens (optional).</param>
+        /// <param name="encryptingCredentials">Credentials to use for encryption of tokens (optional).</param>
+        public TokenGenerator(
+            ILogger logger,
+            SigningCredentials signingCredentials = null,
+            EncryptingCredentials encryptingCredentials = null)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            SigningKey = signingKey ?? throw new ArgumentNullException(nameof(signingKey));
+            _logger = logger
+                ?? throw new ArgumentNullException(nameof(logger));
+            SigningCredentials = signingCredentials;
+            EncryptingCredentials = encryptingCredentials;
         }
 
         /// <summary>
         /// Generate a token from a software entitlement
         /// </summary>
-        /// <param name="entitlements">Software entitlement to use when populating the token.</param>
-        /// <returns></returns>
+        /// <param name="entitlements">Software entitlements to use when populating the token.</param>
+        /// <returns>The generated token.</returns>
         public string Generate(NodeEntitlements entitlements)
         {
             if (entitlements == null)
@@ -48,7 +60,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             _logger.LogDebug($"Not Before: {entitlements.NotBefore}");
             _logger.LogDebug($"Not After: {entitlements.NotAfter}");
 
-            var signingCredentials = new SigningCredentials(SigningKey, SecurityAlgorithms.HmacSha256Signature);
             var claimsIdentity = new ClaimsIdentity(claims);
             var securityTokenDescriptor = new SecurityTokenDescriptor
             {
@@ -58,7 +69,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 IssuedAt = DateTimeOffset.Now.UtcDateTime,
                 Issuer = Claims.Issuer,
                 Audience = Claims.Audience,
-                SigningCredentials = signingCredentials
+                SigningCredentials = SigningCredentials,
+                EncryptingCredentials = EncryptingCredentials
             };
 
             var handler = new JwtSecurityTokenHandler();
@@ -85,10 +97,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 claims.Add(new Claim(Claims.EntitlementId, entitlements.Identifier));
             }
 
-            if (entitlements.IpAddress != null)
+            foreach (var ip in entitlements.IpAddresses)
             {
-                _logger.LogDebug($"Virtual machine Id: {entitlements.IpAddress}");
-                claims.Add(new Claim(Claims.IpAddress, entitlements.IpAddress.ToString()));
+                _logger.LogDebug($"IP Address: {ip}");
+                claims.Add(new Claim(Claims.IpAddress, ip.ToString()));
             }
 
             foreach (var app in entitlements.Applications)

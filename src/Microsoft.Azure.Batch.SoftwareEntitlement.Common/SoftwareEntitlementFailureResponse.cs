@@ -6,12 +6,12 @@
     public class SoftwareEntitlementFailureResponse
     {
         /// <summary>
-        /// A unique machine readable identifier for the reason the entitlement was rejected
+        /// Gets or sets a unique machine readable identifier for the reason the entitlement was rejected
         /// </summary>
         public string Code { get; set; }
 
         /// <summary>
-        /// A human readable message detailing the reason the entitlement was rejected
+        /// Gets or sets a human readable message detailing the reason the entitlement was rejected
         /// </summary>
         public ErrorMessage Message { get; set; }
     }

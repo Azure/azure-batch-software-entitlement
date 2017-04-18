@@ -12,7 +12,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         // A valid set of command line arguments for testing
         private readonly GenerateCommandLine _commandLine = new GenerateCommandLine
         {
-            VirtualMachineId = "Sample"
+            VirtualMachineId = "Sample",
+            Addresses = new List<string> { "127.0.0.1" },
+            ApplicationIds = new List<string> { "contosoapp" }
         };
 
         public class BuildMethod : NodeEntitlementsBuilderTests
@@ -67,7 +69,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WithId_PropertyIsSet()
             {
-                var virtualMachineId = "virtualMachine";
+                const string virtualMachineId = "virtualMachine";
                 _commandLine.VirtualMachineId = virtualMachineId;
                 var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
                 entitlement.Value.VirtualMachineId.Should().Be(virtualMachineId);
@@ -82,7 +84,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WhenMissing_BuildReturnsValue()
             {
-                _commandLine.NotBefore = "";
+                _commandLine.NotBefore = string.Empty;
                 var result = NodeEntitlementsBuilder.Build(_commandLine);
                 result.HasValue.Should().BeTrue();
             }
@@ -122,7 +124,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WhenMissing_BuildReturnsValue()
             {
-                _commandLine.NotAfter = "";
+                _commandLine.NotAfter = string.Empty;
                 var result = NodeEntitlementsBuilder.Build(_commandLine);
                 result.HasValue.Should().BeTrue();
             }
@@ -151,6 +153,51 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 // Compare as formatted strings to avoid issues with extra seconds we don't care about
                 entitlement.Value.NotAfter.ToString(TimestampParser.ExpectedFormat)
                     .Should().Be(_validNotAfter);
+            }
+        }
+
+        public class ApplicationsProperty : NodeEntitlementsBuilderTests
+        {
+            private const string ContosoHrApp = "contosoHR";
+            private const string ContosoItApp = "contosoIT";
+
+            [Fact]
+            public void WhenEmpty_BuildDoesNotReturnValue()
+            {
+                _commandLine.ApplicationIds.Clear();
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
+                entitlement.HasValue.Should().BeFalse();
+            }
+
+            [Fact]
+            public void WhenEmpty_BuildReturnsErrorForApplication()
+            {
+                _commandLine.ApplicationIds.Clear();
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
+                entitlement.Errors.Should().Contain(e => e.Contains("application"));
+            }
+
+            [Fact]
+            public void WhenSingleApplication_PropertyIsSet()
+            {
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
+                entitlement.Value.Applications.Should().BeEquivalentTo(_commandLine.ApplicationIds);
+            }
+
+            [Fact]
+            public void WhenSingleApplication_ReturnsNoErrorForApplication()
+            {
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
+                entitlement.Errors.Should().NotContain(e => e.Contains("application"));
+            }
+
+            [Fact]
+            public void WhenMultipleApplications_PropertyIsSet()
+            {
+                _commandLine.ApplicationIds.Add(ContosoHrApp);
+                _commandLine.ApplicationIds.Add(ContosoItApp);
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
+                entitlement.Value.Applications.Should().BeEquivalentTo(_commandLine.ApplicationIds);
             }
         }
     }

@@ -20,9 +20,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option("batch-service-url", HelpText = "URL of the Azure Batch service endpoint for a particular account to contact for verification.")]
         public string BatchServiceUrl { get; set; }
 
-        //TODO: This needs a much better name
-        //TODO: Document where this looks to find the certificate (in a cross platform way)
-        //TODO: use standard terminology "pinning"
+        // TODO: This needs a much better name
         [Option('a', "authority", HelpText = "Certificate thumbprint used to sign the cert used for the HTTPS connection.")]
         public string AuthorityThumbprint { get; set; }
     }
