@@ -58,12 +58,30 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             var result = entitlement.Combine(signingCert, encryptionCert, GenerateToken);
 
-            if (result.HasValue)
+            if (!result.HasValue)
             {
-                return result.Value;
+                return LogErrors(result.Errors);
             }
 
-            return LogErrors(result.Errors);
+            var token = result.Value;
+            if (string.IsNullOrEmpty(commandLine.TokenFile))
+            {
+                _logger.LogInformation("Token: {JWT}", token);
+                return 0;
+            }
+
+            var fileInfo = new FileInfo(commandLine.TokenFile);
+            _logger.LogInformation("Token file: {filename}", fileInfo.FullName);
+            try
+            {
+                File.WriteAllText(fileInfo.FullName, token);
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(0, ex, ex.Message);
+                return -1;
+            }
         }
 
         /// <summary>
@@ -72,8 +90,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="entitlements">Details of the entitlements to encode into the token.</param>
         /// <param name="signingCert">Certificate to use when signing the token (optional).</param>
         /// <param name="encryptionCert">Certificate to use when encrypting the token (optional).</param>
-        /// <returns>zero (0) if a token was generated, non-zero otherwise.</returns>
-        private static int GenerateToken(
+        /// <returns>Generated token, if any; otherwise all related errors.</returns>
+        private static string GenerateToken(
             NodeEntitlements entitlements,
             X509Certificate2 signingCert = null,
             X509Certificate2 encryptionCert = null)
@@ -94,14 +112,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             var generator = new TokenGenerator(GlobalLogger.Logger, signingCredentials, encryptingCredentials);
-            var token = generator.Generate(entitlements);
-            if (token == null)
-            {
-                return -1;
-            }
-
-            _logger.LogInformation("Token: {JWT}", token);
-            return 0;
+            return generator.Generate(entitlements);
         }
 
         /// <summary>
@@ -225,7 +236,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
             catch (Exception ex)
             {
-                _logger.LogError((EventId)0, ex, ex.Message);
+                _logger.LogError(0, ex, ex.Message);
                 return -1;
             }
         }
