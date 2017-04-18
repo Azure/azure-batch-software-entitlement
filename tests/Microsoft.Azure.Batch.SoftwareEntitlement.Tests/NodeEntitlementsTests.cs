@@ -109,7 +109,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         {
             // sample IPAddresses to use for testing (sample addresses as per RFC5735)
             private readonly IPAddress _addressA = IPAddress.Parse("203.0.113.42");
-            private readonly IPAddress _addressB = IPAddress.Parse("203.0.113.42");
+            private readonly IPAddress _addressB = IPAddress.Parse("203.0.113.44");
 
             [Fact]
             public void GivenNull_ThrowsException()
@@ -137,7 +137,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void GivenSecondIpAddress_RetainsFirst()
             {
-                var entitlement = _emptyEntitlement.AddIpAddress(_addressB);
+                var entitlement = _emptyEntitlement
+                    .AddIpAddress(_addressA)
+                    .AddIpAddress(_addressB);
                 entitlement.IpAddresses.Should().Contain(_addressA);
             }
         }
