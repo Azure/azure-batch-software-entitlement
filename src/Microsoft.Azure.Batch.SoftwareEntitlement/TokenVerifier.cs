@@ -77,7 +77,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// explaining why it wasn't approved.</returns>
         public Errorable<NodeEntitlements> Verify(string tokenString, string application, IPAddress ipAddress)
         {
-            var validationParameters = new TokenValidationParameters()
+            var validationParameters = new TokenValidationParameters
             {
                 ValidateAudience = true,
                 ValidAudience = Claims.Audience,

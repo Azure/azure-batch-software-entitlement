@@ -89,9 +89,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void GivenDuplicateApplicationId_DoesNotAddToConfiguration()
             {
-                var entitlement =
-                    _emptyEntitlement.AddApplication(Application)
-                        .AddApplication(Application);
+                var entitlement = _emptyEntitlement
+                    .AddApplication(Application)
+                    .AddApplication(Application);
                 entitlement.Applications.Should().HaveCount(1);
                 entitlement.Applications.Should().Contain(Application);
             }
