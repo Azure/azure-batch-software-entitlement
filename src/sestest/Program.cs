@@ -5,6 +5,7 @@ using System.IdentityModel;
 using System.IdentityModel.Tokens;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
@@ -195,7 +196,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 _logger = GlobalLogger.CreateLogger(commandLine.LogLevel, file);
             }
 
-            _logger.LogInformation("Software Entitlement Service Test Utility");
+            const string header = "Software Entitlement Service Test Utility";
+            _logger.LogInformation(new string('-', header.Length));
+            _logger.LogInformation(header);
+            _logger.LogInformation(new string('-', header.Length));
         }
 
         /// <summary>

@@ -40,12 +40,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         public IActionResult RequestEntitlement(
             [FromBody] SoftwareEntitlementRequest entitlementRequest)
         {
-            _logger.LogInformation($"Request entitlement for {entitlementRequest.ApplicationId}");
-            _logger.LogDebug($"Application id: {entitlementRequest.ApplicationId}");
-            _logger.LogDebug($"Request token: {entitlementRequest.Token}");
+            _logger.LogInformation("Request entitlement for {application}", entitlementRequest.ApplicationId);
+            _logger.LogDebug("Request token: {token}", entitlementRequest.Token);
 
             var remoteAddress = HttpContext.Connection.RemoteIpAddress;
-            _logger.LogDebug($"Remote Address: {remoteAddress}");
+            _logger.LogDebug("Remote Address: {address}", remoteAddress);
 
             var verificationResult = _verifier.Verify(entitlementRequest.Token, entitlementRequest.ApplicationId, remoteAddress);
             if (!verificationResult.HasValue)
