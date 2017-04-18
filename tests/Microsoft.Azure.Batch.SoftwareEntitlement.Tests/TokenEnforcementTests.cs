@@ -65,7 +65,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         private NodeEntitlements CreateEntitlements(EntitlementCreationOptions creationOptions = EntitlementCreationOptions.None)
         {
             var result = new NodeEntitlements()
-                .WithVirtualMachineId("virtual-machine-identifier")
                 .FromInstant(_now)
                 .UntilInstant(_now + TimeSpan.FromDays(7));
 
@@ -84,6 +83,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 result = result.AddApplication(_contosoFinanceApp);
             }
 
+            if (!creationOptions.HasFlag(EntitlementCreationOptions.OmitMachineId))
+            {
+                result = result.WithVirtualMachineId("virtual-machine-identifier");
+            }
+
             return result;
         }
 
@@ -97,7 +101,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             None = 0,
             OmitIpAddress = 1,
             OmitIdentifier = 2,
-            OmitApplication = 4
+            OmitApplication = 4,
+            OmitMachineId = 8
         }
 
         public class ConfigurationCheck : TokenEnforcementTests
@@ -171,6 +176,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var result = _verifier.Verify(token, _contosoFinanceApp, _approvedAddress);
                 result.HasValue.Should().BeTrue();
                 result.Value.VirtualMachineId.Should().Be(_validEntitlements.VirtualMachineId);
+            }
+
+            [Fact]
+            public void WhenIdentifierOmitted_ReturnsError()
+            {
+                var entitlements = CreateEntitlements(EntitlementCreationOptions.OmitMachineId);
+                var token = _generator.Generate(entitlements);
+                var result = _verifier.Verify(token, _contosoFinanceApp, _approvedAddress);
+                result.HasValue.Should().BeFalse();
+                result.Errors.Should().Contain(e => e.Contains("machine identifier"));
             }
         }
 

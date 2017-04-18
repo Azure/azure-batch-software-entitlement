@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Text;
 using FluentAssertions;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
@@ -198,6 +199,54 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 _commandLine.ApplicationIds.Add(ContosoItApp);
                 var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
                 entitlement.Value.Applications.Should().BeEquivalentTo(_commandLine.ApplicationIds);
+            }
+        }
+
+        public class AddressesProperty : NodeEntitlementsBuilderTests
+        {
+            // sample IPAddresses to use for testing (sample addresses as per RFC5735)
+            private readonly IPAddress _addressA = IPAddress.Parse("203.0.113.46");
+            private readonly IPAddress _addressB = IPAddress.Parse("203.0.113.48");
+
+            [Fact]
+            public void WhenEmpty_StillBuildsResult()
+            {
+                _commandLine.Addresses.Clear();
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
+                entitlement.HasValue.Should().BeTrue();
+            }
+
+            [Fact]
+            public void WhenEmpty_ReturnsDefaultAddresses()
+            {
+                _commandLine.Addresses.Clear();
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
+                entitlement.Value.IpAddresses.Should().NotBeEmpty();
+            }
+
+            [Fact]
+            public void WhenSingleAddress_PropertyIsSet()
+            {
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
+                entitlement.Value.IpAddresses.Should().HaveCount(1);
+            }
+
+            [Fact]
+            public void WhenMultipleAddresses_PropertyIsSet()
+            {
+                _commandLine.Addresses.Add(_addressA.ToString());
+                _commandLine.Addresses.Add(_addressB.ToString());
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
+                entitlement.Value.IpAddresses.Should().HaveCount(3);
+            }
+
+            [Fact]
+            public void WhenInvalidAddress_ReturnsErrorForAddress()
+            {
+                _commandLine.Addresses.Add("Not.An.IP.Address");
+                var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
+                entitlement.HasValue.Should().BeFalse();
+                entitlement.Errors.Should().Contain(e => e.Contains("address"));
             }
         }
     }

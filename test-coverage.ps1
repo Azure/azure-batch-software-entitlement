@@ -19,7 +19,7 @@ $commonTests = resolve-path .\tests\Microsoft.Azure.Batch.SoftwareEntitlement.Co
 $sesTests = resolve-path .\tests\Microsoft.Azure.Batch.SoftwareEntitlement.Tests\*.csproj
 $logLevel = "info"
 
-$filter = "+[*]* -[xunit.*]* -[Fluent*]* -[*.Tests]* -[sestest]*"
+$filter = "+[*]* -[xunit.*]* -[Fluent*]* -[*.Tests]*"
 
 Write-Header "Running tests for: $commonTests"
 & $openCoverExe -oldStyle -target:$dotnetExe -targetargs:"test $commonTests" -register:user -filter:$filter -log:$loglevel -output:.\out\Common.cover.xml
