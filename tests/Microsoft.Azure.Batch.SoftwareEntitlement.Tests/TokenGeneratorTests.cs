@@ -30,43 +30,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         public class Constructor : TokenGeneratorTests
         {
             [Fact]
-            public void GivenNullSigningKey_ThrowsArgumentNullException()
-            {
-                var exception =
-                    Assert.Throws<ArgumentNullException>(
-                        () => new TokenGenerator(null, _encryptionCredentials, _nullLogger));
-                exception.ParamName.Should().Be("signingCredentials");
-            }
-
-            [Fact]
-            public void GivenNullEncryptionKey_ThrowsArgumentNullException()
-            {
-                var exception =
-                    Assert.Throws<ArgumentNullException>(
-                        () => new TokenGenerator(_signingCredentials, null, _nullLogger));
-                exception.ParamName.Should().Be("encryptingCredentials");
-            }
-
-            [Fact]
             public void GivenNullLogger_ThrowsArgumentNullException()
             {
                 var exception =
                     Assert.Throws<ArgumentNullException>(
-                        () => new TokenGenerator(_signingCredentials, _encryptionCredentials, null));
+                        () => new TokenGenerator(null, _signingCredentials, _encryptionCredentials));
                 exception.ParamName.Should().Be("logger");
             }
 
             [Fact]
             public void GivenSigningKey_InitializesProperty()
             {
-                var generator = new TokenGenerator(_signingCredentials, _encryptionCredentials, _nullLogger);
+                var generator = new TokenGenerator(_nullLogger, _signingCredentials, _encryptionCredentials);
                 generator.SigningCredentials.Should().Be(_signingCredentials);
             }
 
             [Fact]
             public void GivenEncryptionKey_InitializesProperty()
             {
-                var generator = new TokenGenerator(_signingCredentials, _encryptionCredentials, _nullLogger);
+                var generator = new TokenGenerator(_nullLogger, _signingCredentials, _encryptionCredentials);
                 generator.EncryptingCredentials.Should().Be(_encryptionCredentials);
             }
         }
@@ -77,7 +59,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
             public Generate()
             {
-                _generator = new TokenGenerator(_signingCredentials, _encryptionCredentials, _nullLogger);
+                _generator = new TokenGenerator(_nullLogger, _signingCredentials, _encryptionCredentials);
             }
 
             [Fact]

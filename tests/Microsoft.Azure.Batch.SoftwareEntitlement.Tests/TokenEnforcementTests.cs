@@ -59,7 +59,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
             _validEntitlements = CreateEntitlements();
             _verifier = new TokenVerifier(signingKey, encryptingKey);
-            _generator = new TokenGenerator(signingCredentials, encryptingCredentials, _nullLogger);
+            _generator = new TokenGenerator(_nullLogger, signingCredentials, encryptingCredentials);
         }
 
         private NodeEntitlements CreateEntitlements(EntitlementCreationOptions creationOptions = EntitlementCreationOptions.None)

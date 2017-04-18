@@ -77,20 +77,28 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="entitlements">Details of the entitlements to encode into the token.</param>
         /// <param name="signingCert">Certificate to use when signing the token (optional).</param>
         /// <param name="encryptionCert">Certificate to use when encrypting the token (optional).</param>
-        /// <returns></returns>
+        /// <returns>zero (0) if a token was generated, non-zero otherwise.</returns>
         private static int GenerateToken(
             NodeEntitlements entitlements,
             X509Certificate2 signingCert = null,
             X509Certificate2 encryptionCert = null)
         {
-            var signingKey = new X509SecurityKey(signingCert);
-            var signingCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.RsaSha512Signature);
+            SigningCredentials signingCredentials = null;
+            if (signingCert != null)
+            {
+                var signingKey = new X509SecurityKey(signingCert);
+                signingCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.RsaSha512Signature);
+            }
 
-            var encryptionKey = new X509SecurityKey(encryptionCert);
-            var encryptingCredentials = new EncryptingCredentials(
-                encryptionKey, SecurityAlgorithms.RsaOAEP, SecurityAlgorithms.Aes256CbcHmacSha512);
+            EncryptingCredentials encryptingCredentials = null;
+            if (encryptionCert != null)
+            {
+                var encryptionKey = new X509SecurityKey(encryptionCert);
+                encryptingCredentials = new EncryptingCredentials(
+                    encryptionKey, SecurityAlgorithms.RsaOAEP, SecurityAlgorithms.Aes256CbcHmacSha512);
+            }
 
-            var generator = new TokenGenerator(signingCredentials, encryptingCredentials, GlobalLogger.Logger);
+            var generator = new TokenGenerator(GlobalLogger.Logger, signingCredentials, encryptingCredentials);
             var token = generator.Generate(entitlements);
             if (token == null)
             {

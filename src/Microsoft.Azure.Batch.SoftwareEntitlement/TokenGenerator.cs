@@ -29,20 +29,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Initializes a new instance of the <see cref="TokenGenerator"/> class
         /// </summary>
-        /// <param name="signingCredentials">Credentials to use for signing tokens.</param>
-        /// <param name="encryptingCredentials">Credentials to use for encryption of tokens.</param>
         /// <param name="logger">Logger to use for diagnostics</param>
+        /// <param name="signingCredentials">Credentials to use for signing tokens (optional).</param>
+        /// <param name="encryptingCredentials">Credentials to use for encryption of tokens (optional).</param>
         public TokenGenerator(
-            SigningCredentials signingCredentials,
-            EncryptingCredentials encryptingCredentials,
-            ILogger logger)
+            ILogger logger,
+            SigningCredentials signingCredentials = null,
+            EncryptingCredentials encryptingCredentials = null)
         {
             _logger = logger
                 ?? throw new ArgumentNullException(nameof(logger));
-            SigningCredentials = signingCredentials
-                ?? throw new ArgumentNullException(nameof(signingCredentials));
-            EncryptingCredentials = encryptingCredentials
-                ?? throw new ArgumentNullException(nameof(encryptingCredentials));
+            SigningCredentials = signingCredentials;
+            EncryptingCredentials = encryptingCredentials;
         }
 
         /// <summary>
