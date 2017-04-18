@@ -37,8 +37,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             SigningCredentials signingCredentials = null,
             EncryptingCredentials encryptingCredentials = null)
         {
-            _logger = logger
-                ?? throw new ArgumentNullException(nameof(logger));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             SigningCredentials = signingCredentials;
             EncryptingCredentials = encryptingCredentials;
         }

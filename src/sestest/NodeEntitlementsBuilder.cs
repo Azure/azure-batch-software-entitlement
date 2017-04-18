@@ -16,9 +16,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         // Reference to the generate command line we wrap
         private readonly GenerateCommandLine _commandLine;
 
-        // Reference to a store in which we can search for certificates
-        private readonly CertificateStore _certificateStore = new CertificateStore();
-
         // Reference to a parser to use for timestamps
         private readonly TimestampParser _timestampParser = new TimestampParser();
 
@@ -110,7 +107,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             if (string.IsNullOrEmpty(_commandLine.NotBefore))
             {
                 // If the user does not specify a start instant for the token, we default to 'now'
-                return Errorable.Success(DateTimeOffset.Now);
+                return Errorable.Success(_now);
             }
 
             return _timestampParser.TryParse(_commandLine.NotBefore, "NotBefore");
