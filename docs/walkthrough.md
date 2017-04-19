@@ -67,7 +67,7 @@ To verify that the `sestest` console application is ready for use, run one of th
 
 You should get output similar to this:
 
-```
+``` PowerShell
 sestest 1.0.0
 Copyright (C) 2017 Microsoft
 
@@ -95,7 +95,107 @@ To verify the `sesclient.native.exe` console application is ready for use, run o
 | Cmd        | `.\x64\Debug\sesclient.native.exe` |
 | bash       | `./x64/Debug/sesclient.native`     |
 
+You should get output similar to this:
+
+``` PowerShell
+Contacts the specified azure batch software entitlement server to verify the provided token.
+Parameters:
+    --url <software entitlement server URL>
+    --thumbprint <thumbprint of a certificate expected in the server's SSL certificate chain>
+    --common-name <common name of the certificate with the specified thumbprint>
+    --token <software entitlement token to pass to the server>
+    --application <name of the license ID being requested>
+```
+
 ## Selecting Certificates
+
+The software entitlement service makes use of three digital certificates as follows:
+
+* To digitally sign the generated entitlement token
+* To encrypt the generated entitlement token
+* To authenticate the software entitlement service
+
+In production, three different certificates will be used, but for test scenarios you are welcome to use the same certificate for all three.
+
+For each required certificate you will need to know the *thumbprint* of that certificate. The SES tooling is not sensitive to the format of the thumbprint.
+
+### Windows
+
+On the Windows platform, one way to find suitable certificates is to use the built in certificate manager.
+
+![Certificate Manager](certificate-manager.png)
+
+At minimum, you must use a certificate that has a private key.
+
+![Certificate with Private Key](certificate-details.png)
+
+### Sestest
+
+To assist with finding a suitable certificate, the `sestest` utility has a **list-certificates** mode that will list certificates that *may* work (the tool only shows certificates with a private key).
+
+| Console    | Command                                                                  |
+| ---------- | ------------------------------------------------------------------------ |
+| PowerShell | `.\sestest list-certificates`                                            |
+| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll list-certificates` |
+| bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll list-certificates` |
+
+The output from this command is tabular, so we recommend using a console window that is as wide as possible.
+
+![Sample output of list-certificates](list-certificates.png)
+
+### Checking a thumbprint
+
+Once you've selected a thumbprint for use, you can verify it using `sestest`.
+
+| Console    | Command                                                                                                                       |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| PowerShell | `.\sestest find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`                                            |
+| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX` |
+| bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX` |
+
+For a thumbprint containing whitespace (as it will if copied from the Windows certificate properties dialog), wrap the thumbprint in quotes.
+
+| Console    | Command                                                                                                                                            |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PowerShell | `.\sestest find-certificate --thumbprint "XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX"`                                            |
+| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll find-certificate --thumbprint "XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX"` |
+| bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll find-certificate --thumbprint "XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX"` |
+
+If `sestest` successfully finds the certificate, some information about the certificate will be shown:
+
+``` PowerShell
+PS> .\sestest find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+10:26:13.119 [Information] Software Entitlement Service Test Utility
+10:26:13.168 [Information] [Subject]
+10:26:13.170 [Information]   CN=localhost
+10:26:13.171 [Information]
+10:26:13.171 [Information] [Issuer]
+10:26:13.172 [Information]   CN=localhost
+10:26:13.174 [Information]
+10:26:13.175 [Information] [Serial Number]
+10:26:13.176 [Information]   XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+10:26:13.177 [Information]
+10:26:13.180 [Information] [Not Before]
+10:26:13.182 [Information]   7/12/2016 10:50:46 AM
+10:26:13.182 [Information]
+10:26:13.184 [Information] [Not After]
+10:26:13.185 [Information]   7/12/2021 12:00:00 PM
+10:26:13.186 [Information]
+10:26:13.187 [Information] [Thumbprint]
+10:26:13.188 [Information]   XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+PS>
+```
+
+If `sestest` is unable to find the certificate, you will get an error like this:
+
+``` PowerShell
+PS> .\sestest find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+10:34:59.211 [Information] Software Entitlement Service Test Utility
+10:34:59.305 [Error] Did not find cert certificate XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+
+PS>
+```
 
 ## Generating a token
 
