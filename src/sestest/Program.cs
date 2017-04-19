@@ -191,20 +191,37 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="commandLine">Options selected by the user (if any).</param>
         private static void ConfigureLogging(CommandLineBase commandLine)
         {
+            var level = LogLevel.Information;
+            var parseFailed = false;
+
+            if (!string.IsNullOrEmpty(commandLine.LogLevel))
+            {
+                if (!Enum.TryParse(commandLine.LogLevel, true, out level))
+                {
+                    level = LogLevel.Information;
+                    parseFailed = true;
+                }
+            }
+
             if (string.IsNullOrEmpty(commandLine.LogFile))
             {
-                _logger = GlobalLogger.CreateLogger(commandLine.LogLevel);
+                _logger = GlobalLogger.CreateLogger(level);
             }
             else
             {
                 var file = new FileInfo(commandLine.LogFile);
-                _logger = GlobalLogger.CreateLogger(commandLine.LogLevel, file);
+                _logger = GlobalLogger.CreateLogger(level, file);
             }
 
             const string header = "Software Entitlement Service Test Utility";
             _logger.LogInformation(new string('-', header.Length));
             _logger.LogInformation(header);
             _logger.LogInformation(new string('-', header.Length));
+
+            if (parseFailed)
+            {
+                _logger.LogWarning("Failed to recognise log level '{level}'; defaulting to {default}", level, "Information");
+            }
         }
 
         /// <summary>
