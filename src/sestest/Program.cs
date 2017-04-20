@@ -213,10 +213,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 _logger = GlobalLogger.CreateLogger(level, file);
             }
 
-            const string header = "Software Entitlement Service Test Utility";
-            _logger.LogInformation(new string('-', header.Length));
-            _logger.LogInformation(header);
-            _logger.LogInformation(new string('-', header.Length));
+            _logger.LogHeader("Software Entitlement Service Test Utility");
 
             if (parseFailed)
             {
