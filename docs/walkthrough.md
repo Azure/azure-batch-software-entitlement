@@ -355,15 +355,46 @@ In production, all tokens will be both signed and encrypted.
 
 The **server** mode of `sestest` provides an HTTPS endpoint that acts as a fully functioning software entitlement server that can be used during development and testing. The command has the following parameters:
 
-| Parameter         | Required  | Definition                                                                                                               |
-| ----------------- | --------- | ------------------------------------------------------------------------------------------------------------------------ |
-| --connection-cert | Mandatory | Thumbprint of the certificate to pin for use with HTTPS (mandatory).                                                     |
-| --signing-cert    | Optional  | Certificate thumbprint of the certificate used to sign the token.                                                        |
-| --encryption-cert | Optional  | Certificate thumbprint of the certificate used to encrypt the token.                                                     |
-| --url             | Optional  | The URL at which the server should process requests <br/> Defaults to `https://localhost:4443`; must start with `https:`.  |
-| --log-level       | Optional  | Specify the level of logging output.<br/>One of *error*, *warning*, *information* or *debug*; defaults to *information*. |
-| --log-file        | Optional  | Specify a file into which log messages should be written.                                                                |
+| Parameter    | Required  | Definition                                                                                                                |
+| ------------ | --------- | ------------------------------------------------------------------------------------------------------------------------- |
+| --connection | Mandatory | Thumbprint of the certificate to pin for use with HTTPS.                                                                  |
+| --sign       | Optional  | Thumbprint of the certificate used to sign tokens. <br/> If specified, all tokens must be signed.                         |
+| --encrypt    | Optional  | Thumbprint of the certificate used to encrypt tokens. <br/> If specified, all tokens must be encrypted.                   |
+| --url        | Optional  | The URL at which the server should process requests <br/> Defaults to `https://localhost:4443`; must start with `https:`. |
+| --log-level  | Optional  | Specify the level of logging output.<br/>One of *error*, *warning*, *information* or *debug*; defaults to *information*.  |
+| --log-file   | Optional  | Specify a file into which log messages should be written.                                                                 |
 
 You can see this documentation for yourself by running `sestest server --help` in your console.
+
+Run the server with minimum parameters (just a connection certificate thumbprint).
+
+| Console    | Command                                                                                                   |
+| ---------- | --------------------------------------------------------------------------------------------------------- |
+| PowerShell | `.\sestest server --connection <thumbprint>                                                               |
+| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll server --connection <thumbprint> --log-level debug` |
+| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll server --connection <thumbprint> --log-level debug` |
+| bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll server --connection <thumbprint> --log-level debug` |
+
+The server will start up and wait for connections
+
+```
+PS> .\sestest server --connection 6D4C8E23E9C70D78F402BE9422BF44CE5465CD1A  --log-level debug
+17:20:02.676 [Information] ---------------------------------------------
+17:20:02.695 [Information]   Software Entitlement Service Test Utility
+17:20:02.696 [Information] ---------------------------------------------
+17:20:02.977 [Debug] Hosting starting
+17:20:03.043 [Debug] Hosting started
+Hosting environment: Production
+Content root path: E:\github\azure-batch-software-entitlement\out\sestest\Debug\netcoreapp1.1
+Now listening on: https://localhost:4443
+Application started. Press Ctrl+C to shut down.
+```
+
+Use Ctrl+C to shut down the server when no longer needed.
+
+```
+Application is shutting down...
+17:20:09.008 [Debug] Hosting shutdown
+```
 
 ## Verifying a token
