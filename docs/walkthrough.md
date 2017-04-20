@@ -67,7 +67,7 @@ To verify that the `sestest` console application is ready for use, run one of th
 
 You should get output similar to this:
 
-``` PowerShell
+``` 
 sestest 1.0.0
 Copyright (C) 2017 Microsoft
 
@@ -97,7 +97,7 @@ To verify the `sesclient.native.exe` console application is ready for use, run o
 
 You should get output similar to this:
 
-``` PowerShell
+``` 
 Contacts the specified azure batch software entitlement server to verify the provided token.
 Parameters:
     --url <software entitlement server URL>
@@ -143,6 +143,8 @@ The output from this command is tabular, so we recommend using a console window 
 
 ![Sample output of list-certificates](list-certificates.png)
 
+(Yes, this output is obfuscated.)
+
 ### Checking a thumbprint
 
 Once you've selected a thumbprint for use, you can verify it using `sestest`.
@@ -163,7 +165,7 @@ For a thumbprint containing whitespace (as it will if copied from the Windows ce
 
 If `sestest` successfully finds the certificate, some information about the certificate will be shown:
 
-``` PowerShell
+``` 
 PS> .\sestest find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 10:26:13.119 [Information] Software Entitlement Service Test Utility
 10:26:13.168 [Information] [Subject]
@@ -189,7 +191,7 @@ PS>
 
 If `sestest` is unable to find the certificate, you will get an error like this:
 
-``` PowerShell
+``` 
 PS> .\sestest find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 10:34:59.211 [Information] Software Entitlement Service Test Utility
 10:34:59.305 [Error] Did not find cert certificate XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
@@ -198,6 +200,90 @@ PS>
 ```
 
 ## Generating a token
+
+The `generate` mode of `sestest` is used to generate a token. The command has the following parameters:
+
+| Parameter        | Definition                                                                                                                                                                           |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| --application-id | Unique identifier(s) for the applications(s) to include in the entitlement (comma separated).                                                                                        |
+| --vmid           | Unique identifier for the Azure virtual machine (mandatory).                                                                                                                         |
+| --not-before     | The moment at which the token becomes active and the application is entitled to execute <br/> Format 'hh:mm d-mmm-yyyy'; 24 hour clock; local time; defaults to now.                 |
+| --not-after      | The moment at which the token expires and the application is no longer entitled to execute <br/> Format 'hh:mm d-mmm/-yyyy'; 24 hour clock; local time; defaults to 7 days from now. |
+| --address        | The externally visible IP addresses of the machine entitled to execute the application(s). <br/> Defaults to all the IP addresses of the current machine.                            |
+| --sign           | Certificate thumbprint of the certificate used to sign the token                                                                                                                     |
+| --encrypt        | Certificate thumbprint of the certificate used to encrypt the token.                                                                                                                 |
+| --token-file     | The name of a file into which the token will be written <br/> Token will be logged otherwise.                                                                                        |
+| --log-level      | Specify the level of logging output. <br/> One of *error*, *warning*, *information* or *debug*; defaults to *information*.                                                           |
+| --log-file       | Specify a file into which log messages should be written. <br/> Logging is shown on the console by default.                                                                          |
+
+You can see this documentation for yourself by running `sestest generate --help` in your console.
+
+Run `sestest generate` with no parameters
+
+| Console    | Command                                                                                                                       |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| PowerShell | `.\sestest generate`                                            |
+| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll generate` |
+| bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll generate` |
+
+```
+PS> .\sestest generate
+10:53:59.102 [Information] Software Entitlement Service Test Utility
+10:53:59.164 [Error] No applications specified.
+10:53:59.164 [Error] No virtual machine identifier specified.
+
+PS>
+```
+
+Running `sestest generate` with just the mandatory parameters supplied will generate a minimal token.
+
+| Console    | Command                                                                                                                       |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| PowerShell | `.\sestest generate --vmid machine-identifier --application-id contosoapp`                                            |
+| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll generate --vmid machine-identifier --application-id contosoapp` |
+| bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll generate --vmid machine-identifier --application-id contosoapp` |
+
+
+```
+10:57:15.616 [Information] Software Entitlement Service Test Utility
+10:57:15.882 [Information] Token: "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ2bWlkIjoibWFjaGluZS1pZGVu
+dGlmaWVyIiwiaXAiOlsiMTAuMTY4LjI0NC4xNDIiLCJmZTgwOjpiOTZjOjMyYTY6ZTI0OjVjN2QlNCIsIjI0MDQ6ZjgwMTo2ODE
+4OjIxMjpiOTZjOjMyYTY6ZTI0OjVjN2QiLCI6OjEiLCIxMjcuMC4wLjEiLCIyNDA0OmY4MDE6NjgxODoyMTI6ODg0Mzo5YWI2Oj
+JkZWI6OGRjMSJdLCJhcHAiOiJjb250b3NvYXBwIiwibmJmIjoxNDkyNjQyNjM1LCJleHAiOjE0OTMyNDc0MzUsImlhdCI6MTQ5M
+jY0MjYzNSwiaXNzIjoiaHR0cHM6Ly9iYXRjaC5henVyZS5jb20vc29mdHdhcmUtZW50aXRsZW1lbnQiLCJhdWQiOiJodHRwczov
+L2JhdGNoLmF6dXJlLmNvbS9zb2Z0d2FyZS1lbnRpdGxlbWVudCJ9."
+```
+(This has been artificially wrapped at 100 columns width.)
+
+Include the option `--log-level debug` to get more information about what is included in the token.
+
+```
+12:27:29 PS> .\sestest generate --vmid machine-identifier --application-id contosoapp --log-level Debug
+12:27:36.577 [Information] Software Entitlement Service Test Utility
+12:27:36.656 [Debug] Virtual machine Id: machine-identifier
+12:27:36.668 [Debug] IP Address: 99.999.999.999
+12:27:36.669 [Debug] IP Address: xx99::x99x:99x9:x99:9x9x%9
+12:27:36.670 [Debug] IP Address: ::9
+12:27:36.671 [Debug] IP Address: 999.9.9.9
+12:27:36.673 [Debug] IP Address: 9999:x999:9999:999:x99x:99x9:x99:9x9x
+12:27:36.674 [Debug] IP Address: 9999:x999:9999:999:9999:9xx9:9xxx:9xx9
+12:27:36.679 [Debug] Application Id: contosoapp
+12:27:36.680 [Debug] Not Before: 4/20/2017 12:27:36 PM +12:00
+12:27:36.681 [Debug] Not After: 4/27/2017 12:27:36 PM +12:00
+12:27:36.812 [Debug] Raw token: {"alg":"none","typ":"JWT"}.{"vmid":"machine-identifier","ip":["99.9
+99.999.999","xx99::x99x:99x9:x99:9x9x%9","::9","999.9.9.9","9999:x999:9999:999:x99x:99x9:x99:9x9x",
+"9999:x999:9999:999:9999:9xx9:9xxx:9xx9"],"app":"contosoapp","nbf":1492648056,"exp":1493252856,"iat
+":1492648056,"iss":"https://batch.azure.com/software-entitlement","aud":"https://batch.azure.com/so
+ftware-entitlement"}
+12:27:36.818 [Information] Token: "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ2bWlkIjoibWFjaGluZS1pZGVu
+dGlmaWVyIiwiaXAiOlsiOTkuOTk5Ljk5OS45OTkiLCJ4eDk5Ojp4OTl4Ojk5eDk6eDk5Ojl4OXglOSIsIjo6OSIsIjk5OS45Ljk
+uOSIsIjk5OTk6eDk5OTo5OTk5Ojk5OTp4OTl4Ojk5eDk6eDk5Ojl4OXgiLCI5OTk5Ong5OTk6OTk5OTo5OTk6OTk5OTo5eHg5Oj
+l4eHg6OXh4OSJdLCJhcHAiOiJjb250b3NvYXBwIiwibmJmIjoxNDkyNjQ4MDU2LCJleHAiOjE0OTMyNTI4NTYsImlhdCI6MTQ5M
+jY0ODA1NiwiaXNzIjoiaHR0cHM6Ly9iYXRjaC5henVyZS5jb20vc29mdHdhcmUtZW50aXRsZW1lbnQiLCJhdWQiOiJodHRwczov
+L2JhdGNoLmF6dXJlLmNvbS9zb2Z0d2FyZS1lbnRpdGxlbWVudCJ9."
+```
+
+Note especially the `[Debug]` information that shows the actual values that have been used for the parameters we haven't supplied ourselves, such as `--not-before`, `--not-after` and `--address`. (Again, the above output has been partially obfuscated.)
 
 ## Starting the test server
 
