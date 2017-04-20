@@ -335,9 +335,23 @@ uOZS3tTbPPyBxle9OJE149TeV2G6kc7I6Ni3xnXcyHAWLrm0qs4owiUJmBJyco0E711o9tXHKJO8uAxo
 eLz74V3wHioYUC3tHiYC9HH0HJGPCX8oFOS7vCzZrCk1aRTJ1bzA52yYVEsIPPJhSararzs3qmQlAYpm-OkU2ori-7lg.7WfJBL
 Ajt9tTffxB6lRlMxeXi25ejR-b4Kul34A3A3w"
 ```
+
 An encrypted token is longer, in part due to information about the required key that's included within.
 In production, all tokens will be both signed and encrypted.
 
 ## Starting the test server
+
+The **server** mode of `sestest` provides an HTTPS endpoint that acts as a fully functioning software entitlement server that can be used during development and testing. The command has the following parameters:
+
+| Parameter         | Required  | Definition                                                                                                               |
+| ----------------- | --------- | ------------------------------------------------------------------------------------------------------------------------ |
+| --connection-cert | Mandatory | Thumbprint of the certificate to pin for use with HTTPS (mandatory).                                                     |
+| --signing-cert    | Optional  | Certificate thumbprint of the certificate used to sign the token.                                                        |
+| --encryption-cert | Optional  | Certificate thumbprint of the certificate used to encrypt the token.                                                     |
+| --url             | Optional  | The URL at which the server should process requests <br/> Defaults to `https://localhost:4443`; must start with `https:`.  |
+| --log-level       | Optional  | Specify the level of logging output.<br/>One of *error*, *warning*, *information* or *debug*; defaults to *information*. |
+| --log-file        | Optional  | Specify a file into which log messages should be written.                                                                |
+
+You can see this documentation for yourself by running `sestest server --help` in your console.
 
 ## Verifying a token
