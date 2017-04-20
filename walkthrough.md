@@ -128,11 +128,11 @@ For each required certificate you will need to know the *thumbprint* of that cer
 
 On the Windows platform, one way to find suitable certificates is to use the built in certificate manager.
 
-![Certificate Manager](certificate-manager.png)
+![Certificate Manager](img/certificate-manager.png)
 
 At minimum, you must use a certificate that has a private key.
 
-![Certificate with Private Key](certificate-details.png)
+![Certificate with Private Key](img/certificate-details.png)
 
 ### Sestest
 
@@ -144,7 +144,7 @@ To assist with finding a suitable certificate, the `sestest` utility has a **lis
 
 The output from this command is tabular, so we recommend using a console window that is as wide as possible.
 
-![Sample output of list-certificates](list-certificates.png)
+![Sample output of list-certificates](img/list-certificates.png)
 
 (Yes, this output is obfuscated.)
 
