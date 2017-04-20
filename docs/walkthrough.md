@@ -257,8 +257,13 @@ L2JhdGNoLmF6dXJlLmNvbS9zb2Z0d2FyZS1lbnRpdGxlbWVudCJ9."
 
 Include the option `--log-level debug` to get more information about what is included in the token.
 
+| Console    | Command                                                                                                                                 |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| PowerShell | `.\sestest generate --vmid machine-identifier --application-id contosoapp --log-level debug`                                            |
+| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll generate --vmid machine-identifier --application-id contosoapp --log-level debug` |
+| bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll generate --vmid machine-identifier --application-id contosoapp --log-level debug` |
+
 ```
-12:27:29 PS> .\sestest generate --vmid machine-identifier --application-id contosoapp --log-level Debug
 12:27:36.577 [Information] Software Entitlement Service Test Utility
 12:27:36.656 [Debug] Virtual machine Id: machine-identifier
 12:27:36.668 [Debug] IP Address: 99.999.999.999
@@ -284,6 +289,54 @@ L2JhdGNoLmF6dXJlLmNvbS9zb2Z0d2FyZS1lbnRpdGxlbWVudCJ9."
 ```
 
 Note especially the `[Debug]` information that shows the actual values that have been used for the parameters we haven't supplied ourselves, such as `--not-before`, `--not-after` and `--address`. (Again, the above output has been partially obfuscated.)
+
+To digitally sign the token, specify a certificate with the `--sign` option; to encrypt the token, specify a certificate with the `--encrypt` option. 
+
+| Console    | Command                                                                                                                                                                            |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PowerShell | `.\sestest generate --vmid machine-identifier --application-id contosoapp --sign <thumbprint> --encrypt <thumbprint> --log-level debug`                                            |
+| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll generate --vmid machine-identifier --application-id contosoapp --sign <thumbprint> --encrypt <thumbprint> --log-level debug` |
+| bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll generate --vmid machine-identifier --application-id contosoapp --sign <thumbprint> --encrypt <thumbprint> --log-level debug` |
+
+```
+14:06:43.861 [Information] Software Entitlement Service Test Utility
+14:06:43.966 [Debug] Virtual machine Id: machine-identifier
+14:06:43.977 [Debug] IP Address: 99.999.999.999
+14:06:43.977 [Debug] IP Address: ::9
+14:06:43.980 [Debug] IP Address: xx99::x99x:99x9:x99:9x9x%9
+14:06:43.980 [Debug] IP Address: 999.9.9.9
+14:06:43.982 [Debug] IP Address: 9999:x999:9999:999:x99x:99x9:x99:9x9x
+14:06:43.982 [Debug] IP Address: 9999:x999:9999:999:9999:9xx9:9xxx:9xx9
+14:06:43.985 [Debug] Application Id: contosoapp
+14:06:43.987 [Debug] Not Before: 4/20/2017 2:06:43 PM +12:00
+14:06:43.989 [Debug] Not After: 4/27/2017 2:06:43 PM +12:00
+14:06:44.165 [Debug] Raw token: {"alg":"RSA-OAEP","enc":"A256CBC-HS512","kid":"<thumbprint>","typ":
+"JWT"}.{"vmid":"machine-identifier","ip":["99.999.999.999","::9","xx99::x99x:99x9:x99:9x9x%9","999.
+9.9.9","9999:x999:9999:999:x99x:99x9:x99:9x9x","9999:x999:9999:999:9999:9xx9:9xxx:9xx9"],"app":"con
+tosoapp","nbf":1492654003,"exp":1493258803,"iat":1492654003,"iss":"https://batch.azure.com/software
+-entitlement","aud":"https://batch.azure.com/software-entitlement"}
+14:06:44.172 [Information] Token: "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZDQkMtSFM1MTIiLCJraWQiOiI2
+RDRDOEUyM0U5QzcwRDc4RjQwMkJFOTQyMkJGNDRDRTU0NjVDRDFBIiwidHlwIjoiSldUIn0.q20Q126UMvDJWoD9iQiYq-g4CvE
+XOXFIZ0ow2Gt3oERzH6yJ4J1RkllBPiCDjzeWVpnlltr5u-TKL1eSWOIf9s-3ESdIhNWT5M7UZUXHN7HdC_YyGE5PvT1SWnUfdj
+frYWBwcLkwzr5hrGrdTdmq-Z5t-j_hHP3D32bkYl4WxoVWuxgBr5YyL0Z620lTqMUvZ1_8kLNpUw5L4BwNWBSt9BK4PDk9f1wEw
+WkFqV5LQ_hLObHUSWU5j3zZo3sYSBBC_be7bs1GIOUiWSAsvr5XnbrAPBmBabLBccOyrI2dRf1nzWyWpWDinSV_9NJWUtG11Yta
+uKK726zr5pr1KVbZuw.TU5K-5s3NbYRDh4z7rbvTA.nsIacvaHdNNRpP0V9WcobTU7-O17fPX4nfyfCpBd0o_4MCqanUxrMgTLR
+y7gXd4V2E2kDFQ4EgZfiE_raGDHeRCP3pdcBMow8Vzm4YGQyV65w-u8XfQc-e1LLMuYW1i0RMzPVztEVxmmTCKhy9bkaCZpwApU
+KaokvTcYroglWjrOxT-tqba0bPEAM0uPqjzb81WTbTGtMe8EC1oZnkJ0fIx4K_VJErMpWTeL365jK-1uk9PEPF7Zeol6wOPr44B
+zu3AUc7NDqONuTSOLYQ7N2SA9UmwE2RrLzBgTINcg6EvA3hOqhW5kPk36-P69ZlieYRBdple72V1vqk6sO6vo8S3BW8w_Hp4p0V
+qe41zZiYQHAaoUC1XzuRvTu4W-cD8olDqjpTFS5w3WCA8FyfaVvvMqQNn6erxxCF5-zLhP91vwSYko72hSJAVlYnby6dKDSl0SN
+3WHilTNSeF5Yi9C7bZVRnAyS5nL5if3RfbBVdaB1mrI5dwpJtNRzHh9vwp2Y2C4nAIfx4__lVHt_josliQoIxyMpKwq6hhQhv7J
+kybPtiLF6tZK4WZ9pXVwBGufvKg5jpsydPjNEn0oAZnzF5oiVaqSyIGi4Bq97Nnad_MnKrYH-gl5Y4AhtaoR2RvhZqyYWjtqG8Z
+Mh4cO661X00HYLPQIS0GrQuvHGIJdN5EiX4NxE3tu8JH-oeUT6oxysim30RwO9Dsn2IMHG2gEesnQA9-lmRgWu-S-FX2CTKT3Hd
+QfsmHumLkjFxQSM46mEtM73j_tEHgujb81L9qYORYxMP2eKU-WdcV7KWd5aXrJ6QvV6oOTEsoGBGvmjz3TVAQUFuAiY7WtjRiod
+qD6SGeAJ8yfbxZ1XA3t7DTenOv1znkU3Hbmo0M3MPJXdebzhDHTU0fuCYTuSC3kuDA8v8P2ffPoSOSvMNyMIvzwSUCawWzY1L1l
+1r7_q-xfvDp-OE7wjVBP-3JMMuThM5EdSy6DhSyNBteMInr1LjBSmI8NMqMsX1JVZS30sJmAwP2TBXHFWNTR9rdsoWiqIBMEGSy
+uOZS3tTbPPyBxle9OJE149TeV2G6kc7I6Ni3xnXcyHAWLrm0qs4owiUJmBJyco0E711o9tXHKJO8uAxotoIPbjbg2Tcl_iJ8iAF
+eLz74V3wHioYUC3tHiYC9HH0HJGPCX8oFOS7vCzZrCk1aRTJ1bzA52yYVEsIPPJhSararzs3qmQlAYpm-OkU2ori-7lg.7WfJBL
+Ajt9tTffxB6lRlMxeXi25ejR-b4Kul34A3A3w"
+```
+An encrypted token is longer, in part due to information about the required key that's included within.
+In production, all tokens will be both signed and encrypted.
 
 ## Starting the test server
 
