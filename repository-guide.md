@@ -2,6 +2,20 @@
 
 The repository contains the software development kit (SDK) for the *Software Entitlement Service*, a feature of Azure Batch used to enable the execution of commercial software within Azure Batch.
 
+## Documentation
+
+The repository contains the following documentation
+
+| Document                                                                                       | Content                                                                                                     |
+| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| [Repository guide](repository-guide.md)                                                        | This file, a summary of the content of this repository.                                                     |
+| [Walk through](walkthrough.md)                                                                 | An introductory walk-through of the various components of the SDK, demonstrating their use and interaction. |
+| [Static Library Readme](src\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native\README.md) | Purpose and compilation of the embeddable static library                                                    |
+| [Source Readme](src\readme.md)                                                                 | Development notes for extending the SDK                                                                     |
+| [Native Client Readme](src\sesclient.native\README.md)                                         | Guidance for using the native client                                                                        |
+| [Test tool Readme](src\sestest\readme.md)                                                      | Guidance for using the testing tool                                                                         |
+| [Rest API Documentation](src\Microsoft.Azure.Batch.SoftwareEntitlement.Server\readme.md)       | Documentation of the REST API used                                                                          |
+
 ## Scripts
 
 The root folder of the repository contains a number of convenience scripts intended to make it easier to work with the SDK.
