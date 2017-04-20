@@ -167,7 +167,9 @@ If `sestest` successfully finds the certificate, some information about the cert
 
 ``` 
 PS> .\sestest find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-10:26:13.119 [Information] Software Entitlement Service Test Utility
+10:26:13.119 [Information] ---------------------------------------------
+10:26:13.119 [Information]   Software Entitlement Service Test Utility
+10:26:13.119 [Information] ---------------------------------------------
 10:26:13.168 [Information] [Subject]
 10:26:13.170 [Information]   CN=localhost
 10:26:13.171 [Information]
@@ -193,7 +195,9 @@ If `sestest` is unable to find the certificate, you will get an error like this:
 
 ``` 
 PS> .\sestest find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-10:34:59.211 [Information] Software Entitlement Service Test Utility
+10:34:59.211 [Information] ---------------------------------------------
+10:34:59.211 [Information]   Software Entitlement Service Test Utility
+10:34:59.211 [Information] ---------------------------------------------
 10:34:59.305 [Error] Did not find cert certificate XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 PS>
@@ -228,7 +232,9 @@ Run `sestest generate` with no parameters
 
 ```
 PS> .\sestest generate
-10:53:59.102 [Information] Software Entitlement Service Test Utility
+10:53:59.102 [Information] ---------------------------------------------
+10:53:59.102 [Information]   Software Entitlement Service Test Utility
+10:53:59.102 [Information] ---------------------------------------------
 10:53:59.164 [Error] No applications specified.
 10:53:59.164 [Error] No virtual machine identifier specified.
 
@@ -245,7 +251,9 @@ Running `sestest generate` with just the mandatory parameters supplied will gene
 
 
 ```
-10:57:15.616 [Information] Software Entitlement Service Test Utility
+10:57:15.616 [Information] ---------------------------------------------
+10:57:15.616 [Information]   Software Entitlement Service Test Utility
+10:57:15.616 [Information] ---------------------------------------------
 10:57:15.882 [Information] Token: "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ2bWlkIjoibWFjaGluZS1pZGVu
 dGlmaWVyIiwiaXAiOlsiMTAuMTY4LjI0NC4xNDIiLCJmZTgwOjpiOTZjOjMyYTY6ZTI0OjVjN2QlNCIsIjI0MDQ6ZjgwMTo2ODE
 4OjIxMjpiOTZjOjMyYTY6ZTI0OjVjN2QiLCI6OjEiLCIxMjcuMC4wLjEiLCIyNDA0OmY4MDE6NjgxODoyMTI6ODg0Mzo5YWI2Oj
@@ -264,7 +272,9 @@ Include the option `--log-level debug` to get more information about what is inc
 | bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll generate --vmid machine-identifier --application-id contosoapp --log-level debug` |
 
 ```
-12:27:36.577 [Information] Software Entitlement Service Test Utility
+12:27:36.577 [Information] ---------------------------------------------
+12:27:36.577 [Information]   Software Entitlement Service Test Utility
+12:27:36.577 [Information] ---------------------------------------------
 12:27:36.656 [Debug] Virtual machine Id: machine-identifier
 12:27:36.668 [Debug] IP Address: 99.999.999.999
 12:27:36.669 [Debug] IP Address: xx99::x99x:99x9:x99:9x9x%9
@@ -294,12 +304,14 @@ To digitally sign the token, specify a certificate with the `--sign` option; to 
 
 | Console    | Command                                                                                                                                                                            |
 | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PowerShell | `.\sestest generate --vmid machine-identifier --application-id contosoapp --sign <thumbprint> --encrypt <thumbprint> --log-level debug`                                            |
-| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll generate --vmid machine-identifier --application-id contosoapp --sign <thumbprint> --encrypt <thumbprint> --log-level debug` |
-| bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll generate --vmid machine-identifier --application-id contosoapp --sign <thumbprint> --encrypt <thumbprint> --log-level debug` |
+| PowerShell | `.\sestest generate --vmid machine-identifier --application-id contosoapp --sign <signing-thumbprint> --encrypt <encryption-thumbprint> --log-level debug`                                            |
+| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll generate --vmid machine-identifier --application-id contosoapp --sign <signing-thumbprint> --encrypt <encryption-thumbprint> --log-level debug` |
+| bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll generate --vmid machine-identifier --application-id contosoapp --sign <signing-thumbprint> --encrypt <encryption-thumbprint> --log-level debug` |
 
 ```
-14:06:43.861 [Information] Software Entitlement Service Test Utility
+14:06:43.861 [Information] ---------------------------------------------
+14:06:43.861 [Information]   Software Entitlement Service Test Utility
+14:06:43.861 [Information] ---------------------------------------------
 14:06:43.966 [Debug] Virtual machine Id: machine-identifier
 14:06:43.977 [Debug] IP Address: 99.999.999.999
 14:06:43.977 [Debug] IP Address: ::9
