@@ -8,14 +8,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     [Verb("server", HelpText = "Run as a standalone software entitlement server.")]
     public sealed class ServerCommandLine : CommandLineBase
     {
-        [Option("signing-cert", HelpText = "Certificate thumbprint of the certificate used to sign the token (optional).")]
+        [Option("sign", HelpText = "Thumbprint of the certificate used to sign tokens (optional; if specified, all tokens must be signed).")]
         public string SigningCertificateThumbprint { get; set; }
 
         //TODO: Document where this looks to find the certificate (in a cross platform way)
-        [Option("encryption-cert", HelpText = "Certificate thumbprint of the certificate used to encrypt the token (optional).")]
+        [Option("encrypt", HelpText = "Thumbprint of the certificate used to encrypt tokens (optional; if specified, all tokens must be encrypted.).")]
         public string EncryptionCertificateThumbprint { get; set; }
 
-        [Option("connection-cert", HelpText = "Thumbprint of the certificate to pin for use with HTTPS (mandatory).")]
+        [Option("connection", HelpText = "Thumbprint of the certificate to pin for use with HTTPS (mandatory).")]
         public string ConnectionCertificateThumbprint { get; set; }
 
         [Option("url", HelpText = "The URL at which the server should process requests (defaults to https://localhost:4443; must start with 'https:').")]
