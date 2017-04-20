@@ -11,6 +11,8 @@ This walk-through will guide you through initial use of the Software Entitlement
 * [Starting the test server](#starting-the-test-server)
 * [Verifying a token](#verifying-a-token)
 
+
+
 ## Prerequisites
 
 To build and use the Software Entitlement Services Test tool (`sestest`) you will need certain prerequisites installed on your system:
@@ -298,7 +300,7 @@ jY0ODA1NiwiaXNzIjoiaHR0cHM6Ly9iYXRjaC5henVyZS5jb20vc29mdHdhcmUtZW50aXRsZW1lbnQiL
 L2JhdGNoLmF6dXJlLmNvbS9zb2Z0d2FyZS1lbnRpdGxlbWVudCJ9."
 ```
 
-Note especially the `[Debug]` information that shows the actual values that have been used for the parameters we haven't supplied ourselves, such as `--not-before`, `--not-after` and `--address`. (Again, the above output has been partially obfuscated.)
+Note especially the `[Debug]` information that shows the actual values that have been used for the parameters we haven't supplied ourselves, such as `--not-before`, `--not-after` and `--address`. (Again, the above output has been wrapped to 100 columns and partially obfuscated.)
 
 To digitally sign the token, specify a certificate with the `--sign` option; to encrypt the token, specify a certificate with the `--encrypt` option. 
 
