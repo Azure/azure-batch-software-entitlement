@@ -1,18 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.IdentityModel;
-using System.IdentityModel.Tokens;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
-using System.Text;
 using CommandLine;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using SymmetricSecurityKey = Microsoft.IdentityModel.Tokens.SymmetricSecurityKey;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -63,12 +58,30 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             var result = entitlement.Combine(signingCert, encryptionCert, GenerateToken);
 
-            if (result.HasValue)
+            if (!result.HasValue)
             {
-                return result.Value;
+                return LogErrors(result.Errors);
             }
 
-            return LogErrors(result.Errors);
+            var token = result.Value;
+            if (string.IsNullOrEmpty(commandLine.TokenFile))
+            {
+                _logger.LogInformation("Token: {JWT}", token);
+                return 0;
+            }
+
+            var fileInfo = new FileInfo(commandLine.TokenFile);
+            _logger.LogInformation("Token file: {filename}", fileInfo.FullName);
+            try
+            {
+                File.WriteAllText(fileInfo.FullName, token);
+                return 0;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(0, ex, ex.Message);
+                return -1;
+            }
         }
 
         /// <summary>
@@ -77,8 +90,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="entitlements">Details of the entitlements to encode into the token.</param>
         /// <param name="signingCert">Certificate to use when signing the token (optional).</param>
         /// <param name="encryptionCert">Certificate to use when encrypting the token (optional).</param>
-        /// <returns>zero (0) if a token was generated, non-zero otherwise.</returns>
-        private static int GenerateToken(
+        /// <returns>Generated token, if any; otherwise all related errors.</returns>
+        private static string GenerateToken(
             NodeEntitlements entitlements,
             X509Certificate2 signingCert = null,
             X509Certificate2 encryptionCert = null)
@@ -99,14 +112,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             var generator = new TokenGenerator(GlobalLogger.Logger, signingCredentials, encryptingCredentials);
-            var token = generator.Generate(entitlements);
-            if (token == null)
-            {
-                return -1;
-            }
-
-            _logger.LogInformation("Token: {JWT}", token);
-            return 0;
+            return generator.Generate(entitlements);
         }
 
         /// <summary>
@@ -185,17 +191,34 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="commandLine">Options selected by the user (if any).</param>
         private static void ConfigureLogging(CommandLineBase commandLine)
         {
+            var level = LogLevel.Information;
+            var parseFailed = false;
+
+            if (!string.IsNullOrEmpty(commandLine.LogLevel))
+            {
+                if (!Enum.TryParse(commandLine.LogLevel, true, out level))
+                {
+                    level = LogLevel.Information;
+                    parseFailed = true;
+                }
+            }
+
             if (string.IsNullOrEmpty(commandLine.LogFile))
             {
-                _logger = GlobalLogger.CreateLogger(commandLine.LogLevel);
+                _logger = GlobalLogger.CreateLogger(level);
             }
             else
             {
                 var file = new FileInfo(commandLine.LogFile);
-                _logger = GlobalLogger.CreateLogger(commandLine.LogLevel, file);
+                _logger = GlobalLogger.CreateLogger(level, file);
             }
 
-            _logger.LogInformation("Software Entitlement Service Test Utility");
+            _logger.LogHeader("Software Entitlement Service Test Utility");
+
+            if (parseFailed)
+            {
+                _logger.LogWarning("Failed to recognise log level '{level}'; defaulting to {default}", level, "Information");
+            }
         }
 
         /// <summary>
@@ -227,7 +250,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
             catch (Exception ex)
             {
-                _logger.LogError((EventId)0, ex, ex.Message);
+                _logger.LogError(0, ex, ex.Message);
                 return -1;
             }
         }

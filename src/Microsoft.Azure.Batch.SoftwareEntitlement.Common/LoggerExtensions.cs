@@ -44,5 +44,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 logger.Log(level, (EventId)0, row, null, (cells, ex) => FormatRow(cells));
             }
         }
+
+        /// <summary>
+        /// Log a heading 
+        /// </summary>
+        /// <param name="logger">Actual logger to use.</param>
+        /// <param name="heading">Heading to display.</param>
+        /// <param name="level">Log level for the output.</param>
+        public static void LogHeader(this ILogger logger, string heading, LogLevel level = LogLevel.Information)
+        {
+            var line = new string('-', heading.Length + 4);
+            logger.Log(level, (EventId)0, line, null, (s, ex) => s);
+            logger.Log(level, (EventId)0, "  " + heading, null, (s, ex) => s);
+            logger.Log(level, (EventId)0, line, null, (s, ex) => s);
+        }
     }
 }

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -14,9 +15,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     {
         // Reference to the generate command line we wrap
         private readonly GenerateCommandLine _commandLine;
-
-        // Reference to a store in which we can search for certificates
-        private readonly CertificateStore _certificateStore = new CertificateStore();
 
         // Reference to a parser to use for timestamps
         private readonly TimestampParser _timestampParser = new TimestampParser();
@@ -109,7 +107,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             if (string.IsNullOrEmpty(_commandLine.NotBefore))
             {
                 // If the user does not specify a start instant for the token, we default to 'now'
-                return Errorable.Success(DateTimeOffset.Now);
+                return Errorable.Success(_now);
             }
 
             return _timestampParser.TryParse(_commandLine.NotBefore, "NotBefore");
@@ -128,21 +126,34 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         private IEnumerable<Errorable<IPAddress>> Addresses()
         {
-            if (_commandLine.Addresses == null || !_commandLine.Addresses.Any())
+            if (_commandLine.Addresses != null && _commandLine.Addresses.Any())
             {
-                yield return Errorable.Failure<IPAddress>("No IP Addresses specified.");
+                foreach (var address in _commandLine.Addresses)
+                {
+                    if (IPAddress.TryParse(address, out var ip))
+                    {
+                        yield return Errorable.Success(ip);
+                    }
+                    else
+                    {
+                        yield return Errorable.Failure<IPAddress>($"IP address '{address}' not in expected format (IPv4 and IPv6 supported).");
+                    }
+                }
+
                 yield break;
             }
 
-            foreach (var address in _commandLine.Addresses)
+            foreach (var i in NetworkInterface.GetAllNetworkInterfaces())
             {
-                if (IPAddress.TryParse(address, out var ip))
+                var properties = i.GetIPProperties();
+                var unicast = properties.UnicastAddresses;
+                if (unicast != null)
                 {
-                    yield return Errorable.Success(ip);
-                }
-                else
-                {
-                    yield return Errorable.Failure<IPAddress>($"IP address '{address}' not in expected format (IPv4 and IPv6 supported).");
+                    foreach (var info in unicast)
+                    {
+                        var ip = info.Address;
+                        yield return Errorable.Success(ip);
+                    }
                 }
             }
         }

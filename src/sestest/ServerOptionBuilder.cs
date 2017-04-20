@@ -58,10 +58,24 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     whenFailure: e => errors.AddRange(e));
             }
 
+            void ConfigureOptional<V>(Func<Errorable<V>> readConfiguration, Func<V, ServerOptions> applyConfiguration)
+                where V : class
+            {
+                readConfiguration().Match(
+                    whenSuccessful: value =>
+                    {
+                        if (value != null)
+                        {
+                            options = applyConfiguration(value);
+                        }
+                    },
+                    whenFailure: e => errors.AddRange(e));
+            }
+
             Configure(ServerUrl, url => options.WithServerUrl(url));
             Configure(ConnectionCertificate, cert => options.WithConnectionCertificate(cert));
-            Configure(SigningCertificate, cert => options.WithSigningCertificate(cert));
-            Configure(EncryptingCertificate, cert => options.WithConnectionCertificate(cert));
+            ConfigureOptional(SigningCertificate, cert => options.WithSigningCertificate(cert));
+            ConfigureOptional(EncryptingCertificate, cert => options.WithConnectionCertificate(cert));
 
             if (errors.Any())
             {
@@ -114,6 +128,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>Certificate, if found; error details otherwise.</returns>
         private Errorable<X509Certificate2> SigningCertificate()
         {
+            if (string.IsNullOrEmpty(_commandLine.SigningCertificateThumbprint))
+            {
+                // No certificate requested, no need to look for one
+                return Errorable.Success<X509Certificate2>(null);
+            }
+
             return FindCertificate("signing", _commandLine.SigningCertificateThumbprint);
         }
 
@@ -123,6 +143,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>Certificate, if found; error details otherwise.</returns>
         private Errorable<X509Certificate2> EncryptingCertificate()
         {
+            if (string.IsNullOrEmpty(_commandLine.EncryptionCertificateThumbprint))
+            {
+                // No certificate requested, no need to look for one
+                return Errorable.Success<X509Certificate2>(null);
+            }
+
             return FindCertificate("encrypting", _commandLine.EncryptionCertificateThumbprint);
         }
 
