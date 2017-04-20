@@ -11,7 +11,9 @@ This walk-through will guide you through initial use of the Software Entitlement
 * [Starting the test server](#starting-the-test-server)
 * [Verifying a token](#verifying-a-token)
 
+## A note on consoles
 
+The SDK has been written to be cross platform, working on Windows, Linux and Macintosh. For brevity, this walk-through uses PowerShell only (usable on both Windows and [Linux](https://azure.microsoft.com/blog/powershell-is-open-sourced-and-is-available-on-linux/)); the commands shown should be trivially convertible to your console of choice, including `cmd` and `bash` (including bash on Windows).
 
 ## Prerequisites
 
@@ -23,31 +25,38 @@ The C++ source for the client library requires [libcurl](https://curl.haxx.se/li
 
 ## Building the tools
 
-To compile the cross platform (.NET) based tooling, open a console window to the root directory of the repo and run one of the following commands:
+Open a console window to the root directory of the repository.
 
-| Console    | Command                                                           |
-| ---------- | ----------------------------------------------------------------- |
-| PowerShell | `.\build-xplat.ps1`                                               |
-| Cmd        | `dotnet restore .\src\sestest` <br/> `dotnet build .\src\sestest` |
-| bash       | `dotnet restore ./src/sestest` <br/> `dotnet build ./src/sestest` |
+Compile the cross platform (.NET) based tooling with the convenience PowerShell script:
 
-* The choice of command is specific to the console being used, not the host platform, and has the 
-  usual predictable differences between consoles. The PowerShell convenience script should work 
-  the same on Linux as it does on Windows; the bash commands should work the same on Windows 10 as 
-  they do on Linux.
+``` PowerShell
+.\build-xplat.ps1
+```
 
-To compile the native code on Windows, run one of the following commands:
+or compile it manually:
 
-| Console    | Command                                                                                                                                                                                                                  |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| PowerShell | `.\build-windows -platform x64 -configuration Debug`                                                                                                                                                                     |
-| Cmd        | `msbuild .\src\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native /property:Configuration=Debug /property:Platform=x64` <br/> `msbuild .\src\sesclient.native /property:Configuration=Debug /property:Platform=x64` |
+``` PowerShell
+dotnet restore .\src\sestest
+dotnet build .\src\sestest
+```
 
-* These commands presume an installation of Visual Studio 2017 on the machine that includes the C++ compiler toolset
-* The PowerShell convenience script uses **msbuild** directly.
-* The command given for **cmd** assumes that **msbuild** is availble on the PATH (as it will be if you open a *Developer Command Prompt for VS 2017* window)
-* The first `msbuild` command shown above builds the library, the second builds a wrapper executable provided for testing purposes.
-* Details of the required will differ if you are using a different C++ compiler.
+To compile the native code on Windows with the script:
+
+``` PowerShell
+.\build-windows -platform x64 -configuration Debug
+```
+
+or you can commpile it manually:
+
+``` PowerShell
+msbuild .\src\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native /property:Configuration=Debug /property:Platform=x64
+msbuild .\src\sesclient.native /property:Configuration=Debug /property:Platform=x64
+```
+
+The first `msbuild` command shown above builds the library, the second builds a wrapper executable provided for testing purposes.
+The commands shown assume that **msbuild** is availble on the PATH (as it will be if you open a *Developer Command Prompt for VS 2017* window.)'
+
+Details of the required buld will differ if you are using a different C++ compiler or are building on a different platform.
 
 ### Troubleshooting the builds
 
@@ -57,15 +66,11 @@ TBC
 
 If compilation works without any issues, you should now have the executables you need for testing.
 
-To verify that the `sestest` console application is ready for use, run one of the following commands from your console:
+Run the `sestest` console application to verify it is ready for use.
 
-| Console    | Command                                                |
-| ---------- | ------------------------------------------------------ |
-| PowerShell | `.\sestest`                                            |
-| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll` |
-| bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll` |
-
-* Again, there is a PowerShell convenience script for use.
+``` PowerShell
+.\sestest
+```
 
 You should get output similar to this:
 
@@ -89,13 +94,11 @@ ERROR(S):
   version              Display version information.
 ```
 
-To verify the `sesclient.native.exe` console application is ready for use, run one of the following commands from your console:
+You should also run the `sesclient.native.exe` console application to verify it is ready for use:
 
-| Console    | Command                            |
-| ---------- | ---------------------------------- |
-| PowerShell | `.\x64\Debug\sesclient.native.exe` |
-| Cmd        | `.\x64\Debug\sesclient.native.exe` |
-| bash       | `./x64/Debug/sesclient.native`     |
+```
+.\sesclient
+```
 
 You should get output similar to this:
 
@@ -135,11 +138,9 @@ At minimum, you must use a certificate that has a private key.
 
 To assist with finding a suitable certificate, the `sestest` utility has a **list-certificates** mode that will list certificates that *may* work (the tool only shows certificates with a private key).
 
-| Console    | Command                                                                  |
-| ---------- | ------------------------------------------------------------------------ |
-| PowerShell | `.\sestest list-certificates`                                            |
-| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll list-certificates` |
-| bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll list-certificates` |
+```
+.\sestest list-certificates
+```
 
 The output from this command is tabular, so we recommend using a console window that is as wide as possible.
 
@@ -149,26 +150,20 @@ The output from this command is tabular, so we recommend using a console window 
 
 ### Checking a thumbprint
 
-Once you've selected a thumbprint for use, you can verify it using `sestest`.
+Once you've selected a thumbprint for use, you can verify it using `sestest` (Substitute your own thumbprint for `XXX`).
 
-| Console    | Command                                                                                                                       |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| PowerShell | `.\sestest find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX`                                            |
-| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX` |
-| bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX` |
-
+```
+.\sestest find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+```
 For a thumbprint containing whitespace (as it will if copied from the Windows certificate properties dialog), wrap the thumbprint in quotes.
 
-| Console    | Command                                                                                                                                            |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PowerShell | `.\sestest find-certificate --thumbprint "XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX"`                                            |
-| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll find-certificate --thumbprint "XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX"` |
-| bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll find-certificate --thumbprint "XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX"` |
+```
+.\sestest find-certificate --thumbprint "XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX"
+```
 
 If `sestest` successfully finds the certificate, some information about the certificate will be shown:
 
 ``` 
-PS> .\sestest find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 10:26:13.119 [Information] ---------------------------------------------
 10:26:13.119 [Information]   Software Entitlement Service Test Utility
 10:26:13.119 [Information] ---------------------------------------------
@@ -189,20 +184,15 @@ PS> .\sestest find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 10:26:13.186 [Information]
 10:26:13.187 [Information] [Thumbprint]
 10:26:13.188 [Information]   XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
-PS>
 ```
 
 If `sestest` is unable to find the certificate, you will get an error like this:
 
 ``` 
-PS> .\sestest find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 10:34:59.211 [Information] ---------------------------------------------
 10:34:59.211 [Information]   Software Entitlement Service Test Utility
 10:34:59.211 [Information] ---------------------------------------------
 10:34:59.305 [Error] Did not find cert certificate XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-
-PS>
 ```
 
 ## Generating a token
@@ -224,33 +214,27 @@ The `generate` mode of `sestest` is used to generate a token. The command has th
 
 You can see this documentation for yourself by running `sestest generate --help` in your console.
 
-Run `sestest generate` with no parameters
-
-| Console    | Command                                                                                                                       |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| PowerShell | `.\sestest generate`                                            |
-| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll generate` |
-| bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll generate` |
+Run `sestest generate` with no parameters.
 
 ```
-PS> .\sestest generate
+.\sestest generate
+```
+
+Typical output:
+
+```
 10:53:59.102 [Information] ---------------------------------------------
 10:53:59.102 [Information]   Software Entitlement Service Test Utility
 10:53:59.102 [Information] ---------------------------------------------
 10:53:59.164 [Error] No applications specified.
 10:53:59.164 [Error] No virtual machine identifier specified.
-
-PS>
 ```
 
 Running `sestest generate` with just the mandatory parameters supplied will generate a minimal token.
 
-| Console    | Command                                                                                                                       |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| PowerShell | `.\sestest generate --vmid machine-identifier --application-id contosoapp`                                            |
-| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll generate --vmid machine-identifier --application-id contosoapp` |
-| bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll generate --vmid machine-identifier --application-id contosoapp` |
-
+```
+.\sestest generate --vmid machine-identifier --application-id contosoapp
+```
 
 ```
 10:57:15.616 [Information] ---------------------------------------------
@@ -267,11 +251,9 @@ L2JhdGNoLmF6dXJlLmNvbS9zb2Z0d2FyZS1lbnRpdGxlbWVudCJ9."
 
 Include the option `--log-level debug` to get more information about what is included in the token.
 
-| Console    | Command                                                                                                                                 |
-| ---------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| PowerShell | `.\sestest generate --vmid machine-identifier --application-id contosoapp --log-level debug`                                            |
-| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll generate --vmid machine-identifier --application-id contosoapp --log-level debug` |
-| bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll generate --vmid machine-identifier --application-id contosoapp --log-level debug` |
+```
+.\sestest generate --vmid machine-identifier --application-id contosoapp --log-level debug
+```
 
 ```
 12:27:36.577 [Information] ---------------------------------------------
@@ -304,11 +286,9 @@ Note especially the `[Debug]` information that shows the actual values that have
 
 To digitally sign the token, specify a certificate with the `--sign` option; to encrypt the token, specify a certificate with the `--encrypt` option. 
 
-| Console    | Command                                                                                                                                                                            |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| PowerShell | `.\sestest generate --vmid machine-identifier --application-id contosoapp --sign <signing-thumbprint> --encrypt <encryption-thumbprint> --log-level debug`                                            |
-| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll generate --vmid machine-identifier --application-id contosoapp --sign <signing-thumbprint> --encrypt <encryption-thumbprint> --log-level debug` |
-| bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll generate --vmid machine-identifier --application-id contosoapp --sign <signing-thumbprint> --encrypt <encryption-thumbprint> --log-level debug` |
+```
+.\sestest generate --vmid machine-identifier --application-id contosoapp --sign <signing-thumbprint> --encrypt <encryption-thumbprint> --log-level debug
+```
 
 ```
 14:06:43.861 [Information] ---------------------------------------------
@@ -370,17 +350,13 @@ You can see this documentation for yourself by running `sestest server --help` i
 
 Run the server with minimum parameters (just a connection certificate thumbprint).
 
-| Console    | Command                                                                                                   |
-| ---------- | --------------------------------------------------------------------------------------------------------- |
-| PowerShell | `.\sestest server --connection <thumbprint>                                                               |
-| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll server --connection <thumbprint> --log-level debug` |
-| Cmd        | `dotnet .\out\sestest\Debug\netcoreapp1.1\sestest.dll server --connection <thumbprint> --log-level debug` |
-| bash       | `dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll server --connection <thumbprint> --log-level debug` |
+```
+.\sestest server --connection <thumbprint>
+```
 
 The server will start up and wait for connections
 
 ```
-PS> .\sestest server --connection 6D4C8E23E9C70D78F402BE9422BF44CE5465CD1A  --log-level debug
 17:20:02.676 [Information] ---------------------------------------------
 17:20:02.695 [Information]   Software Entitlement Service Test Utility
 17:20:02.696 [Information] ---------------------------------------------
