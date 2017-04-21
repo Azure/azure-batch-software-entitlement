@@ -375,4 +375,136 @@ Application is shutting down...
 17:20:09.008 [Debug] Hosting shutdown
 ```
 
+TODO: Checking the server is running
+
 ## Verifying a token
+
+The `sesclient` console application allows you to submit a previously generated token to a software entitlement server and see the result. The command has the following parameters:
+
+| Parameter     | Required  | Definition                                                                                      |
+| ------------- | --------- | ----------------------------------------------------------------------------------------------- |
+| --url         | Mandatory | The url of the software entitlement server URL to use                                           |
+| --thumbprint  | Mandatory | Thumbprint of a certificate expected in the server's SSL certificate chain                      |
+| --common-name | Mandatory | Common name of the certificate with the specified thumbprint                                    |
+| --token       | Mandatory | Software entitlement token to pass to the server <br/> Specify `-` to read the token from stdin |
+| --application | Mandatory | Name of the license ID being requested                                                          |
+
+Assuming a token previously generated into `token.txt`:
+
+```
+$token = get-content token.txt
+.\sesclient --url https://localhost:4443 --thumbprint XXXX --common-name Microsoft --token $token --application contosoapp
+```
+
+Alternatively, in `bash` or `cmd` you can use a redirect to feed the token in:
+
+```
+$token = get-content token.txt
+sesclient --url https://localhost:4443 --thumbprint XXXX --common-name Microsoft --token - --application contosoapp < token.txt
+```
+
+## Bringing it all together
+
+Now that we've seen all of the individual components of the SDK, let's pull them all together into a full workflow.
+
+### Select your certificates
+
+Select the certificate or certificates you want to use - one to secure the connection to the server, one to sign each token and one to encrypt each token. Define three variables, one for each certificate (this makes it easier to reference the thumbprints later on).
+
+``` PowerShell
+$connectionThumbprint = "9X9X9X99X9X99X99X999XX9999XX99XX9999XX9X"
+$signingThumbprint = "99999999XX999X999X999X999X9999X99XX99X99"
+$encryptingThumbprint = "99X9999XXX9XX9999XX99X9X9999X9X9999X999X"
+```
+### Generate a token
+
+Generate an encrypted and signed token for the application `contosoapp`:
+
+``` PowerShell
+.\sestest generate --vmid $env:COMPUTERNAME --application-id contosoapp --sign $signingThumbprint --encrypt $encryptingThumbprint --token-file token.txt
+```
+
+This commandline uses the name of your current computer as the "virtual machine identifier" to embed in the token.
+
+```
+11:30:29.763 [Information] ---------------------------------------------
+11:30:29.783 [Information]   Software Entitlement Service Test Utility
+11:30:29.784 [Information] ---------------------------------------------
+11:30:30.091 [Information] Token file: "E:\github\azure-batch-software-entitlement\token.txt"
+```
+You may want to inspect the token file using a text editor.
+
+### Start the software entitlement server
+
+Open a second console window and define the same certificate variables as above. Start a test server:
+
+``` PowerShell
+.\sestest server --connection $connectionThumbprint --sign $signingThumbprint --encrypt $encryptingThumbprint
+```
+
+The server will start up:
+
+```
+11:44:48.705 [Information] ---------------------------------------------
+11:44:48.724 [Information]   Software Entitlement Service Test Utility
+11:44:48.725 [Information] ---------------------------------------------
+Hosting environment: Production
+Content root path: ... elided ...
+Now listening on: https://localhost:4443
+Application started. Press Ctrl+C to shut down.
+```
+
+The "Now listening on:" line gives you the URL needed for the next step.
+
+### Checking the token
+
+Back in your original console window, use `sesclient` to verify the token.
+
+```
+$token = get-content token.txt
+.\sesclient --url https://localhost:4443 --thumbprint $connectionThumbprint --common-name Microsoft --token $token --application contosoapp
+```
+
+### Troubleshooting
+
+#### SSPI Errors
+
+If the connection certificate you selected previously isn't fully trusted, the `sestest server` window will show messages like this:
+
+```
+11:48:21.194 [Error] ConnectionFilter.OnConnection
+11:48:21.202 [Error] One or more errors occurred. (A call to SSPI failed, see inner exception.) (AggregateException)
+11:48:21.203 [Error]     A call to SSPI failed, see inner exception. (AuthenticationException)
+11:48:21.234 [Error]         The certificate chain was issued by an authority that is not trusted (Win32Exception)
+```
+
+One way to remedy this is to install the certificate as a **Trusted Root Certificate Authority**. Since this is a global configuration change on your machine, please make sure you are comfortable with the consequences before doing this.
+
+#### Self signed certificate
+
+If using a self signed certificate, secure connection validation code in the static client library will prevent you from connecting. The error message reads:
+
+```
+libcurl_error 60: SSL certificate problem: unable to get local issuer certificate
+```
+
+To turn off these checks, modify the source code in `SoftwareEntitlementClient.cpp`, around line #335:
+
+``` cplusplus
+// During testing, if the certificate chain leaves something to be
+// desired, disable the following two options by setting them to 0.
+//
+ThrowIfCurlError(curl_easy_setopt(_curl.get(), CURLOPT_SSL_VERIFYHOST, /* 2 */ 0));
+ThrowIfCurlError(curl_easy_setopt(_curl.get(), CURLOPT_SSL_VERIFYPEER, /* 1 */ 0));
+```
+
+**NOTE**: Don't leave these checks disabled when you do the release build of your package. Failing to restore these checks will make it much easier for a man-in-the-middle attack.
+
+### Things to try
+
+Once you've successfully validated a token, here are some things to try:
+
+* Try a token that has already expired.
+* Try a token that is not yet enabled.
+* Try requesting entitlement for an application not listed in the token
+* Try requesting entitlement from a different machine on your network
