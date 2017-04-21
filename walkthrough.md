@@ -199,18 +199,18 @@ If `sestest` is unable to find the certificate, you will get an error like this:
 
 The `generate` mode of `sestest` is used to generate a token. The command has the following parameters:
 
-| Parameter        | Definition                                                                                                                                                                           |
+| Parameter        | Required | Definition                                                                                                                                                                           |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| --application-id | Unique identifier(s) for the applications(s) to include in the entitlement (comma separated).                                                                                        |
-| --vmid           | Unique identifier for the Azure virtual machine (mandatory).                                                                                                                         |
-| --not-before     | The moment at which the token becomes active and the application is entitled to execute <br/> Format 'hh:mm d-mmm-yyyy'; 24 hour clock; local time; defaults to now.                 |
-| --not-after      | The moment at which the token expires and the application is no longer entitled to execute <br/> Format 'hh:mm d-mmm/-yyyy'; 24 hour clock; local time; defaults to 7 days from now. |
-| --address        | The externally visible IP addresses of the machine entitled to execute the application(s). <br/> Defaults to all the IP addresses of the current machine.                            |
-| --sign           | Certificate thumbprint of the certificate used to sign the token                                                                                                                     |
-| --encrypt        | Certificate thumbprint of the certificate used to encrypt the token.                                                                                                                 |
-| --token-file     | The name of a file into which the token will be written <br/> Token will be logged otherwise.                                                                                        |
-| --log-level      | Specify the level of logging output. <br/> One of *error*, *warning*, *information* or *debug*; defaults to *information*.                                                           |
-| --log-file       | Specify a file into which log messages should be written. <br/> Logging is shown on the console by default.                                                                          |
+| --application-id | Mandatory | Unique identifier(s) for the applications(s) to include in the entitlement (comma separated).                                                                                        |
+| --vmid           | Mandatory | Unique identifier for the Azure virtual machine.                                                                                                                         |
+| --not-before     | Optional  | The moment at which the token becomes active and the application is entitled to execute <br/> Format 'hh:mm d-mmm-yyyy'; 24 hour clock; local time; defaults to now.                 |
+| --not-after      | Optional  | The moment at which the token expires and the application is no longer entitled to execute <br/> Format 'hh:mm d-mmm/-yyyy'; 24 hour clock; local time; defaults to 7 days from now. |
+| --address        | Optional  | The externally visible IP addresses of the machine entitled to execute the application(s). <br/> Defaults to all the IP addresses of the current machine.                            |
+| --sign           | Optional  | Certificate thumbprint of the certificate used to sign the token                                                                                                                     |
+| --encrypt        | Optional  | Certificate thumbprint of the certificate used to encrypt the token.                                                                                                                 |
+| --token-file     | Optional  | The name of a file into which the token will be written <br/> Token will be logged otherwise.                                                                                        |
+| --log-level      | Optional  | Specify the level of logging output. <br/> One of *error*, *warning*, *information* or *debug*; defaults to *information*.                                                           |
+| --log-file       | Optional  | Specify a file into which log messages should be written. <br/> Logging is shown on the console by default.                                                                          |
 
 You can see this documentation for yourself by running `sestest generate --help` in your console.
 
