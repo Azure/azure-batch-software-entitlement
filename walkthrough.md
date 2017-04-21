@@ -10,10 +10,11 @@ This walk-through will guide you through initial use of the Software Entitlement
 * [Generating a token](#generating-a-token)
 * [Starting the test server](#starting-the-test-server)
 * [Verifying a token](#verifying-a-token)
+* [Bringing it all together](#bringing-it-all-together)
 
 ## A note on consoles
 
-The SDK has been written to be cross platform, working on Windows, Linux and Macintosh. For brevity, this walk-through uses PowerShell only (usable on both Windows and [Linux](https://azure.microsoft.com/blog/powershell-is-open-sourced-and-is-available-on-linux/)); the commands shown should be trivially convertible to your console of choice, including `cmd` and `bash` (including bash on Windows).
+The SDK has been written to be cross platform, working on Windows, Linux and Macintosh. For brevity, this walk-through uses **PowerShell** only (usable on both Windows and [Linux](https://azure.microsoft.com/blog/powershell-is-open-sourced-and-is-available-on-linux/)); the commands shown should be trivially convertible to your console of choice, including **cmd** and **bash** (including **bash** on Windows 10).
 
 ## Prerequisites
 
@@ -40,13 +41,13 @@ dotnet restore .\src\sestest
 dotnet build .\src\sestest
 ```
 
-To compile the native code on Windows with the script:
+To compile the native code on Windows:
 
 ``` PowerShell
 .\build-windows -platform x64 -configuration Debug
 ```
 
-or you can commpile it manually:
+or you can compile it manually:
 
 ``` PowerShell
 msbuild .\src\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native /property:Configuration=Debug /property:Platform=x64
@@ -54,13 +55,9 @@ msbuild .\src\sesclient.native /property:Configuration=Debug /property:Platform=
 ```
 
 The first `msbuild` command shown above builds the library, the second builds a wrapper executable provided for testing purposes.
-The commands shown assume that **msbuild** is availble on the PATH (as it will be if you open a *Developer Command Prompt for VS 2017* window.)'
+The commands shown assume that **msbuild** is availble on the PATH (as it will be if you open a *Developer Command Prompt for VS 2017* window).
 
 Details of the required buld will differ if you are using a different C++ compiler or are building on a different platform.
-
-### Troubleshooting the builds
-
-TBC
 
 ### Checking that it works
 
@@ -94,7 +91,7 @@ ERROR(S):
   version              Display version information.
 ```
 
-You should also run the `sesclient.native.exe` console application to verify it is ready for use:
+Run the `sesclient.native.exe` console application to verify it is ready for use:
 
 ```
 .\sesclient
@@ -114,15 +111,15 @@ Parameters:
 
 ## Selecting Certificates
 
-The software entitlement service makes use of three digital certificates as follows:
+The software entitlement service makes use of three digital certificates:
 
-* To digitally sign the generated entitlement token
-* To encrypt the generated entitlement token
-* To authenticate the software entitlement service
+* one to digitally sign the generated entitlement token;
+* one to encrypt the generated entitlement token; and
+* one to authenticate the software entitlement service;
 
-In production, three different certificates will be used, but for test scenarios you are welcome to use the same certificate for all three.
+In production, three different certificates will be used, but for test scenarios you may want to use the same certificate for all three.
 
-For each required certificate you will need to know the *thumbprint* of that certificate. The SES tooling is not sensitive to the format of the thumbprint.
+For each required certificate you will need to know its *thumbprint*. The SES tooling is not sensitive to the format of the thumbprint.
 
 ### Windows
 
@@ -136,7 +133,7 @@ At minimum, you must use a certificate that has a private key.
 
 ### Sestest
 
-To assist with finding a suitable certificate, the `sestest` utility has a **list-certificates** mode that will list certificates that *may* work (the tool only shows certificates with a private key).
+To assist with finding a suitable certificate, the `sestest` utility has a **list-certificates** mode that will list certificates that *may* work (the tool lists certificates with a private key but doesn't check for other characteristics).
 
 ```
 .\sestest list-certificates
@@ -161,7 +158,7 @@ For a thumbprint containing whitespace (as it will if copied from the Windows ce
 .\sestest find-certificate --thumbprint "XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX"
 ```
 
-If `sestest` successfully finds the certificate, some information about the certificate will be shown:
+If `sestest` finds the certificate, some information will be shown:
 
 ``` 
 10:26:13.119 [Information] ---------------------------------------------
@@ -186,7 +183,7 @@ If `sestest` successfully finds the certificate, some information about the cert
 10:26:13.188 [Information]   XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ```
 
-If `sestest` is unable to find the certificate, you will get an error like this:
+If `sestest` is unable to find the certificate, you will get an error:
 
 ``` 
 10:34:59.211 [Information] ---------------------------------------------
@@ -282,9 +279,9 @@ jY0ODA1NiwiaXNzIjoiaHR0cHM6Ly9iYXRjaC5henVyZS5jb20vc29mdHdhcmUtZW50aXRsZW1lbnQiL
 L2JhdGNoLmF6dXJlLmNvbS9zb2Z0d2FyZS1lbnRpdGxlbWVudCJ9."
 ```
 
-Note especially the `[Debug]` information that shows the actual values that have been used for the parameters we haven't supplied ourselves, such as `--not-before`, `--not-after` and `--address`. (Again, the above output has been wrapped to 100 columns and partially obfuscated.)
+Note the `[Debug]` log lines that show the actual values that have been used, including the default values selected for parameters we haven't supplied ourselves, such as `--not-before`, `--not-after` and `--address`. (Again, the above output has been wrapped to 100 columns and partially obfuscated.)
 
-To digitally sign the token, specify a certificate with the `--sign` option; to encrypt the token, specify a certificate with the `--encrypt` option. 
+To digitally sign the token, specify a certificate thumbprint with the `--sign` option; to encrypt the token, specify a certificate thumbprint with the `--encrypt` option.
 
 ```
 .\sestest generate --vmid machine-identifier --application-id contosoapp --sign <signing-thumbprint> --encrypt <encryption-thumbprint> --log-level debug
@@ -375,7 +372,7 @@ Application is shutting down...
 17:20:09.008 [Debug] Hosting shutdown
 ```
 
-TODO: Checking the server is running
+***TODO: Checking the server is running***
 
 ## Verifying a token
 
@@ -413,9 +410,10 @@ Select the certificate or certificates you want to use - one to secure the conne
 
 ``` PowerShell
 $connectionThumbprint = "9X9X9X99X9X99X99X999XX9999XX99XX9999XX9X"
-$signingThumbprint = "99999999XX999X999X999X999X9999X99XX99X99"
+$signingThumbprint    = "99999999XX999X999X999X999X9999X99XX99X99"
 $encryptingThumbprint = "99X9999XXX9XX9999XX99X9X9999X9X9999X999X"
 ```
+
 ### Generate a token
 
 Generate an encrypted and signed token for the application `contosoapp`:
@@ -424,7 +422,7 @@ Generate an encrypted and signed token for the application `contosoapp`:
 .\sestest generate --vmid $env:COMPUTERNAME --application-id contosoapp --sign $signingThumbprint --encrypt $encryptingThumbprint --token-file token.txt
 ```
 
-This commandline uses the name of your current computer as the "virtual machine identifier" to embed in the token.
+This uses the name of your current computer as the "virtual machine identifier" to embed in the token.
 
 ```
 11:30:29.763 [Information] ---------------------------------------------
