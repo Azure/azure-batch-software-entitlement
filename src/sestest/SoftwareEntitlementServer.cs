@@ -9,6 +9,7 @@ using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
@@ -21,13 +22,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         // Reference to the options that configure our operation
         private readonly ServerOptions _options;
 
+        // Logger used for diagnostics
+        private readonly ILogger _logger;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SoftwareEntitlementServer"/> class
         /// </summary>
         /// <param name="options">Options to control our behavior.</param>
-        public SoftwareEntitlementServer(ServerOptions options)
+        /// <param name="logger">Logger to use for diagnostic output.</param>
+        public SoftwareEntitlementServer(ServerOptions options, ILogger logger)
         {
             _options = options;
+            _logger = logger;
         }
 
         /// <summary>
@@ -51,8 +57,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         private void ConfigureServices(IServiceCollection services)
         {
-            var signingKey = CreateKey(_options.SigningCertificate);
-            var encryptingKey = CreateKey(_options.EncryptionCertificate);
+            var signingKey = CreateKey(_options.SigningCertificate, "signing");
+            var encryptingKey = CreateKey(_options.EncryptionCertificate, "encryption");
             var controllerOptions = new SoftwareEntitlementsController.Options(signingKey, encryptingKey);
             services.AddSingleton(controllerOptions);
         }
@@ -81,13 +87,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return hostFileInfo.Directory;
         }
 
-        private SecurityKey CreateKey(X509Certificate2 certificate)
+        private SecurityKey CreateKey(X509Certificate2 certificate, string purpose)
         {
             if (certificate == null)
             {
+                _logger.LogDebug("No certificate specified for {purpose}", purpose);
                 return null;
             }
 
+            _logger.LogDebug("Creating security key for {purpose}", purpose);
             return new X509SecurityKey(certificate);
         }
     }
