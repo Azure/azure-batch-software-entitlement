@@ -48,3 +48,24 @@ The folders within the repository have the following uses.
 | `img`     | Images that form a part of the documentation                                                                                                                                                                                                                                                                     |
 | `scripts` | Various utility scripts used by the convenience scripts found in the root folder of the repository.                                                                                                                                                                                                              |
 
+## Key Classes
+
+The core functionality of the software entitlement service SDK is found in these classes.
+
+| Class                       | Purpose                                                                                                                                     | Links                                                                                                                                                                             |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NodeEntitlements`          | A definition of the software entitlements to be made available to a single compute node.                                                    | [Project](src/Microsoft.Azure.Batch.SoftwareEntitlement/) <br/> [Source](src/Microsoft.Azure.Batch.SoftwareEntitlement/NodeEntitlements.cs)                                       |
+| `TokenGenerator`            | Factory class that creates new software entitlement tokens when given a properly configured instance of `NodeEntitlements`.                 | [Project](src/Microsoft.Azure.Batch.SoftwareEntitlement/) <br/> [Source](src/Microsoft.Azure.Batch.SoftwareEntitlement/TokenGenerator.cs)                                         |
+| `TokenVerifier`             | Accepts an encoded software entitlement token and checks to see whether a requested software entitlement should be approved.                | [Project](src/Microsoft.Azure.Batch.SoftwareEntitlement/) <br/> [Source](src/Microsoft.Azure.Batch.SoftwareEntitlement/TokenVerifier.cs)                                          |
+| `SoftwareEntitlementClient` | When provided with a software entitlement token, securely contacts a nominated software entitlement server to see if the token is approved. | [Project](src/Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native/) <br/> [Source](src/Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native/SoftwareEntitlementClient.cpp) |
+
+## Supporting Classes
+
+These classes provide fundamental support for the operation of the software entitlement service SDK. Only those selected classes who's are listed
+
+| Class                            | Purpose                                                                                                                  | Links                                                                                                                                                                                           |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `SoftwareEntitlementsController` | ASP.NET Core controller that provides an HTTPS endpoint for token verification.                                          | [Project](src/Microsoft.Azure.Batch.SoftwareEntitlement.Server/Controllers/) <br/> [Source](src/Microsoft.Azure.Batch.SoftwareEntitlement.Server/Controllers/SoftwareEntitlementsController.cs) |
+| `CertificateThumbprint`          | A semantic type for the thumbprint of an X509 certificate.                                                               | [Project](src/Microsoft.Azure.Batch.SoftwareEntitlement.Common/) <br/> [Source](src/Microsoft.Azure.Batch.SoftwareEntitlement.Common/CertificateThumbprint.cs)                                  |
+| `Errorable`                      | A container that contains *either* a successful result *or* a list of errors. Used to cleanly propagate errors for reporting diagnostics. | [Project](src/Microsoft.Azure.Batch.SoftwareEntitlement.Common/) <br/> [Source](src/Microsoft.Azure.Batch.SoftwareEntitlement.Common/Errorable.cs)                                              |
+
