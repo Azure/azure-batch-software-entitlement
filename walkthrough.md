@@ -365,6 +365,13 @@ Now listening on: https://localhost:4443
 Application started. Press Ctrl+C to shut down.
 ```
 
+Using a web browser, connect to the server by entering the URL shown on the console.
+
+![Browser](img/browser.png)
+
+* Only an HTTPS connection will work. The server does not listen for HTTP connections.
+* If you specified any kind of locally signed certificate, you will likely need to override security features of your browser to connect.
+
 Use Ctrl+C to shut down the server when no longer needed.
 
 ```
