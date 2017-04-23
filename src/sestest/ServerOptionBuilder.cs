@@ -75,7 +75,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             Configure(ServerUrl, url => options.WithServerUrl(url));
             Configure(ConnectionCertificate, cert => options.WithConnectionCertificate(cert));
             ConfigureOptional(SigningCertificate, cert => options.WithSigningCertificate(cert));
-            ConfigureOptional(EncryptingCertificate, cert => options.WithConnectionCertificate(cert));
+            ConfigureOptional(EncryptingCertificate, cert => options.WithEncryptionCertificate(cert));
 
             if (errors.Any())
             {
