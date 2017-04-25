@@ -12,7 +12,7 @@ This walk-through will guide you through initial use of the Software Entitlement
 * [Verifying a token](#verifying-a-token)
 * [Bringing it all together](#bringing-it-all-together)
 
-## A note on consoles
+## A note on shells
 
 The SDK has been written to be cross platform, working on Windows, Linux and Macintosh. For brevity, this walk-through uses **PowerShell** only (usable on both Windows and [Linux](https://azure.microsoft.com/blog/powershell-is-open-sourced-and-is-available-on-linux/)); the commands shown should be trivially convertible to your console of choice, including **cmd** and **bash** (including **bash** on Windows 10).
 
@@ -26,7 +26,7 @@ The C++ source for the client library requires [libcurl](https://curl.haxx.se/li
 
 ## Building the tools
 
-Open a console window to the root directory of the repository.
+Open a shell window to the root directory of the repository.
 
 Compile the cross platform (.NET) based tooling with the convenience PowerShell script:
 
@@ -343,7 +343,7 @@ The **server** mode of `sestest` provides an HTTPS endpoint that acts as a fully
 | --log-level  | Optional  | Specify the level of logging output.<br/>One of *error*, *warning*, *information* or *debug*; defaults to *information*.  |
 | --log-file   | Optional  | Specify a file into which log messages should be written.                                                                 |
 
-You can see this documentation for yourself by running `sestest server --help` in your console.
+You can see this documentation for yourself by running `sestest server --help` in your shell.
 
 Run the server with minimum parameters (just a connection certificate thumbprint).
 
@@ -441,7 +441,7 @@ You may want to inspect the token file using a text editor.
 
 ### Start the software entitlement server
 
-Open a second console window and define the same certificate variables as above. Start a test server:
+Open a second shell window and define the same certificate variables as above. Start a test server:
 
 ``` PowerShell
 .\sestest server --connection $connectionThumbprint --sign $signingThumbprint --encrypt $encryptingThumbprint
@@ -463,7 +463,7 @@ The "Now listening on:" line gives you the URL needed for the next step.
 
 ### Checking the token
 
-Back in your original console window, use `sesclient` to verify the token.
+Back in your original shell window, use `sesclient` to verify the token.
 
 ``` PowerShell
 $token = get-content token.txt
