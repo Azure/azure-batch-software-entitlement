@@ -55,7 +55,7 @@ msbuild .\src\sesclient.native /property:Configuration=Debug /property:Platform=
 ```
 
 The first `msbuild` command shown above builds the library, the second builds a wrapper executable provided for testing purposes.
-The commands shown assume that `msbuild` is available on the PATH. If this is not the case, you'll need to provide the full path to `msbuild` - typically, this is something like `C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\MSBuild.exe` (the actual path will differ according to the version of Visual Studio or SDK you have installed).
+The commands shown assume that `msbuild` is available on the PATH. If this is not the case, you'll need to provide the full path to `msbuild`&ntypically, this is something like `C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\MSBuild.exe` (the actual path will differ according to the version of Visual Studio or SDK you have installed).
 
 Details of how to build the code will differ if you are using a different C++ compiler or are building on a different platform.
 
@@ -63,7 +63,7 @@ Details of how to build the code will differ if you are using a different C++ co
 
 If compilation works without any issues, you should now have the executables you need for testing.
 
-Run the `sestest` console utility to verify it is ready for use.
+Run the `sestest` console utility to verify it is ready for use:
 
 ``` PowerShell
 .\sestest
@@ -131,9 +131,9 @@ At minimum, you must use a certificate that has a private key.
 
 ![Certificate with Private Key](img/certificate-details.png)
 
-### Sestest
+### Listing possible certificates
 
-To assist with finding a suitable certificate, the `sestest` utility has a **list-certificates** mode that will list certificates that *may* work (the tool lists certificates with a private key but doesn't check for other characteristics).
+To assist with finding a suitable certificate, the `sestest` utility has a **list-certificates** mode that will list certificates that *may* work (the tool lists certificates with a private key but doesn't check for other characteristics):
 
 ``` PowerShell
 .\sestest list-certificates
@@ -147,12 +147,13 @@ The output from this command is tabular, so we recommend using a console window 
 
 ### Checking a thumbprint
 
-Once you've selected a thumbprint for use, you can verify it using `sestest` (Substitute your own thumbprint for `XXX`).
+Once you've selected a thumbprint for use, you can verify it using `sestest` (Substitute your own thumbprint for `XXX`):
 
 ``` PowerShell
 .\sestest find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ```
-For a thumbprint containing whitespace (as it will if copied from the Windows certificate properties dialog), wrap the thumbprint in quotes.
+
+For a thumbprint containing whitespace (as it will if copied from the Windows certificate properties dialog), wrap the thumbprint in quotes:
 
 ``` PowerShell
 .\sestest find-certificate --thumbprint "XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX"
@@ -196,22 +197,22 @@ If `sestest` is unable to find the certificate, you will get an error:
 
 The `generate` mode of `sestest` is used to generate a token. The command has the following parameters:
 
-| Parameter        | Required | Definition                                                                                                                                                                           |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| --application-id | Mandatory | Unique identifier(s) for the applications(s) to include in the entitlement (comma separated).                                                                                        |
-| --vmid           | Mandatory | Unique identifier for the Azure virtual machine.                                                                                                                         |
+| Parameter        | Required  | Definition                                                                                                                                                                           |
+| ---------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| --application-id | Mandatory | Unique identifier(s) for the application(s) to include in the entitlement (comma separated).                                                                                         |
+| --vmid           | Mandatory | Unique identifier for the Azure virtual machine.                                                                                                                                     |
 | --not-before     | Optional  | The moment at which the token becomes active and the application is entitled to execute <br/> Format 'hh:mm d-mmm-yyyy'; 24 hour clock; local time; defaults to now.                 |
 | --not-after      | Optional  | The moment at which the token expires and the application is no longer entitled to execute <br/> Format 'hh:mm d-mmm/-yyyy'; 24 hour clock; local time; defaults to 7 days from now. |
 | --address        | Optional  | The externally visible IP addresses of the machine entitled to execute the application(s). <br/> Defaults to all the IP addresses of the current machine.                            |
 | --sign           | Optional  | Certificate thumbprint of the certificate used to sign the token                                                                                                                     |
 | --encrypt        | Optional  | Certificate thumbprint of the certificate used to encrypt the token.                                                                                                                 |
-| --token-file     | Optional  | The name of a file into which the token will be written <br/> Token will be logged otherwise.                                                                                        |
+| --token-file     | Optional  | The name of a file into which the token will be written <br/> If not specified, the token will be shown in the log.                                                                  |
 | --log-level      | Optional  | Specify the level of logging output. <br/> One of *error*, *warning*, *information* or *debug*; defaults to *information*.                                                           |
 | --log-file       | Optional  | Specify a file into which log messages should be written. <br/> Logging is shown on the console by default.                                                                          |
 
 You can see this documentation for yourself by running `sestest generate --help` in your console.
 
-Run `sestest generate` with no parameters.
+Run `sestest generate` with no parameters:
 
 ``` PowerShell
 .\sestest generate
@@ -227,7 +228,7 @@ Typical output:
 10:53:59.164 [Error] No virtual machine identifier specified.
 ```
 
-Running `sestest generate` with just the mandatory parameters supplied will generate a minimal token.
+Running `sestest generate` with just the mandatory parameters supplied will generate a minimal token:
 
 ``` PowerShell
 .\sestest generate --vmid machine-identifier --application-id contosoapp
@@ -246,7 +247,7 @@ L2JhdGNoLmF6dXJlLmNvbS9zb2Z0d2FyZS1lbnRpdGxlbWVudCJ9."
 ```
 (This has been artificially wrapped at 100 columns width.)
 
-Include the option `--log-level debug` to get more information about what is included in the token.
+Include the option `--log-level debug` to get more information about what is included in the token:
 
 ``` PowerShell
 .\sestest generate --vmid machine-identifier --application-id contosoapp --log-level debug
@@ -281,7 +282,7 @@ L2JhdGNoLmF6dXJlLmNvbS9zb2Z0d2FyZS1lbnRpdGxlbWVudCJ9."
 
 Note the `[Debug]` log lines that show the actual values that have been used, including the default values selected for parameters we haven't supplied ourselves, such as `--not-before`, `--not-after` and `--address`. (Again, the above output has been wrapped to 100 columns and partially obfuscated.)
 
-To digitally sign the token, specify a certificate thumbprint with the `--sign` option; to encrypt the token, specify a certificate thumbprint with the `--encrypt` option.
+To digitally sign the token, specify a certificate thumbprint with the `--sign` option; to encrypt the token, specify a certificate thumbprint with the `--encrypt` option:
 
 ``` PowerShell
 .\sestest generate --vmid machine-identifier --application-id contosoapp --sign <signing-thumbprint> --encrypt <encryption-thumbprint> --log-level debug
@@ -334,18 +335,18 @@ In production, all tokens will be both signed and encrypted.
 
 The **server** mode of `sestest` provides an HTTPS endpoint that acts as a fully functioning software entitlement server that can be used during development and testing. The command has the following parameters:
 
-| Parameter    | Required  | Definition                                                                                                                |
-| ------------ | --------- | ------------------------------------------------------------------------------------------------------------------------- |
-| --connection | Mandatory | Thumbprint of the certificate to pin for use with HTTPS.                                                                  |
-| --sign       | Optional  | Thumbprint of the certificate used to sign tokens. <br/> If specified, all tokens must be signed.                         |
-| --encrypt    | Optional  | Thumbprint of the certificate used to encrypt tokens. <br/> If specified, all tokens must be encrypted.                   |
-| --url        | Optional  | The URL at which the server should process requests <br/> Defaults to `https://localhost:4443`; must start with `https:`. |
-| --log-level  | Optional  | Specify the level of logging output.<br/>One of *error*, *warning*, *information* or *debug*; defaults to *information*.  |
-| --log-file   | Optional  | Specify a file into which log messages should be written.                                                                 |
+| Parameter    | Required  | Definition                                                                                                                              |
+| ------------ | --------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| --connection | Mandatory | Thumbprint of the certificate to use with HTTPS.                                                                                        |
+| --sign       | Optional  | Thumbprint of the certificate used to sign tokens. <br/> If specified, only tokens signed with this certificate will be approved.       |
+| --encrypt    | Optional  | Thumbprint of the certificate used to encrypt tokens. <br/> If specified, only tokens encrypted with this certificate will be approved. |
+| --url        | Optional  | The URL at which the server should process requests <br/> Defaults to `https://localhost:4443`; must start with `https:`.               |
+| --log-level  | Optional  | Specify the level of logging output.<br/>One of *error*, *warning*, *information* or *debug*; defaults to *information*.                |
+| --log-file   | Optional  | Specify a file into which log messages should be written.                                                                               |
 
 You can see this documentation for yourself by running `sestest server --help` in your shell.
 
-Run the server with minimum parameters (just a connection certificate thumbprint).
+Run the server with minimum parameters (just a connection certificate thumbprint):
 
 ``` PowerShell
 .\sestest server --connection <thumbprint>
@@ -360,7 +361,7 @@ The server will start up and wait for connections
 17:20:02.977 [Debug] Hosting starting
 17:20:03.043 [Debug] Hosting started
 Hosting environment: Production
-Content root path: E:\github\azure-batch-software-entitlement\out\sestest\Debug\netcoreapp1.1
+Content root path: ... elided ...
 Now listening on: https://localhost:4443
 Application started. Press Ctrl+C to shut down.
 ```
@@ -387,7 +388,7 @@ The `sesclient` console application allows you to submit a previously generated 
 
 | Parameter     | Required  | Definition                                                                                      |
 | ------------- | --------- | ----------------------------------------------------------------------------------------------- |
-| --url         | Mandatory | The url of the software entitlement server URL to use                                           |
+| --url         | Mandatory | The url of the software entitlement server to contact for token verification.                   |
 | --thumbprint  | Mandatory | Thumbprint of a certificate expected in the server's SSL certificate chain                      |
 | --common-name | Mandatory | Common name of the certificate with the specified thumbprint                                    |
 | --token       | Mandatory | Software entitlement token to pass to the server <br/> Specify `-` to read the token from stdin |
@@ -400,10 +401,9 @@ $token = get-content token.txt
 .\sesclient --url https://localhost:4443 --thumbprint XXXX --common-name Microsoft --token $token --application contosoapp
 ```
 
-Alternatively, in `bash` or `CMD` you can use a redirect to feed the token in:
+Alternatively, in `bash` or `CMD` you can use a redirect to feed the token in by specifying `-` for `--token`:
 
-``` PowerShell
-$token = get-content token.txt
+``` sh
 sesclient --url https://localhost:4443 --thumbprint XXXX --common-name Microsoft --token - --application contosoapp < token.txt
 ```
 
@@ -413,7 +413,7 @@ Now that we've seen all of the individual components of the SDK, let's pull them
 
 ### Select your certificates
 
-Select the certificate or certificates you want to use - one to secure the connection to the server, one to sign each token and one to encrypt each token. Define three variables, one for each certificate (this makes it easier to reference the thumbprints later on).
+Select the certificate or certificates you want to use &ndash; one to secure the connection to the server, one to sign each token and one to encrypt each token. Define three variables, one for each certificate (this makes it easier to reference the thumbprints later on):
 
 ``` PowerShell
 $connectionThumbprint = "9X9X9X99X9X99X99X999XX9999XX99XX9999XX9X"
@@ -435,7 +435,7 @@ This uses the name of your current computer as the "virtual machine identifier" 
 11:30:29.763 [Information] ---------------------------------------------
 11:30:29.783 [Information]   Software Entitlement Service Test Utility
 11:30:29.784 [Information] ---------------------------------------------
-11:30:30.091 [Information] Token file: "E:\github\azure-batch-software-entitlement\token.txt"
+11:30:30.091 [Information] Token file: "...elided...\token.txt"
 ```
 You may want to inspect the token file using a text editor.
 
@@ -463,7 +463,7 @@ The "Now listening on:" line gives you the URL needed for the next step.
 
 ### Checking the token
 
-Back in your original shell window, use `sesclient` to verify the token.
+Back in your original shell window, use `sesclient` to verify the token:
 
 ``` PowerShell
 $token = get-content token.txt
@@ -485,9 +485,9 @@ If the connection certificate you selected previously isn't fully trusted, the `
 
 One way to remedy this is to install the certificate as a **Trusted Root Certificate Authority**. Since this is a global configuration change on your machine, please make sure you are comfortable with the consequences before doing this.
 
-#### Self signed certificate
+#### Using a self-signed certificate
 
-If using a self signed certificate, secure connection validation code in the static client library will prevent you from connecting. The error message reads:
+If using a self-signed certificate, secure connection validation code in the native client library will prevent you from connecting. The error message reads:
 
 ```
 libcurl_error 60: SSL certificate problem: unable to get local issuer certificate
