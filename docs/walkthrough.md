@@ -1,6 +1,6 @@
 # Software Entitlement Service Walk-through
 
-This walk-through will guide you through initial use of the Software Entitlement Service SDK, building the tooling from source code, generating and then verifying a software entitlement token.
+This walk-through will guide you through use of the Software Entitlement Service SDK, building the tooling from source code, generating and verifying a software entitlement token.
 
 ## Table of Contents
 
@@ -14,21 +14,21 @@ This walk-through will guide you through initial use of the Software Entitlement
 
 ## A note on shells
 
-The SDK has been written to be cross platform, working on Windows, Linux and Macintosh. For brevity, this walk-through uses **PowerShell** only (usable on both Windows and [Linux](https://azure.microsoft.com/blog/powershell-is-open-sourced-and-is-available-on-linux/)); the commands shown should be trivially convertible to your console of choice, including **cmd** and **bash** (including **bash** on Windows 10).
+The SDK has been written to be cross-platform, working on Windows, Linux and macOS. For brevity, this walk-through uses **PowerShell** only (usable on both Windows and [Linux](https://azure.microsoft.com/blog/powershell-is-open-sourced-and-is-available-on-linux/)); the commands shown should be trivially convertible to your shell of choice, such as `CMD` and `bash` (including `bash` on Windows 10).
 
 ## Prerequisites
 
-To build and use the Software Entitlement Services Test tool (`sestest`) you will need certain prerequisites installed on your system:
+To build and use the Software Entitlement Services test tool (`sestest`) you will need certain prerequisites installed on your system:
 
-The `sestest` command line application and associated assemblies are written in C#7 and require version 1.1 or higher of [.NET Core](https://www.microsoft.com/net/core#windowsvs2017) to be pre-installed. The tool was written with Visual Studio 2017; it should compile with just the .NET Core installation. For more information see the [Sestest command line utility](../src/sestest/).
+The `sestest` command line utility and associated libraries are written in C#7 and require version 1.1 or higher of [.NET Core](https://www.microsoft.com/net/core#windowsvs2017) to be installed. The tool was written with Visual Studio 2017; it will compile with just the .NET Core SDK installation. For more information see the [Sestest command line utility](../src/sestest/).
 
-The C++ source for the client library requires [libcurl](https://curl.haxx.se/libcurl/) and [OpenSSL](https://www.openssl.org/) libraries as packaged by [vcpkg](https://blogs.msdn.microsoft.com/vcblog/2016/09/19/vcpkg-a-tool-to-acquire-and-build-c-open-source-libraries-on-windows/). The library was also written with Visual Studio 2017; it should compile with any modern C++ compiler. For more information (including details of configuration and use of `vcpkg`) see the [Software entitlement service native client library](../src/Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native)
+The C++ source for the client library requires [libcurl](https://curl.haxx.se/libcurl/) and [OpenSSL](https://www.openssl.org/) libraries as installed by [vcpkg](https://blogs.msdn.microsoft.com/vcblog/2016/09/19/vcpkg-a-tool-to-acquire-and-build-c-open-source-libraries-on-windows/). The library was also written with Visual Studio 2017; it will compile with any modern C++ compiler. For more information (including details of configuration and use of `vcpkg`) see the [Software entitlement service native client library](../src/Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native)
 
 ## Building the tools
 
 Open a shell window to the root directory of the repository.
 
-Compile the cross platform (.NET) based tooling with the convenience PowerShell script:
+Compile the cross-platform (.NET) tooling with the convenience PowerShell script:
 
 ``` PowerShell
 .\build-xplat.ps1
@@ -55,15 +55,15 @@ msbuild .\src\sesclient.native /property:Configuration=Debug /property:Platform=
 ```
 
 The first `msbuild` command shown above builds the library, the second builds a wrapper executable provided for testing purposes.
-The commands shown assume that **msbuild** is availble on the PATH (as it will be if you open a *Developer Command Prompt for VS 2017* window).
+The commands shown assume that `msbuild` is available on the PATH. If this is not the case, you'll need to provide the full path to `msbuild` - typically, this is something like `C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\MSBuild.exe` (the actual path will differ according to the version of Visual Studio or SDK you have installed).
 
-Details of the required buld will differ if you are using a different C++ compiler or are building on a different platform.
+Details of how to build the code will differ if you are using a different C++ compiler or are building on a different platform.
 
 ### Checking that it works
 
 If compilation works without any issues, you should now have the executables you need for testing.
 
-Run the `sestest` console application to verify it is ready for use.
+Run the `sestest` console utility to verify it is ready for use.
 
 ``` PowerShell
 .\sestest
@@ -91,7 +91,7 @@ ERROR(S):
   version              Display version information.
 ```
 
-Run the `sesclient.native.exe` console application to verify it is ready for use:
+Run the `sesclient.native.exe` console utility to verify it is ready for use:
 
 ``` PowerShell
 .\sesclient.native
@@ -113,11 +113,11 @@ Parameters:
 
 The software entitlement service makes use of three digital certificates:
 
-* one to digitally sign the generated entitlement token;
-* one to encrypt the generated entitlement token; and
-* one to authenticate the software entitlement service;
+* one to digitally sign the generated entitlement token,
+* one to encrypt the generated entitlement token, and
+* one to authenticate the software entitlement service.
 
-In production, three different certificates will be used, but for test scenarios you may want to use the same certificate for all three.
+In production, three different certificates will be used, but for test scenarios you can use the same certificate for all three.
 
 For each required certificate you will need to know its *thumbprint*. The SES tooling is not sensitive to the format of the thumbprint.
 
@@ -400,7 +400,7 @@ $token = get-content token.txt
 .\sesclient --url https://localhost:4443 --thumbprint XXXX --common-name Microsoft --token $token --application contosoapp
 ```
 
-Alternatively, in `bash` or `cmd` you can use a redirect to feed the token in:
+Alternatively, in `bash` or `CMD` you can use a redirect to feed the token in:
 
 ``` PowerShell
 $token = get-content token.txt
