@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-
+using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
@@ -56,8 +56,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             var claims = CreateClaims(entitlements);
 
-            _logger.LogDebug("Not Before: {notBefore}", entitlements.NotBefore);
-            _logger.LogDebug("Not After: {notAfter}", entitlements.NotAfter);
+            _logger.LogDebug(
+                "Not Before: {notBefore}",
+                entitlements.NotBefore.ToString(TimestampParser.ExpectedFormat));
+            _logger.LogDebug(
+                "Not After: {notAfter}",
+                entitlements.NotAfter.ToString(TimestampParser.ExpectedFormat));
 
             var claimsIdentity = new ClaimsIdentity(claims);
             var securityTokenDescriptor = new SecurityTokenDescriptor

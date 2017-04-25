@@ -10,7 +10,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
     public class TimestampParser
     {
         // The expected format for timestamps
-        public const string ExpectedFormat = "HH:mm d-MMM-yyyy";
+        public const string ExpectedFormat = "yyyy-MM-ddTHH:mm";
 
         /// <summary>
         /// Try to parse a string into a DateTimeOffset

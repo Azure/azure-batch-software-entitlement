@@ -202,18 +202,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return false;
         }
 
-        private static Errorable<NodeEntitlements> TokenNotYetValidError(DateTime exceptionNotBefore)
+        private static Errorable<NodeEntitlements> TokenNotYetValidError(DateTime notBefore)
         {
-            var template = $"Token will not be valid until {{0:{TimestampParser.ExpectedFormat}}}";
-            return Errorable.Failure<NodeEntitlements>(
-                string.Format(template, exceptionNotBefore));
+            var timestamp = notBefore.ToString(TimestampParser.ExpectedFormat);
+            return Errorable.Failure<NodeEntitlements>($"Token will not be valid until {timestamp}");
         }
 
         private static Errorable<NodeEntitlements> TokenExpiredError(DateTime expires)
         {
-            var template = $"Token expired at {{0:{TimestampParser.ExpectedFormat}}}";
-            return Errorable.Failure<NodeEntitlements>(
-                string.Format(template, expires));
+            var timestamp = expires.ToString(TimestampParser.ExpectedFormat);
+            return Errorable.Failure<NodeEntitlements>($"Token expired at {timestamp}");
         }
 
         private static Errorable<NodeEntitlements> InvalidTokenError(string reason)
