@@ -93,8 +93,8 @@ ERROR(S):
 
 Run the `sesclient.native.exe` console application to verify it is ready for use:
 
-```
-.\sesclient
+``` PowerShell
+.\sesclient.native
 ```
 
 You should get output similar to this:
@@ -135,7 +135,7 @@ At minimum, you must use a certificate that has a private key.
 
 To assist with finding a suitable certificate, the `sestest` utility has a **list-certificates** mode that will list certificates that *may* work (the tool lists certificates with a private key but doesn't check for other characteristics).
 
-```
+``` PowerShell
 .\sestest list-certificates
 ```
 
@@ -149,12 +149,12 @@ The output from this command is tabular, so we recommend using a console window 
 
 Once you've selected a thumbprint for use, you can verify it using `sestest` (Substitute your own thumbprint for `XXX`).
 
-```
+``` PowerShell
 .\sestest find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ```
 For a thumbprint containing whitespace (as it will if copied from the Windows certificate properties dialog), wrap the thumbprint in quotes.
 
-```
+``` PowerShell
 .\sestest find-certificate --thumbprint "XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX"
 ```
 
@@ -213,7 +213,7 @@ You can see this documentation for yourself by running `sestest generate --help`
 
 Run `sestest generate` with no parameters.
 
-```
+``` PowerShell
 .\sestest generate
 ```
 
@@ -229,7 +229,7 @@ Typical output:
 
 Running `sestest generate` with just the mandatory parameters supplied will generate a minimal token.
 
-```
+``` PowerShell
 .\sestest generate --vmid machine-identifier --application-id contosoapp
 ```
 
@@ -248,7 +248,7 @@ L2JhdGNoLmF6dXJlLmNvbS9zb2Z0d2FyZS1lbnRpdGxlbWVudCJ9."
 
 Include the option `--log-level debug` to get more information about what is included in the token.
 
-```
+``` PowerShell
 .\sestest generate --vmid machine-identifier --application-id contosoapp --log-level debug
 ```
 
@@ -283,7 +283,7 @@ Note the `[Debug]` log lines that show the actual values that have been used, in
 
 To digitally sign the token, specify a certificate thumbprint with the `--sign` option; to encrypt the token, specify a certificate thumbprint with the `--encrypt` option.
 
-```
+``` PowerShell
 .\sestest generate --vmid machine-identifier --application-id contosoapp --sign <signing-thumbprint> --encrypt <encryption-thumbprint> --log-level debug
 ```
 
@@ -347,7 +347,7 @@ You can see this documentation for yourself by running `sestest server --help` i
 
 Run the server with minimum parameters (just a connection certificate thumbprint).
 
-```
+``` PowerShell
 .\sestest server --connection <thumbprint>
 ```
 
@@ -395,14 +395,14 @@ The `sesclient` console application allows you to submit a previously generated 
 
 Assuming a token previously generated into `token.txt`:
 
-```
+``` PowerShell
 $token = get-content token.txt
 .\sesclient --url https://localhost:4443 --thumbprint XXXX --common-name Microsoft --token $token --application contosoapp
 ```
 
 Alternatively, in `bash` or `cmd` you can use a redirect to feed the token in:
 
-```
+``` PowerShell
 $token = get-content token.txt
 sesclient --url https://localhost:4443 --thumbprint XXXX --common-name Microsoft --token - --application contosoapp < token.txt
 ```
@@ -465,7 +465,7 @@ The "Now listening on:" line gives you the URL needed for the next step.
 
 Back in your original console window, use `sesclient` to verify the token.
 
-```
+``` PowerShell
 $token = get-content token.txt
 .\sesclient --url https://localhost:4443 --thumbprint $connectionThumbprint --common-name Microsoft --token $token --application contosoapp
 ```
