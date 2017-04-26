@@ -8,7 +8,11 @@ The SDK includes the following:
 
 * A command line utility ([sestest](src/sestest)) is provided to assist with testing of the integration. This utility supports token generation and can emulate a software entitlement server for testing outside of the Batch environment.
 
-* Reference documentation on the [REST API](src/Microsoft.Azure.Batch.SoftwareEntitlement.Server), detailing the interaction between the library code used by the software application and the software entitlement server. 
+* Reference documentation on the [REST API](src/Microsoft.Azure.Batch.SoftwareEntitlement.Server), detailing the interaction between the library code used by the software application and the software entitlement server.
+
+* A [full walk-through](docs/walk-through.md) to take new partners through the end to end process of compilation and use.
+
+* A [repository guide](docs/repository-guide.md) that identifies key documents, folders, scripts and classes for developers working with the code.
 
 ## Overview
 
@@ -39,7 +43,7 @@ The software entitlement server will authenticate the software package by compar
 
 # Prerequisites
 
-The `sestest` command line application and associated assemblies are written in C#7 and require version 1.1 or higher of [.NET Core](https://www.microsoft.com/net/core#windowsvs2017) to be pre-installed. The tool was written with Visual Studio 2017; it should compile with just the .NET Core installation.
+The `sestest` command line application and associated assemblies are written in C#7 and require version 1.1 or higher of [.NET Core](https://www.microsoft.com/net/core#windowsvs2017) to be pre-installed. The tool was written with Visual Studio 2017; it should compile with just the .NET Core SDK installation.
 
 The C++ source for the client library requires [libcurl](https://curl.haxx.se/libcurl/) and [OpenSSL](https://www.openssl.org/) libraries as packaged by [vcpkg](https://blogs.msdn.microsoft.com/vcblog/2016/09/19/vcpkg-a-tool-to-acquire-and-build-c-open-source-libraries-on-windows/). The library was also written with Visual Studio 2017; it should compile with any modern C++ compiler.
 
