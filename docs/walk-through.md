@@ -262,8 +262,8 @@ Include the option `--log-level debug` to get more information about what is inc
 12:27:36.673 [Debug] IP Address: 9999:x999:9999:999:x99x:99x9:x99:9x9x
 12:27:36.674 [Debug] IP Address: 9999:x999:9999:999:9999:9xx9:9xxx:9xx9
 12:27:36.679 [Debug] Application Id: contosoapp
-12:27:36.680 [Debug] Not Before: 4/20/2017 12:27:36 PM +12:00
-12:27:36.681 [Debug] Not After: 4/27/2017 12:27:36 PM +12:00
+12:27:36.680 [Debug] Not Before: 2017-04-20T12:27
+12:27:36.681 [Debug] Not After: 2017-04-27T14:27
 12:27:36.812 [Debug] Raw token: {"alg":"none","typ":"JWT"}.{"vmid":"machine-identifier","ip":["99.9
 99.999.999","xx99::x99x:99x9:x99:9x9x%9","::9","999.9.9.9","9999:x999:9999:999:x99x:99x9:x99:9x9x",
 "9999:x999:9999:999:9999:9xx9:9xxx:9xx9"],"app":"contosoapp","nbf":1492648056,"exp":1493252856,"iat
@@ -298,8 +298,8 @@ A full command line that both signs and encrypts a token would look like this:
 14:06:43.982 [Debug] IP Address: 9999:x999:9999:999:x99x:99x9:x99:9x9x
 14:06:43.982 [Debug] IP Address: 9999:x999:9999:999:9999:9xx9:9xxx:9xx9
 14:06:43.985 [Debug] Application Id: contosoapp
-14:06:43.987 [Debug] Not Before: 4/20/2017 2:06:43 PM +12:00
-14:06:43.989 [Debug] Not After: 4/27/2017 2:06:43 PM +12:00
+14:06:43.987 [Debug] Not Before: 2017-04-20T14:06
+14:06:43.989 [Debug] Not After: 2017-04-27T14:06
 14:06:44.165 [Debug] Raw token: {"alg":"RSA-OAEP","enc":"A256CBC-HS512","kid":"<thumbprint>","typ":
 "JWT"}.{"vmid":"machine-identifier","ip":["99.999.999.999","::9","xx99::x99x:99x9:x99:9x9x%9","999.
 9.9.9","9999:x999:9999:999:x99x:99x9:x99:9x9x","9999:x999:9999:999:9999:9xx9:9xxx:9xx9"],"app":"con
