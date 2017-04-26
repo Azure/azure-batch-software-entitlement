@@ -9,7 +9,7 @@ The repository contains the following documentation:
 | Document                                                                                       | Content                                                                                                     |
 | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | [Repository guide](repository-guide.md)                                                        | This file, a summary of the content of this repository.                                                     |
-| [Walk through](walkthrough.md)                                                                 | An introductory walk-through of the various components of the SDK, demonstrating their use and interaction. |
+| [Walk-through](walk-through.md)                                                                | An introductory walk-through of the various components of the SDK, demonstrating their use and interaction. |
 | [Native Library Readme](src\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native\README.md) | Purpose and compilation of the embeddable native library.                                                   |
 | [Source Readme](src\readme.md)                                                                 | Development notes for extending the SDK.                                                                    |
 | [Native Client Readme](src\sesclient.native\README.md)                                         | Guidance for using the native client.                                                                       |
