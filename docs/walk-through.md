@@ -119,7 +119,7 @@ The software entitlement service makes use of three digital certificates:
 
 In production, three different certificates will be used, but for test scenarios you can use the same certificate for all three.
 
-For each required certificate you will need to know its *thumbprint*. The SES tooling is not sensitive to the format of the thumbprint.
+For each required certificate you will need to know its *thumbprint*. Both condensed (e.g. `d4de20d05e66fc53fe1a50882c78db2852cae474`) and expanded (e.g. `d4 de 20 d0 5e 66 fc 53 fe 1a 50 88 2c 78 db 28 52 ca e4 74`) formats are supported.
 
 ### Windows
 
@@ -200,25 +200,23 @@ The `generate` mode of `sestest` is used to generate a token. The command has th
 | Parameter        | Required  | Definition                                                                                                                                                                           |
 | ---------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | --application-id | Mandatory | Unique identifier(s) for the application(s) to include in the entitlement (comma separated).                                                                                         |
-| --vmid           | Mandatory | Unique identifier for the Azure virtual machine.                                                                                                                                     |
-| --not-before     | Optional  | The moment at which the token becomes active and the application is entitled to execute <br/> Format 'hh:mm d-mmm-yyyy'; 24 hour clock; local time; defaults to now.                 |
-| --not-after      | Optional  | The moment at which the token expires and the application is no longer entitled to execute <br/> Format 'hh:mm d-mmm/-yyyy'; 24 hour clock; local time; defaults to 7 days from now. |
-| --address        | Optional  | The externally visible IP addresses of the machine entitled to execute the application(s). <br/> Defaults to all the IP addresses of the current machine.                            |
-| --sign           | Optional  | Certificate thumbprint of the certificate used to sign the token                                                                                                                     |
-| --encrypt        | Optional  | Certificate thumbprint of the certificate used to encrypt the token.                                                                                                                 |
+| --vmid           | Mandatory | Unique identifier for the Azure virtual machine. If you are testing outside of Azure, we suggest you use the name of the machine (e.g. `%COMPUTERNAME%`).                            |
+| --not-before     | Optional  | The moment at which the token becomes active and the application is entitled to execute <br/> Format: 'yyyy-mm-ddThh-mm'; 24 hour clock; local time; defaults to now.                |
+| --not-after      | Optional  | The moment at which the token expires and the application is no longer entitled to execute <br/> Format: 'yyyy-mm-ddThh-mm'; 24 hour clock; local time; defaults to 7 days from now. |
+| --address        | Optional  | The IP addresses of the machine entitled to execute the application(s). <br/> Defaults to all the IP addresses of the current machine.                                               |
+| --sign           | Optional  | Certificate thumbprint of the certificate to use for signing the token                                                                                                               |
+| --encrypt        | Optional  | Certificate thumbprint of the certificate to use for encryption of the token.                                                                                                        |
 | --token-file     | Optional  | The name of a file into which the token will be written <br/> If not specified, the token will be shown in the log.                                                                  |
 | --log-level      | Optional  | Specify the level of logging output. <br/> One of *error*, *warning*, *information* or *debug*; defaults to *information*.                                                           |
 | --log-file       | Optional  | Specify a file into which log messages should be written. <br/> Logging is shown on the console by default.                                                                          |
 
 You can see this documentation for yourself by running `sestest generate --help` in your console.
 
-Run `sestest generate` with no parameters:
+Running `sestest generate` with no parameters will tell you about the mandatory parameters:
 
 ``` PowerShell
 .\sestest generate
 ```
-
-Typical output:
 
 ```
 10:53:59.102 [Information] ---------------------------------------------
@@ -227,6 +225,8 @@ Typical output:
 10:53:59.164 [Error] No applications specified.
 10:53:59.164 [Error] No virtual machine identifier specified.
 ```
+
+The output tells you that you need to supply both an application and a virtual machine identifier.
 
 Running `sestest generate` with just the mandatory parameters supplied will generate a minimal token:
 
@@ -239,10 +239,7 @@ Running `sestest generate` with just the mandatory parameters supplied will gene
 10:57:15.616 [Information]   Software Entitlement Service Test Utility
 10:57:15.616 [Information] ---------------------------------------------
 10:57:15.882 [Information] Token: "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ2bWlkIjoibWFjaGluZS1pZGVu
-dGlmaWVyIiwiaXAiOlsiMTAuMTY4LjI0NC4xNDIiLCJmZTgwOjpiOTZjOjMyYTY6ZTI0OjVjN2QlNCIsIjI0MDQ6ZjgwMTo2ODE
-4OjIxMjpiOTZjOjMyYTY6ZTI0OjVjN2QiLCI6OjEiLCIxMjcuMC4wLjEiLCIyNDA0OmY4MDE6NjgxODoyMTI6ODg0Mzo5YWI2Oj
-JkZWI6OGRjMSJdLCJhcHAiOiJjb250b3NvYXBwIiwibmJmIjoxNDkyNjQyNjM1LCJleHAiOjE0OTMyNDc0MzUsImlhdCI6MTQ5M
-jY0MjYzNSwiaXNzIjoiaHR0cHM6Ly9iYXRjaC5henVyZS5jb20vc29mdHdhcmUtZW50aXRsZW1lbnQiLCJhdWQiOiJodHRwczov
+... elided ...
 L2JhdGNoLmF6dXJlLmNvbS9zb2Z0d2FyZS1lbnRpdGxlbWVudCJ9."
 ```
 (This has been artificially wrapped at 100 columns width.)
@@ -273,19 +270,20 @@ Include the option `--log-level debug` to get more information about what is inc
 ":1492648056,"iss":"https://batch.azure.com/software-entitlement","aud":"https://batch.azure.com/so
 ftware-entitlement"}
 12:27:36.818 [Information] Token: "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ2bWlkIjoibWFjaGluZS1pZGVu
-dGlmaWVyIiwiaXAiOlsiOTkuOTk5Ljk5OS45OTkiLCJ4eDk5Ojp4OTl4Ojk5eDk6eDk5Ojl4OXglOSIsIjo6OSIsIjk5OS45Ljk
-uOSIsIjk5OTk6eDk5OTo5OTk5Ojk5OTp4OTl4Ojk5eDk6eDk5Ojl4OXgiLCI5OTk5Ong5OTk6OTk5OTo5OTk6OTk5OTo5eHg5Oj
-l4eHg6OXh4OSJdLCJhcHAiOiJjb250b3NvYXBwIiwibmJmIjoxNDkyNjQ4MDU2LCJleHAiOjE0OTMyNTI4NTYsImlhdCI6MTQ5M
-jY0ODA1NiwiaXNzIjoiaHR0cHM6Ly9iYXRjaC5henVyZS5jb20vc29mdHdhcmUtZW50aXRsZW1lbnQiLCJhdWQiOiJodHRwczov
+... elided ...
 L2JhdGNoLmF6dXJlLmNvbS9zb2Z0d2FyZS1lbnRpdGxlbWVudCJ9."
 ```
 
 Note the `[Debug]` log lines that show the actual values that have been used, including the default values selected for parameters we haven't supplied ourselves, such as `--not-before`, `--not-after` and `--address`. (Again, the above output has been wrapped to 100 columns and partially obfuscated.)
 
-To digitally sign the token, specify a certificate thumbprint with the `--sign` option; to encrypt the token, specify a certificate thumbprint with the `--encrypt` option:
+To digitally sign the token, define `$signingThumbprint` with the thumbprint of an appropriate certificate and include `--sign $signingThumbprint` on the command line.
+Similarly, to encrypt the token define `$encryptingThumbprint` with a certificate thumbprint and include `--encrypt $encryptingThumbprint` on the command line. 
+(Defining variables to hold the thumbprints makes it easier to reuse the values later on.)
+
+A full command line that both signs and encrypts a token would look like this:
 
 ``` PowerShell
-.\sestest generate --vmid machine-identifier --application-id contosoapp --sign <signing-thumbprint> --encrypt <encryption-thumbprint> --log-level debug
+.\sestest generate --vmid machine-identifier --application-id contosoapp --sign $signingThumbprint --encrypt $encryptingThumbprint --log-level debug
 ```
 
 ```
@@ -308,28 +306,12 @@ To digitally sign the token, specify a certificate thumbprint with the `--sign` 
 tosoapp","nbf":1492654003,"exp":1493258803,"iat":1492654003,"iss":"https://batch.azure.com/software
 -entitlement","aud":"https://batch.azure.com/software-entitlement"}
 14:06:44.172 [Information] Token: "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZDQkMtSFM1MTIiLCJraWQiOiI2
-RDRDOEUyM0U5QzcwRDc4RjQwMkJFOTQyMkJGNDRDRTU0NjVDRDFBIiwidHlwIjoiSldUIn0.q20Q126UMvDJWoD9iQiYq-g4CvE
-XOXFIZ0ow2Gt3oERzH6yJ4J1RkllBPiCDjzeWVpnlltr5u-TKL1eSWOIf9s-3ESdIhNWT5M7UZUXHN7HdC_YyGE5PvT1SWnUfdj
-frYWBwcLkwzr5hrGrdTdmq-Z5t-j_hHP3D32bkYl4WxoVWuxgBr5YyL0Z620lTqMUvZ1_8kLNpUw5L4BwNWBSt9BK4PDk9f1wEw
-WkFqV5LQ_hLObHUSWU5j3zZo3sYSBBC_be7bs1GIOUiWSAsvr5XnbrAPBmBabLBccOyrI2dRf1nzWyWpWDinSV_9NJWUtG11Yta
-uKK726zr5pr1KVbZuw.TU5K-5s3NbYRDh4z7rbvTA.nsIacvaHdNNRpP0V9WcobTU7-O17fPX4nfyfCpBd0o_4MCqanUxrMgTLR
-y7gXd4V2E2kDFQ4EgZfiE_raGDHeRCP3pdcBMow8Vzm4YGQyV65w-u8XfQc-e1LLMuYW1i0RMzPVztEVxmmTCKhy9bkaCZpwApU
-KaokvTcYroglWjrOxT-tqba0bPEAM0uPqjzb81WTbTGtMe8EC1oZnkJ0fIx4K_VJErMpWTeL365jK-1uk9PEPF7Zeol6wOPr44B
-zu3AUc7NDqONuTSOLYQ7N2SA9UmwE2RrLzBgTINcg6EvA3hOqhW5kPk36-P69ZlieYRBdple72V1vqk6sO6vo8S3BW8w_Hp4p0V
-qe41zZiYQHAaoUC1XzuRvTu4W-cD8olDqjpTFS5w3WCA8FyfaVvvMqQNn6erxxCF5-zLhP91vwSYko72hSJAVlYnby6dKDSl0SN
-3WHilTNSeF5Yi9C7bZVRnAyS5nL5if3RfbBVdaB1mrI5dwpJtNRzHh9vwp2Y2C4nAIfx4__lVHt_josliQoIxyMpKwq6hhQhv7J
-kybPtiLF6tZK4WZ9pXVwBGufvKg5jpsydPjNEn0oAZnzF5oiVaqSyIGi4Bq97Nnad_MnKrYH-gl5Y4AhtaoR2RvhZqyYWjtqG8Z
-Mh4cO661X00HYLPQIS0GrQuvHGIJdN5EiX4NxE3tu8JH-oeUT6oxysim30RwO9Dsn2IMHG2gEesnQA9-lmRgWu-S-FX2CTKT3Hd
-QfsmHumLkjFxQSM46mEtM73j_tEHgujb81L9qYORYxMP2eKU-WdcV7KWd5aXrJ6QvV6oOTEsoGBGvmjz3TVAQUFuAiY7WtjRiod
-qD6SGeAJ8yfbxZ1XA3t7DTenOv1znkU3Hbmo0M3MPJXdebzhDHTU0fuCYTuSC3kuDA8v8P2ffPoSOSvMNyMIvzwSUCawWzY1L1l
-1r7_q-xfvDp-OE7wjVBP-3JMMuThM5EdSy6DhSyNBteMInr1LjBSmI8NMqMsX1JVZS30sJmAwP2TBXHFWNTR9rdsoWiqIBMEGSy
-uOZS3tTbPPyBxle9OJE149TeV2G6kc7I6Ni3xnXcyHAWLrm0qs4owiUJmBJyco0E711o9tXHKJO8uAxotoIPbjbg2Tcl_iJ8iAF
-eLz74V3wHioYUC3tHiYC9HH0HJGPCX8oFOS7vCzZrCk1aRTJ1bzA52yYVEsIPPJhSararzs3qmQlAYpm-OkU2ori-7lg.7WfJBL
+... elided ...
 Ajt9tTffxB6lRlMxeXi25ejR-b4Kul34A3A3w"
 ```
 
-An encrypted token is longer, in part due to information about the required key that's included within.
-In production, all tokens will be both signed and encrypted.
+An encrypted token is significantly longer, in part due to information about the required key that's included within.
+In production, all tokens will be both signed and encrypted and we therefore encourage you to do all your testing with signed and encrypted tokens as well.
 
 ## Starting the test server
 
@@ -398,13 +380,13 @@ Assuming a token previously generated into `token.txt`:
 
 ``` PowerShell
 $token = get-content token.txt
-.\sesclient --url https://localhost:4443 --thumbprint XXXX --common-name Microsoft --token $token --application contosoapp
+.\sesclient --url https://localhost:4443 --thumbprint XXXX --common-name localhost --token $token --application contosoapp
 ```
 
 Alternatively, in `bash` or `CMD` you can use a redirect to feed the token in by specifying `-` for `--token`:
 
 ``` sh
-sesclient --url https://localhost:4443 --thumbprint XXXX --common-name Microsoft --token - --application contosoapp < token.txt
+sesclient --url https://localhost:4443 --thumbprint XXXX --common-name localhost --token - --application contosoapp < token.txt
 ```
 
 ## Bringing it all together
@@ -467,7 +449,7 @@ Back in your original shell window, use `sesclient` to verify the token:
 
 ``` PowerShell
 $token = get-content token.txt
-.\sesclient --url https://localhost:4443 --thumbprint $connectionThumbprint --common-name Microsoft --token $token --application contosoapp
+.\sesclient --url https://localhost:4443 --thumbprint $connectionThumbprint --common-name localhost --token $token --application contosoapp
 ```
 
 ### Troubleshooting
