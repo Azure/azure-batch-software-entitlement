@@ -171,7 +171,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             var thumbprint = new CertificateThumbprint(commandLine.Thumbprint);
             var certificateStore = new CertificateStore();
-            var certificate = certificateStore.FindByThumbprint("cert", thumbprint);
+            var certificate = certificateStore.FindByThumbprint("required", thumbprint);
             return certificate.Match(ShowCertificate, LogErrors);
         }
 
