@@ -68,13 +68,16 @@ The `generate` mode allows you to generate a software entitlement token with the
 | Parameter     | Required  | Definition                                                                                                                                                                                                                |
 | ------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | --application | Mandatory | Unique identifier(s) for the application(s) to include (comma separated).                                                                                                                                                 |
-| --vmid        | Mandatory | Unique identifier for the Azure virtual machine                                                                                                                                                                           |
-| --not-before  | Optional  | The moment at which the token becomes active and the application is entitled to execute. <p/> **Format**: `hh:mm d-mmm-yyyy`; 24 hour clock; local time. <br/> **Default**: Now.                                          |
-| --not-after   | Optional  | The moment at which the token expires and the application is no longer entitled to execute. <p/> **Format**: `hh:mm d-mmm-yyyy`; 24 hour clock; local time. <br/> **Default**: 7 days (168 hours) after **--not-before**. |
-| --address     | Optional  | ***PLANNED*** The externally visible IP address of the machine entitled to execute the application. <p/> **Default**: The IP address of the current machine.                                                              |
-| --sign        | Optional  | ***PLANNED*** Certificate thumbprint of the certificate that should be used to sign the token.                                                                                                                            |
-| --encrypt     | Optional  | ***PLANNED*** Certificate thumbprint of the certificate that should be used to encrypt the token.                                                                                                                         |
-| --token-file  | Optional  | ***PLANNED***The name of a file into which the token will be written (token will be written to stdout otherwise).                                                                                                         |
+| --vmid           | Mandatory | Unique identifier for the Azure virtual machine. If you are testing outside of Azure, we suggest you use the name of the machine (e.g. `%COMPUTERNAME%`).                            |
+| --not-before     | Optional  | The moment at which the token becomes active and the application is entitled to execute <br/> Format: 'yyyy-mm-ddThh-mm'; 24 hour clock; local time; defaults to now.                |
+| --not-after      | Optional  | The moment at which the token expires and the application is no longer entitled to execute <br/> Format: 'yyyy-mm-ddThh-mm'; 24 hour clock; local time; defaults to 7 days from now. |
+| --address        | Optional  | The IP addresses of the machine entitled to execute the application(s). <br/> Defaults to all the IP addresses of the current machine.                                               |
+| --sign           | Optional  | Thumbprint of the certificate to use for signing the token                                                                                                               |
+| --encrypt        | Optional  | Thumbprint of the certificate to use for encryption of the token.                                                                                                        |
+| --token-file     | Optional  | The name of a file into which the token will be written <br/> If not specified, the token will be shown in the log.                                                                  |
+
+You can see this documentation for yourself by running `sestest generate --help` in your console.
+
 
 The exit code for `sestest generate` will be zero (**0**) if a token was correctly generated, non-zero (typically **-1**) if there were any issues.
 

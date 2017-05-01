@@ -1,6 +1,6 @@
 # Software Entitlement Service Walk-through
 
-This walk-through will guide you through use of the Software Entitlement Service SDK, building the tooling from source code, generating and verifying a software entitlement token.
+This walk-through describes how the *Software Entitlement Service SDK* is used to enable on-premise integration of licensed commercial software with Azure Batch.
 
 ## Table of Contents
 
@@ -12,104 +12,27 @@ This walk-through will guide you through use of the Software Entitlement Service
 * [Verifying a token](#verifying-a-token)
 * [Bringing it all together](#bringing-it-all-together)
 
+## Overview
+
+In production, Azure Batch will generate a software entitlements token for each task run on a compute node. The application software installed on the node (for the purposes of this walk-through, ContosoApp) securely contacts a software entitlement server to verify that the token is authentic. 
+
+[Image]
+
+When working on-premise, the Software Entitlement Service SDK substitutes for the components available only in the cloud:
+
+[Image]
+
+## Prerequisites
+
+Before working through this guide, you will need to have built the tooling and have it ready for execution. See the [Guide to building the Software Entitlement Service SDK](build-guide.md) for details of doing this.
+
 ## A note on shells
 
 The SDK has been written to be cross-platform, working on Windows, Linux and macOS. For brevity, this walk-through uses **PowerShell** only (usable on both Windows and [Linux](https://azure.microsoft.com/blog/powershell-is-open-sourced-and-is-available-on-linux/)); the commands shown should be trivially convertible to your shell of choice, such as `CMD` and `bash` (including `bash` on Windows 10).
 
-## Prerequisites
-
-To build and use the Software Entitlement Services test tool (`sestest`) you will need certain prerequisites installed on your system:
-
-The `sestest` command line utility and associated libraries are written in C#7 and require version 1.1 or higher of [.NET Core](https://www.microsoft.com/net/core#windowsvs2017) to be installed. The tool was written with Visual Studio 2017; it will compile with just the .NET Core SDK installation. For more information see the [Sestest command line utility](../src/sestest/).
-
-The C++ source for the client library requires [libcurl](https://curl.haxx.se/libcurl/) and [OpenSSL](https://www.openssl.org/) libraries as installed by [vcpkg](https://blogs.msdn.microsoft.com/vcblog/2016/09/19/vcpkg-a-tool-to-acquire-and-build-c-open-source-libraries-on-windows/). The library was also written with Visual Studio 2017; it will compile with any modern C++ compiler. For more information (including details of configuration and use of `vcpkg`) see the [Software entitlement service native client library](../src/Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native)
-
-## Building the tools
-
-Open a shell window to the root directory of the repository.
-
-Compile the cross-platform (.NET) tooling with the convenience PowerShell script:
-
-``` PowerShell
-.\build-xplat.ps1
-```
-
-or compile it manually:
-
-``` PowerShell
-dotnet restore .\src\sestest
-dotnet build .\src\sestest
-```
-
-To compile the native code on Windows:
-
-``` PowerShell
-.\build-windows -platform x64 -configuration Debug
-```
-
-or you can compile it manually:
-
-``` PowerShell
-msbuild .\src\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native /property:Configuration=Debug /property:Platform=x64
-msbuild .\src\sesclient.native /property:Configuration=Debug /property:Platform=x64
-```
-
-The first `msbuild` command shown above builds the library, the second builds a wrapper executable provided for testing purposes.
-The commands shown assume that `msbuild` is available on the PATH. If this is not the case, you'll need to provide the full path to `msbuild`&ntypically, this is something like `C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\MSBuild.exe` (the actual path will differ according to the version of Visual Studio or SDK you have installed).
-
-Details of how to build the code will differ if you are using a different C++ compiler or are building on a different platform.
-
-### Checking that it works
-
-If compilation works without any issues, you should now have the executables you need for testing.
-
-Run the `sestest` console utility to verify it is ready for use:
-
-``` PowerShell
-.\sestest
-```
-
-You should get output similar to this:
-
-``` 
-sestest 1.0.0
-Copyright (C) 2017 Microsoft
-
-ERROR(S):
-  No verb selected.
-
-  generate             Generate a token with specified parameters
-
-  server               Run as a standalone software entitlement server.
-
-  list-certificates    List all available certificates.
-
-  find-certificate     Show the details of one particular certificate.
-
-  help                 Display more information on a specific command.
-
-  version              Display version information.
-```
-
-Run the `sesclient.native.exe` console utility to verify it is ready for use:
-
-``` PowerShell
-.\sesclient.native
-```
-
-You should get output similar to this:
-
-``` 
-Contacts the specified azure batch software entitlement server to verify the provided token.
-Parameters:
-    --url <software entitlement server URL>
-    --thumbprint <thumbprint of a certificate expected in the server's SSL certificate chain>
-    --common-name <common name of the certificate with the specified thumbprint>
-    --token <software entitlement token to pass to the server>
-    --application <name of the license ID being requested>
-```
-
 ## Selecting Certificates
+
+Before we begin, we need to select one or more digital certificates to use.
 
 The software entitlement service makes use of three digital certificates:
 
@@ -120,6 +43,9 @@ The software entitlement service makes use of three digital certificates:
 In production, three different certificates will be used, but for test scenarios you can use the same certificate for all three.
 
 For each required certificate you will need to know its *thumbprint*. Both condensed (e.g. `d4de20d05e66fc53fe1a50882c78db2852cae474`) and expanded (e.g. `d4 de 20 d0 5e 66 fc 53 fe 1a 50 88 2c 78 db 28 52 ca e4 74`) formats are supported.
+
+If you want to reuse an existing certificate or certificates, see below for instructions. 
+If you want to generate your own self-signed certificates for use, the blog entry [Creating self signed certificates with makecert.exe for development](https://blog.jayway.com/2014/09/03/creating-self-signed-certificates-with-makecert-exe-for-development/) may be useful.
 
 ### Windows
 
@@ -195,38 +121,7 @@ If `sestest` is unable to find the certificate, you will get an error:
 
 ## Generating a token
 
-The `generate` mode of `sestest` is used to generate a token. The command has the following parameters:
-
-| Parameter        | Required  | Definition                                                                                                                                                                           |
-| ---------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| --application-id | Mandatory | Unique identifier(s) for the application(s) to include in the entitlement (comma separated).                                                                                         |
-| --vmid           | Mandatory | Unique identifier for the Azure virtual machine. If you are testing outside of Azure, we suggest you use the name of the machine (e.g. `%COMPUTERNAME%`).                            |
-| --not-before     | Optional  | The moment at which the token becomes active and the application is entitled to execute <br/> Format: 'yyyy-mm-ddThh-mm'; 24 hour clock; local time; defaults to now.                |
-| --not-after      | Optional  | The moment at which the token expires and the application is no longer entitled to execute <br/> Format: 'yyyy-mm-ddThh-mm'; 24 hour clock; local time; defaults to 7 days from now. |
-| --address        | Optional  | The IP addresses of the machine entitled to execute the application(s). <br/> Defaults to all the IP addresses of the current machine.                                               |
-| --sign           | Optional  | Certificate thumbprint of the certificate to use for signing the token                                                                                                               |
-| --encrypt        | Optional  | Certificate thumbprint of the certificate to use for encryption of the token.                                                                                                        |
-| --token-file     | Optional  | The name of a file into which the token will be written <br/> If not specified, the token will be shown in the log.                                                                  |
-| --log-level      | Optional  | Specify the level of logging output. <br/> One of *error*, *warning*, *information* or *debug*; defaults to *information*.                                                           |
-| --log-file       | Optional  | Specify a file into which log messages should be written. <br/> Logging is shown on the console by default.                                                                          |
-
-You can see this documentation for yourself by running `sestest generate --help` in your console.
-
-Running `sestest generate` with no parameters will tell you about the mandatory parameters:
-
-``` PowerShell
-.\sestest generate
-```
-
-```
-10:53:59.102 [Information] ---------------------------------------------
-10:53:59.102 [Information]   Software Entitlement Service Test Utility
-10:53:59.102 [Information] ---------------------------------------------
-10:53:59.164 [Error] No applications specified.
-10:53:59.164 [Error] No virtual machine identifier specified.
-```
-
-The output tells you that you need to supply both an application and a virtual machine identifier.
+The `generate` mode of `sestest` is used to generate a software entitlement token. We will use this to generate a token, after which we will manully define the environment variables normally provided by Azure Batch.
 
 Running `sestest generate` with just the mandatory parameters supplied will generate a minimal token:
 
@@ -242,9 +137,9 @@ Running `sestest generate` with just the mandatory parameters supplied will gene
 ... elided ...
 L2JhdGNoLmF6dXJlLmNvbS9zb2Z0d2FyZS1lbnRpdGxlbWVudCJ9."
 ```
-(This has been artificially wrapped at 100 columns width.)
+Some lines have been removed and the output has been artificially wrapped at 100 columns width. Your token will differ due to different timestamps, machine names and IP addresses. For a full reference of all the available parameters for this mode, see [../src/sestest/readme.md](../src/sestest/readme.md).
 
-Include the option `--log-level debug` to get more information about what is included in the token:
+We recommend includeing the option `--log-level debug` to show more information about what is included in the token:
 
 ``` PowerShell
 .\sestest generate --vmid machine-identifier --application-id contosoapp --log-level debug
@@ -275,6 +170,10 @@ L2JhdGNoLmF6dXJlLmNvbS9zb2Z0d2FyZS1lbnRpdGxlbWVudCJ9."
 ```
 
 Note the `[Debug]` log lines that show the actual values that have been used, including the default values selected for parameters we haven't supplied ourselves, such as `--not-before`, `--not-after` and `--address`. (Again, the above output has been wrapped to 100 columns and partially obfuscated.)
+
+
+
+
 
 To digitally sign the token, define `$signingThumbprint` with the thumbprint of an appropriate certificate and include `--sign $signingThumbprint` on the command line.
 Similarly, to encrypt the token define `$encryptingThumbprint` with a certificate thumbprint and include `--encrypt $encryptingThumbprint` on the command line. 
@@ -312,6 +211,9 @@ Ajt9tTffxB6lRlMxeXi25ejR-b4Kul34A3A3w"
 
 An encrypted token is significantly longer, in part due to information about the required key that's included within.
 In production, all tokens will be both signed and encrypted and we therefore encourage you to do all your testing with signed and encrypted tokens as well.
+
+DEFINE VARIABLES HERE
+
 
 ## Starting the test server
 
