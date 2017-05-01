@@ -70,9 +70,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 _encryptingKey, "dir", SecurityAlgorithms.Aes256CbcHmacSha512);
 
             _validEntitlements = CreateEntitlements();
-            _verifier = new TokenVerifier()
-                .ConfigureOptionalSigningKey(_signingKey)
-                .ConfigureOptionalEncryptionKey(_encryptingKey);
+            _verifier = new TokenVerifier(_signingKey, _encryptingKey);
             _generator = new TokenGenerator(_nullLogger, _signingCredentials, _encryptingCredentials);
         }
 
@@ -323,11 +321,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
             public WithoutSigning()
             {
-                _verifierWithNoSigningKey = new TokenVerifier()
-                    .ConfigureOptionalEncryptionKey(_encryptingKey);
-
+                _verifierWithNoSigningKey = new TokenVerifier(encryptingKey: _encryptingKey);
                 _generatorWithNoSigningKey = new TokenGenerator(_nullLogger, null, _encryptingCredentials);
-                }
+            }
 
             [Fact]
             public void WhenEntitlementContainsOnlyTheRequestedApplication_ReturnsExpectedApplication()
@@ -352,10 +348,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
             public WithoutEncryption()
             {
-                _verifierWithNoEncryptionKey = new TokenVerifier()
-                    .ConfigureOptionalSigningKey(_signingKey);
-
-                _generatorWithNoEncryptionKey = new TokenGenerator(_nullLogger, _signingCredentials, null);
+                _verifierWithNoEncryptionKey = new TokenVerifier(signingKey: _signingKey);
+                _generatorWithNoEncryptionKey = new TokenGenerator(_nullLogger, _signingCredentials, encryptingCredentials: null);
             }
 
             [Fact]

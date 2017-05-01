@@ -30,9 +30,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             _options = options;
             _logger = logger;
 
-            _verifier = new TokenVerifier()
-                .ConfigureOptionalSigningKey(_options.SigningKey)
-                .ConfigureOptionalEncryptionKey(_options.EncryptionKey);
+            _verifier = new TokenVerifier(_options.SigningKey, _options.EncryptionKey);
         }
 
         [HttpPost]
