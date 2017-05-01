@@ -23,38 +23,64 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
         public TokenVerifierTests()
         {
-            const string plainTextSecurityKey = "This is my shared, not so secret, secret that needs to be really long!";
+            const string keyForSigning = "This is my shared, not so secret, secret that needs to be really long!";
+            const string keyForEncryption = "This is my shared, not so secret, secret that also needs to be really long!";
 
-            _signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(plainTextSecurityKey));
-            _encryptingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(plainTextSecurityKey));
+            _signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyForSigning));
+            _encryptingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyForEncryption));
 
-            _verifier = new TokenVerifier(_signingKey, _encryptingKey);
+            _verifier = new TokenVerifier()
+                .ConfigureOptionalSigningKey(_signingKey)
+                .ConfigureOptionalEncryptionKey(_encryptingKey);
         }
 
-        public class Constructor : TokenVerifierTests
+        public class ConfigureOptionalSigningKey : TokenVerifierTests
         {
             [Fact]
-            public void GivenNullSigningKey_ShouldThrowArgumentNullException()
+            public void GivenNull_ReturnsExistingInstance()
             {
-                var exception =
-                    Assert.Throws<ArgumentNullException>(
-                        () => new TokenVerifier(null, _signingKey));
-                exception.ParamName.Should().Be("signingKey");
+                var verifier = new TokenVerifier();
+                verifier.ConfigureOptionalSigningKey(null)
+                    .Should().BeSameAs(verifier);
             }
 
             [Fact]
-            public void GivenNullEncryptingKey_ShouldThrowArgumentNullException()
+            public void GivenSigningKey_ConfiguresProperty()
             {
-                var exception =
-                    Assert.Throws<ArgumentNullException>(
-                        () => new TokenVerifier(_signingKey, null));
-                exception.ParamName.Should().Be("encryptingKey");
+                _verifier.ConfigureOptionalSigningKey(_signingKey)
+                    .SigningKey.Should().BeSameAs(_signingKey);
             }
 
             [Fact]
-            public void GivenSecurityKey_ShouldConfigureProperty()
+            public void GivenNullWhenSigningKeyConfigured_ThrowsException()
             {
-                _verifier.SigningKey.Should().Be(_signingKey);
+                Assert.Throws<InvalidOperationException>(
+                    () => _verifier.ConfigureOptionalSigningKey(null));
+            }
+        }
+
+        public class ConfigureOptionalEncryptionKey : TokenVerifierTests
+        {
+            [Fact]
+            public void GivenNull_ReturnsExistingInstance()
+            {
+                var verifier = new TokenVerifier();
+                verifier.ConfigureOptionalEncryptionKey(null)
+                    .Should().BeSameAs(verifier);
+            }
+
+            [Fact]
+            public void GivenSigningKey_ConfiguresProperty()
+            {
+                _verifier.ConfigureOptionalEncryptionKey(_encryptingKey)
+                    .EncryptionKey.Should().BeSameAs(_encryptingKey);
+            }
+
+            [Fact]
+            public void GivenNullWhenSigningKeyConfigured_ThrowsException()
+            {
+                Assert.Throws<InvalidOperationException>(
+                    () => _verifier.ConfigureOptionalEncryptionKey(null));
             }
         }
 

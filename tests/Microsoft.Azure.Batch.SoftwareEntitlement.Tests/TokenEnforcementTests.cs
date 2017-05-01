@@ -39,27 +39,41 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         // Logger that does nothing
         private readonly ILogger _nullLogger = NullLogger.Instance;
 
+        // Key to use for signing
+        private readonly SymmetricSecurityKey _signingKey;
+
+        // Key to use for encryption
+        private readonly SymmetricSecurityKey _encryptingKey;
+
+        // Credentials used for encryption
+        private readonly EncryptingCredentials _encryptingCredentials;
+
+        // Credentials used for signing
+        private readonly SigningCredentials _signingCredentials;
+
         public TokenEnforcementTests()
         {
             // Hard coded key for unit testing only; actual operation will use a cert
             const string plainTextSigningKey = "This is my shared, not so secret, secret that needs to be very long!";
-            var signingKey = new SymmetricSecurityKey(
+            _signingKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(plainTextSigningKey));
 
-            var signingCredentials = new SigningCredentials(
-                signingKey, SecurityAlgorithms.HmacSha256Signature);
+            _signingCredentials = new SigningCredentials(
+                _signingKey, SecurityAlgorithms.HmacSha256Signature);
 
             // Hard coded key for unit testing only; actual operation will use a cert
             const string plainTextEncryptionKey = "This is another not so secret, secret that needs to be very long!";
-            var encryptingKey = new SymmetricSecurityKey(
+            _encryptingKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(plainTextEncryptionKey));
 
-            var encryptingCredentials = new EncryptingCredentials(
-                encryptingKey, "dir", SecurityAlgorithms.Aes256CbcHmacSha512);
+            _encryptingCredentials = new EncryptingCredentials(
+                _encryptingKey, "dir", SecurityAlgorithms.Aes256CbcHmacSha512);
 
             _validEntitlements = CreateEntitlements();
-            _verifier = new TokenVerifier(signingKey, encryptingKey);
-            _generator = new TokenGenerator(_nullLogger, signingCredentials, encryptingCredentials);
+            _verifier = new TokenVerifier()
+                .ConfigureOptionalSigningKey(_signingKey)
+                .ConfigureOptionalEncryptionKey(_encryptingKey);
+            _generator = new TokenGenerator(_nullLogger, _signingCredentials, _encryptingCredentials);
         }
 
         private NodeEntitlements CreateEntitlements(EntitlementCreationOptions creationOptions = EntitlementCreationOptions.None)
@@ -293,6 +307,64 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var result = _verifier.Verify(token, _contosoFinanceApp, _approvedAddress);
                 result.HasValue.Should().BeFalse();
                 result.Errors.Should().Contain(e => e.Contains("identifier"));
+            }
+        }
+
+        /// <summary>
+        /// Tests to check that enforcement works end to end with no signing key 
+        /// </summary>
+        public class WithoutSigning : TokenEnforcementTests
+        {
+            // Generator with no signing key used to create a token
+            private readonly TokenGenerator _generatorWithNoSigningKey;
+
+            // Verifier with no signing key used to check the token
+            private readonly TokenVerifier _verifierWithNoSigningKey;
+
+            public WithoutSigning()
+            {
+                _verifierWithNoSigningKey = new TokenVerifier()
+                    .ConfigureOptionalEncryptionKey(_encryptingKey);
+
+                _generatorWithNoSigningKey = new TokenGenerator(_nullLogger, null, _encryptingCredentials);
+                }
+
+            [Fact]
+            public void WhenEntitlementContainsOnlyTheRequestedApplication_ReturnsExpectedApplication()
+            {
+                var token = _generatorWithNoSigningKey.Generate(_validEntitlements);
+                var result = _verifierWithNoSigningKey.Verify(token, _contosoFinanceApp, _approvedAddress);
+                result.HasValue.Should().BeTrue();
+                result.Value.Applications.Should().Contain(_contosoFinanceApp);
+            }
+        }
+
+        /// <summary>
+        /// Tests to check that enforcement works end to end with no encryption key 
+        /// </summary>
+        public class WithoutEncryption : TokenEnforcementTests
+        {
+            // Generator with no signing key used to create a token
+            private readonly TokenGenerator _generatorWithNoEncryptionKey;
+
+            // Verifier with no signing key used to check the token
+            private readonly TokenVerifier _verifierWithNoEncryptionKey;
+
+            public WithoutEncryption()
+            {
+                _verifierWithNoEncryptionKey = new TokenVerifier()
+                    .ConfigureOptionalSigningKey(_signingKey);
+
+                _generatorWithNoEncryptionKey = new TokenGenerator(_nullLogger, _signingCredentials, null);
+            }
+
+            [Fact]
+            public void WhenEntitlementContainsOnlyTheRequestedApplication_ReturnsExpectedApplication()
+            {
+                var token = _generatorWithNoEncryptionKey.Generate(_validEntitlements);
+                var result = _verifierWithNoEncryptionKey.Verify(token, _contosoFinanceApp, _approvedAddress);
+                result.HasValue.Should().BeTrue();
+                result.Value.Applications.Should().Contain(_contosoFinanceApp);
             }
         }
     }

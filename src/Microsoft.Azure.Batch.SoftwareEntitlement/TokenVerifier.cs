@@ -36,14 +36,57 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Initializes a new instance of the <see cref="TokenVerifier"/> class
         /// </summary>
-        /// <param name="signingKey">Credentials to use when verifying the signature of the token.</param>
-        /// <param name="encryptingKey">Credentials to use when decrypting the token.</param>
-        public TokenVerifier(SecurityKey signingKey, SecurityKey encryptingKey)
+        public TokenVerifier()
         {
-            SigningKey = signingKey ?? throw new ArgumentNullException(nameof(signingKey));
-            EncryptionKey = encryptingKey ?? throw new ArgumentNullException(nameof(encryptingKey));
-
             CurrentInstant = DateTimeOffset.Now;
+        }
+
+        /// <summary>
+        /// Optionally configure the token verifier to use a signing key when verifying the 
+        /// software entitlement token
+        /// </summary>
+        /// <remarks>This method does nothing if no signing key is needed but may not be used to 
+        /// remove a previously applied signing key.</remarks>
+        /// <param name="signingKey">A security key to use for signing (null to not use signing).</param>
+        /// <returns>An updated token verifier that checks token signatures with the specified key.</returns>
+        public TokenVerifier ConfigureOptionalSigningKey(SecurityKey signingKey)
+        {
+            if (signingKey == null)
+            {
+                if (SigningKey != null)
+                {
+                    // Because our cloning constructor doesn't allow us to set a null signing key
+                    throw new InvalidOperationException("May not remove a signing key once configured.");
+                }
+
+                return this;
+            }
+
+            return new TokenVerifier(this, signingKey: signingKey);
+        }
+
+        /// <summary>
+        /// Optionally configure the token verifier to use an encryption key when verifying the 
+        /// software entitlement token
+        /// </summary>
+        /// <remarks>This method does nothing if no encryption key is needed but may not be used 
+        /// to remove a previously applied encryption key.</remarks>
+        /// <param name="encryptingKey">A security key to use for encryption (null to not use encryption).</param>
+        /// <returns>An updated token verifier that decrypts tokens with the specified key.</returns>
+        public TokenVerifier ConfigureOptionalEncryptionKey(SecurityKey encryptingKey)
+        {
+            if (encryptingKey == null)
+            {
+                if (EncryptionKey != null)
+                {
+                    // Because our cloning constructor doesn't allow us to set a null encryption key
+                    throw new InvalidOperationException("May not remove an encrypting key once configured.");
+                }
+
+                return this;
+            }
+
+            return new TokenVerifier(this, encryptionKey: encryptingKey);
         }
 
         /// <summary>
@@ -85,7 +128,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 ValidIssuer = Claims.Issuer,
                 ValidateLifetime = true,
                 RequireExpirationTime = true,
-                RequireSignedTokens = true,
+                RequireSignedTokens = (SigningKey != null),
                 ClockSkew = TimeSpan.FromSeconds(60),
                 IssuerSigningKey = SigningKey,
                 ValidateIssuerSigningKey = true,
