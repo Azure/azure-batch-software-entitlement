@@ -17,9 +17,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
 
         private readonly ILogger _logger;
 
-        // Key used to check the signature of tokens
-        private readonly SecurityKey _signingKey;
-
         // Verifier used to check tokens
         private readonly TokenVerifier _verifier;
 
@@ -32,6 +29,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         {
             _options = options;
             _logger = logger;
+
             _verifier = new TokenVerifier(_options.SigningKey, _options.EncryptionKey);
         }
 

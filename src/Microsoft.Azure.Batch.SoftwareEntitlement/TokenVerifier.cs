@@ -36,12 +36,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Initializes a new instance of the <see cref="TokenVerifier"/> class
         /// </summary>
-        /// <param name="signingKey">Credentials to use when verifying the signature of the token.</param>
-        /// <param name="encryptingKey">Credentials to use when decrypting the token.</param>
-        public TokenVerifier(SecurityKey signingKey, SecurityKey encryptingKey)
+        /// <param name="signingKey">Optional key to use when verifying the signature of the token.</param> 
+        /// <param name="encryptingKey">Optional key to use when decrypting the token.</param> 
+        public TokenVerifier(SecurityKey signingKey = null, SecurityKey encryptingKey = null)
         {
-            SigningKey = signingKey ?? throw new ArgumentNullException(nameof(signingKey));
-            EncryptionKey = encryptingKey ?? throw new ArgumentNullException(nameof(encryptingKey));
+            SigningKey = signingKey;
+            EncryptionKey = encryptingKey;
 
             CurrentInstant = DateTimeOffset.Now;
         }
@@ -85,7 +85,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 ValidIssuer = Claims.Issuer,
                 ValidateLifetime = true,
                 RequireExpirationTime = true,
-                RequireSignedTokens = true,
+                RequireSignedTokens = SigningKey != null,
                 ClockSkew = TimeSpan.FromSeconds(60),
                 IssuerSigningKey = SigningKey,
                 ValidateIssuerSigningKey = true,

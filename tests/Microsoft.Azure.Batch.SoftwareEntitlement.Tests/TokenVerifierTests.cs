@@ -15,47 +15,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         // A valid virtual machine identifier
         private readonly string _virtualMachineId = "virtual-machine-identifier";
 
-        // Key used to verify token signatures
-        private readonly SymmetricSecurityKey _signingKey;
-
-        // Key used to encrypt tokens
-        private readonly SymmetricSecurityKey _encryptingKey;
-
         public TokenVerifierTests()
         {
-            const string plainTextSecurityKey = "This is my shared, not so secret, secret that needs to be really long!";
+            const string keyForSigning = "This is my shared, not so secret, secret that needs to be really long!";
+            const string keyForEncryption = "This is my shared, not so secret, secret that also needs to be really long!";
 
-            _signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(plainTextSecurityKey));
-            _encryptingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(plainTextSecurityKey));
+            var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyForSigning));
+            var encryptingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyForEncryption));
 
-            _verifier = new TokenVerifier(_signingKey, _encryptingKey);
-        }
-
-        public class Constructor : TokenVerifierTests
-        {
-            [Fact]
-            public void GivenNullSigningKey_ShouldThrowArgumentNullException()
-            {
-                var exception =
-                    Assert.Throws<ArgumentNullException>(
-                        () => new TokenVerifier(null, _signingKey));
-                exception.ParamName.Should().Be("signingKey");
-            }
-
-            [Fact]
-            public void GivenNullEncryptingKey_ShouldThrowArgumentNullException()
-            {
-                var exception =
-                    Assert.Throws<ArgumentNullException>(
-                        () => new TokenVerifier(_signingKey, null));
-                exception.ParamName.Should().Be("encryptingKey");
-            }
-
-            [Fact]
-            public void GivenSecurityKey_ShouldConfigureProperty()
-            {
-                _verifier.SigningKey.Should().Be(_signingKey);
-            }
+            _verifier = new TokenVerifier(signingKey, encryptingKey);
         }
 
         public class VirtualMachineIdProperty : TokenVerifierTests
