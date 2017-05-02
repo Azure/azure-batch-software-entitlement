@@ -63,6 +63,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 "Not After: {notAfter}",
                 entitlements.NotAfter.ToString(TimestampParser.ExpectedFormat));
 
+            if (SigningCredentials != null)
+            {
+                _logger.LogDebug(
+                    "Signing with {Credentials}",
+                    SigningCredentials.Kid);
+            }
+
+            if (EncryptingCredentials != null)
+            {
+                _logger.LogDebug(
+                    "Encrypting with {Algorithm}/{Credentials}",
+                    EncryptingCredentials.Alg,
+                    EncryptingCredentials.Key.KeyId);
+            }
+
             var claimsIdentity = new ClaimsIdentity(claims);
             var securityTokenDescriptor = new SecurityTokenDescriptor
             {

@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
@@ -125,20 +127,26 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     .UntilInstant(new DateTimeOffset(token.ValidTo))
                     .AddApplication(application)
                     .WithIdentifier(entitlementIdClaim.Value)
-                    .AddIpAddress(ipAddress);
+                    .AddIpAddress(ipAddress); 
 
                 return Errorable.Success(result);
             }
             catch (SecurityTokenNotYetValidException exception)
             {
+                var logger = GlobalLogger.Logger;
+                logger.LogError(0, exception, exception.Message);
                 return TokenNotYetValidError(exception.NotBefore);
             }
             catch (SecurityTokenExpiredException exception)
             {
+                var logger = GlobalLogger.Logger;
+                logger.LogError(0, exception, exception.Message);
                 return TokenExpiredError(exception.Expires);
             }
             catch (SecurityTokenException exception)
             {
+                var logger = GlobalLogger.Logger;
+                logger.LogError(0, exception, exception.Message);
                 return InvalidTokenError(exception.Message);
             }
         }

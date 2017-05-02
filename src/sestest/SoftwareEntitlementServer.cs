@@ -96,7 +96,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             _logger.LogDebug("Creating security key for {purpose}", purpose);
-            return new X509SecurityKey(certificate);
+            var result = new X509SecurityKey(certificate);
+
+            if (!result.HasPrivateKey)
+            {
+                _logger.LogDebug("Private key for {Certificate} is not available", certificate.Thumbprint);
+                return null;
+            }
+
+            return result;
         }
     }
 }

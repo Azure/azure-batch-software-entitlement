@@ -30,6 +30,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             _options = options;
             _logger = logger;
 
+            if (_options.SigningKey != null)
+            {
+                _logger.LogDebug(
+                    "Tokens must be signed with {Credentials}",
+                    _options.SigningKey.KeyId);
+            }
+
+            if (_options.EncryptionKey != null)
+            {
+                _logger.LogDebug(
+                    "Tokens must be encrypted with {Credentials}",
+                    _options.EncryptionKey.KeyId);
+            }
+
             _verifier = new TokenVerifier(_options.SigningKey, _options.EncryptionKey);
         }
 
