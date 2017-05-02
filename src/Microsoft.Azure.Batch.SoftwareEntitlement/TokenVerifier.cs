@@ -133,20 +133,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
             catch (SecurityTokenNotYetValidException exception)
             {
-                var logger = GlobalLogger.Logger;
-                logger.LogError(0, exception, exception.Message);
                 return TokenNotYetValidError(exception.NotBefore);
             }
             catch (SecurityTokenExpiredException exception)
             {
-                var logger = GlobalLogger.Logger;
-                logger.LogError(0, exception, exception.Message);
                 return TokenExpiredError(exception.Expires);
             }
             catch (SecurityTokenException exception)
             {
-                var logger = GlobalLogger.Logger;
-                logger.LogError(0, exception, exception.Message);
                 return InvalidTokenError(exception.Message);
             }
         }
