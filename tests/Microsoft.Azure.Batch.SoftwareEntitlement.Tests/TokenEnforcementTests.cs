@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Text;
 
 using FluentAssertions;
+using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.IdentityModel.Tokens;
@@ -359,6 +362,56 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var result = _verifierWithNoEncryptionKey.Verify(token, _contosoFinanceApp, _approvedAddress);
                 result.HasValue.Should().BeTrue();
                 result.Value.Applications.Should().Contain(_contosoFinanceApp);
+            }
+        }
+
+        public class WithCertificates : TokenEnforcementTests
+        {
+            [Theory(Skip = "Need a thumbprint specified in TestCaseKeys()")]
+            [MemberData(nameof(TestCaseKeys))]
+            public void WhenSignedByCertificate_ReturnsExpectedResult(SecurityKey key)
+            {
+                // Arrange
+                var signingCredentials = new SigningCredentials(key, SecurityAlgorithms.RsaSha512Signature);
+                var verifier = new TokenVerifier(signingKey: key);
+                var generator = new TokenGenerator(_nullLogger, signingCredentials, encryptingCredentials: null);
+                // Act
+                var token = generator.Generate(_validEntitlements);
+                var result = verifier.Verify(token, _contosoFinanceApp, _approvedAddress);
+                // Assert
+                result.Errors.Should().BeEmpty();
+                result.Value.Applications.Should().Contain(_contosoFinanceApp);
+            }
+
+            [Theory(Skip="Need a thumbprint specified in TestCaseKeys()")]
+            [MemberData(nameof(TestCaseKeys))]
+            public void WhenEncryptedByCertificate_ReturnsExpectedResult(SecurityKey key)
+            {
+                // Arrange
+                var encryptingCredentials = new EncryptingCredentials(key, SecurityAlgorithms.RsaOAEP, SecurityAlgorithms.Aes256CbcHmacSha512);
+                var verifier = new TokenVerifier(encryptingKey: key);
+                var generator = new TokenGenerator(_nullLogger, signingCredentials: null, encryptingCredentials: encryptingCredentials);
+                // Act
+                var token = generator.Generate(_validEntitlements);
+                var result = verifier.Verify(token, _contosoFinanceApp, _approvedAddress);
+                // Assert
+                result.Errors.Should().BeEmpty();
+                result.Value.Applications.Should().Contain(_contosoFinanceApp);
+            }
+
+            public static IEnumerable<object[]> TestCaseKeys()
+            {
+                // To use this test, change the next line by entering a thumbprint that exists on the test machine
+                var thumbprint = new CertificateThumbprint("<thumbprint-goes-here>");
+                var store = new CertificateStore();
+                var cert = store.FindByThumbprint("test", thumbprint);
+                if (!cert.HasValue)
+                {
+                    throw new InvalidOperationException(cert.Errors.First());
+                }
+
+                var key = new X509SecurityKey(cert.Value);
+                yield return new object[] { key };
             }
         }
     }
