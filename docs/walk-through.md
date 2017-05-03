@@ -51,11 +51,11 @@ If you want to generate your own self-signed certificates for use, the blog entr
 
 On the Windows platform, one way to find suitable certificates is to use the built in certificate manager.
 
-![Certificate Manager](img/certificate-manager.png)
+![Certificate Manager](../img/certificate-manager.png)
 
 At minimum, you must use a certificate that has a private key.
 
-![Certificate with Private Key](img/certificate-details.png)
+![Certificate with Private Key](../img/certificate-details.png)
 
 ### Listing possible certificates
 
@@ -67,7 +67,7 @@ To assist with finding a suitable certificate, the `sestest` utility has a **lis
 
 The output from this command is tabular, so we recommend using a console window that is as wide as possible.
 
-![Sample output of list-certificates](img/list-certificates.png)
+![Sample output of list-certificates](../img/list-certificates.png)
 
 (Yes, this output is obfuscated.)
 
