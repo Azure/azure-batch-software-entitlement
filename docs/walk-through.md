@@ -36,87 +36,15 @@ In production, three different certificates will be used, but for test scenarios
 
 For each required certificate you will need to know its *thumbprint*. Both condensed (e.g. `d4de20d05e66fc53fe1a50882c78db2852cae474`) and expanded (e.g. `d4 de 20 d0 5e 66 fc 53 fe 1a 50 88 2c 78 db 28 52 ca e4 74`) formats are supported.
 
-If you already have suitable certificates on your machine (e.g. if you use HTTPS locally for development and testing), you can use those. If you don't already have suitable certificates (or if you're not sure), creating your own certificates is straightforward. The blog entry [Creating self signed certificates with makecert.exe for development](https://blog.jayway.com/2014/09/03/creating-self-signed-certificates-with-makecert-exe-for-development/) is one useful guide for this.
+If you already have suitable certificates on your machine (e.g. if you use HTTPS locally for development and testing), you can use those. See [*Finding Certificates*](finding-certificates.md) for information on finding a certificate on your machine.
 
-### Windows
-
-On the Windows platform, one way to find suitable certificates is to use the built in certificate manager.
-
-![Certificate Manager](../img/certificate-manager.png)
-
-At minimum, you must use a certificate that has a private key.
-
-![Certificate with Private Key](../img/certificate-details.png)
-
-### Listing possible certificates
-
-To assist with finding a suitable certificate, the `sestest` utility has a **list-certificates** mode that will list certificates that *may* work (the tool lists certificates with a private key but doesn't check for other characteristics):
-
-``` PowerShell
-.\sestest list-certificates
-```
-
-The output from this command is tabular, so we recommend using a console window that is as wide as possible.
-
-![Sample output of list-certificates](../img/list-certificates.png)
-
-(Yes, this output is obfuscated.)
-
-### Checking a thumbprint
-
-Once you've selected a thumbprint for use, you can verify it using `sestest` (Substitute your own thumbprint for `XXX`):
-
-``` PowerShell
-.\sestest find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-```
-
-For a thumbprint containing whitespace (as it will if copied from the Windows certificate properties dialog), wrap the thumbprint in quotes:
-
-``` PowerShell
-.\sestest find-certificate --thumbprint "XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX"
-```
-
-If `sestest` finds the certificate, some information will be shown:
-
-``` 
-10:26:13.119 [Information] ---------------------------------------------
-10:26:13.119 [Information]   Software Entitlement Service Test Utility
-10:26:13.119 [Information] ---------------------------------------------
-10:26:13.168 [Information] [Subject]
-10:26:13.170 [Information]   CN=localhost
-10:26:13.171 [Information]
-10:26:13.171 [Information] [Issuer]
-10:26:13.172 [Information]   CN=localhost
-10:26:13.174 [Information]
-10:26:13.175 [Information] [Serial Number]
-10:26:13.176 [Information]   XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-10:26:13.177 [Information]
-10:26:13.180 [Information] [Not Before]
-10:26:13.182 [Information]   7/12/2016 10:50:46 AM
-10:26:13.182 [Information]
-10:26:13.184 [Information] [Not After]
-10:26:13.185 [Information]   7/12/2021 12:00:00 PM
-10:26:13.186 [Information]
-10:26:13.187 [Information] [Thumbprint]
-10:26:13.188 [Information]   XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-```
-
-If `sestest` is unable to find the certificate, you will get an error:
-
-``` 
-10:34:59.211 [Information] ---------------------------------------------
-10:34:59.211 [Information]   Software Entitlement Service Test Utility
-10:34:59.211 [Information] ---------------------------------------------
-10:34:59.305 [Error] Did not find cert certificate XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-```
+If you don't already have suitable certificates (or if you're not sure), creating your own certificates is straightforward. The blog entry [Creating self signed certificates with makecert.exe for development](https://blog.jayway.com/2014/09/03/creating-self-signed-certificates-with-makecert-exe-for-development/) is one useful guide for this.
 
 ## Generating a token
 
 In production, Azure Batch will generate a software entitlement token and make it available in the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN`. For local development and testing, we can use `generate` mode of `sestest` to generate a token and then manually define the required variable.
 
 Run the following command to generate a minimal token and store it in `token.txt`:
-
-Running `sestest generate` with just the mandatory parameters supplied will generate a minimal token:
 
 ``` PowerShell
 PS> .\sestest generate --vmid $env:COMPUTERNAME --application-id contosoapp --token-file token.txt
@@ -139,8 +67,10 @@ PS> $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN = (get-content token.txt)
 Or, if you're using CMD:
 
 ``` cmd
-C:> set /p AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN=< token.txt
+C:> set /p AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN= < token.txt
 ```
+
+The `/p` option is required to read the value for the variable from stdin.
 
 ### Generating signed and encrypted tokens
 
@@ -148,9 +78,11 @@ In production, Azure Batch generates software entitlement tokens that are both s
 
 When working in a local development/test environment, signing and encryption of tokens are both optional. We do recommend that you do at least some testing with fully secured tokens as they are significantly longer.
 
-To sign a token, you will need to specify the thumbprint of a certificate to use for signing. Remember which certificate you use for signing as you'll need to provide `sestest server` test service the same thumbprint for verifying the signature (described [below](#starting-the-test-server)).
+To sign a token, you will need to specify the thumbprint of a certificate to use for signing. Remember which certificate you use for signing as you'll need to provide the same thumbprint to  `sestest server` for verifying the signature (described [below](#starting-the-test-server)).
 
-Encryption works in the same way - the appropriate thumbprint will need to be provided at both ends of the process.
+Encryption works in the same way - the same thumbprint needs to be provided both for token generation and for token verification.
+
+You may use the same certificate for both signing and encryption if you prefer.
 
 Define `$signingThumbprint` and `$encryptingThumbprint` with the appropriate thumbprint values to make it easier to reference the thumbprints:
 
