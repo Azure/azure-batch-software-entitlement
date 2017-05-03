@@ -231,9 +231,9 @@ Set the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN` to the genera
 ``` PowerShell
 $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN = "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZDQkMtSFM1MTIiLCJ
 ...elided... Ajt9tTffxB6lRlMxeXi25ejR-b4Kul34A3A3w"
+```
 
 Note that an encrypted token is significantly longer, in part due to information about the required key that's included within. One reason that we recommend testing with an encrypted token is to ensure your application can handle the full length of each token.
-
 
 ## Starting the test server
 
@@ -249,7 +249,7 @@ Then run the server with just the connection thumbprint:
 $connectionThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 $signingThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 $encryptingThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-.\sestest server --connection $connectionThumbprint
+.\sestest server --connection $connectionThumbprint --sign $signingThumbprint --encrypt $encryptingThumbprint
 ```
 
 The server will start up and wait for connections.
@@ -292,83 +292,9 @@ With the environment variables previously defined (`AZ_BATCH_SOFTWARE_ENTITLEMEN
 .\sesclient --url $env:AZ_BATCH_ACCOUNT_URL --thumbprint $connectionThumbprint --common-name localhost --token $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN --application contosoapp
 ```
 
+## Troubleshooting
 
-
-
-
-
-
-
-
-
-
-
-## Bringing it all together
-
-Now that we've seen all of the individual components of the SDK, let's pull them all together into a full workflow.
-
-### Select your certificates
-
-Select the certificate or certificates you want to use &ndash; one to secure the connection to the server, one to sign each token and one to encrypt each token. Define three variables, one for each certificate (this makes it easier to reference the thumbprints later on):
-
-``` PowerShell
-$connectionThumbprint = "9X9X9X99X9X99X99X999XX9999XX99XX9999XX9X"
-$signingThumbprint    = "99999999XX999X999X999X999X9999X99XX99X99"
-$encryptingThumbprint = "99X9999XXX9XX9999XX99X9X9999X9X9999X999X"
-```
-
-### Generate a token
-
-Generate an encrypted and signed token for the application `contosoapp`:
-
-``` PowerShell
-.\sestest generate --vmid $env:COMPUTERNAME --application-id contosoapp --sign $signingThumbprint --encrypt $encryptingThumbprint --token-file token.txt
-```
-
-This uses the name of your current computer as the "virtual machine identifier" to embed in the token.
-
-```
-11:30:29.763 [Information] ---------------------------------------------
-11:30:29.783 [Information]   Software Entitlement Service Test Utility
-11:30:29.784 [Information] ---------------------------------------------
-11:30:30.091 [Information] Token file: "...elided...\token.txt"
-```
-You may want to inspect the token file using a text editor.
-
-### Start the software entitlement server
-
-Open a second shell window and define the same certificate variables as above. Start a test server:
-
-``` PowerShell
-.\sestest server --connection $connectionThumbprint --sign $signingThumbprint --encrypt $encryptingThumbprint
-```
-
-The server will start up:
-
-```
-11:44:48.705 [Information] ---------------------------------------------
-11:44:48.724 [Information]   Software Entitlement Service Test Utility
-11:44:48.725 [Information] ---------------------------------------------
-Hosting environment: Production
-Content root path: ... elided ...
-Now listening on: https://localhost:4443
-Application started. Press Ctrl+C to shut down.
-```
-
-The "Now listening on:" line gives you the URL needed for the next step.
-
-### Checking the token
-
-Back in your original shell window, use `sesclient` to verify the token:
-
-``` PowerShell
-$token = get-content token.txt
-.\sesclient --url https://localhost:4443 --thumbprint $connectionThumbprint --common-name localhost --token $token --application contosoapp
-```
-
-### Troubleshooting
-
-#### SSPI Errors
+### SSPI Errors
 
 If the connection certificate you selected previously isn't fully trusted, the `sestest server` window will show messages like this:
 
@@ -381,7 +307,7 @@ If the connection certificate you selected previously isn't fully trusted, the `
 
 One way to remedy this is to install the certificate as a **Trusted Root Certificate Authority**. Since this is a global configuration change on your machine, please make sure you are comfortable with the consequences before doing this.
 
-#### Using a self-signed certificate
+### Using a self-signed certificate
 
 If using a self-signed certificate, secure connection validation code in the native client library will prevent you from connecting. The error message reads:
 
@@ -401,7 +327,7 @@ ThrowIfCurlError(curl_easy_setopt(_curl.get(), CURLOPT_SSL_VERIFYPEER, /* 1 */ 0
 
 **NOTE**: Don't leave these checks disabled when you do the release build of your package. Failing to restore these checks will make it much easier for a man-in-the-middle attack.
 
-### Things to try
+## Things to try
 
 Once you've successfully validated a token, here are some things to try:
 
