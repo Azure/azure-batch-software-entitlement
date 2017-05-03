@@ -111,8 +111,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     encryptionKey, SecurityAlgorithms.RsaOAEP, SecurityAlgorithms.Aes256CbcHmacSha512);
             }
 
+            var entitlementWithIdentifier = entitlements.WithIdentifier($"entitlement-{Guid.NewGuid():D}");
+
             var generator = new TokenGenerator(GlobalLogger.Logger, signingCredentials, encryptingCredentials);
-            return generator.Generate(entitlements);
+            return generator.Generate(entitlementWithIdentifier);
         }
 
         /// <summary>
@@ -154,11 +156,22 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         private static IList<string> DescribeCertificate(X509Certificate2 cert)
         {
+            var status = string.Empty;
+            if (cert.NotAfter < DateTime.Now)
+            {
+                status = "(expired)";
+            }
+            else if (DateTime.Now < cert.NotBefore)
+            {
+                status = "(not yet active)";
+            }
+
             return new List<string>
             {
                 cert.SubjectName.Name,
                 cert.FriendlyName,
-                cert.Thumbprint
+                cert.Thumbprint,
+                status
             };
         }
 
