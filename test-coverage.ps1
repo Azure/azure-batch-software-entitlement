@@ -5,7 +5,7 @@
 . $PSScriptRoot\scripts\includes.ps1
 
 Write-Divider
-$dotnetExe = (get-command dotnet).Source
+$dotnetExe = (get-command dotnet).Path
 Write-Output "Dotnet executable:           $dotnetExe"
 
 $openCoverExe = resolve-path $env:userprofile\.nuget\packages\OpenCover\*\tools\OpenCover.Console.exe 
@@ -22,10 +22,10 @@ $logLevel = "info"
 $filter = "+[*]* -[xunit.*]* -[Fluent*]* -[*.Tests]*"
 
 Write-Header "Running tests for: $commonTests"
-& $openCoverExe -oldStyle -target:$dotnetExe -targetargs:"test $commonTests" -register:user -filter:$filter -log:$loglevel -output:.\out\Common.cover.xml
+& $openCoverExe -oldStyle "-target:$dotnetExe" "-targetargs:test $commonTests" -register:user "-filter:$filter" -log:$loglevel -output:.\out\Common.cover.xml
 
 Write-Header "Running tests for $sesTests"
-& $openCoverExe -oldStyle -target:$dotnetExe -targetargs:"test $sesTests" -register:user -filter:$filter -log:$loglevel -output:.\out\Ses.cover.xml
+& $openCoverExe -oldStyle "-target:$dotnetExe" "-targetargs:test $sesTests" -register:user "-filter:$filter" -log:$loglevel -output:.\out\Ses.cover.xml
 
 Write-Header "Generating Report"
 & $reportGeneratorExe "-reports:.\out\Common.cover.xml;.\out\Ses.cover.xml" "-targetdir:.\out\cover\"
