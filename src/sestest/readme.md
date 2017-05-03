@@ -47,7 +47,7 @@ These parameters are available for every mode
 
 Run `sestest server` to stand up a diagnostic software entitlement server, able to accept and verify tokens submitted by either the application. This allows full testing of the integration.
 
-**NOTE**: On Windows, ensure you run `sestest server` from an elevated command prompt - this is required for certificate credential exchange to work. An error like _"The credentials supplied to the package were not recognized"_ may indicate that `sestest server` is running in at user level.
+**NOTE**: On Windows, ensure you run `sestest server` from an elevated shell window - this is required for certificate credential exchange to work. An error like _"The credentials supplied to the package were not recognized"_ may indicate that `sestest server` is running in a non-elevated shell window.
 
 
 | Parameter            | Required  | Definition                                                                                                                              |
