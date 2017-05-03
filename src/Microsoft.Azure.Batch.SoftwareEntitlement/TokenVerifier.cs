@@ -127,7 +127,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     .UntilInstant(new DateTimeOffset(token.ValidTo))
                     .AddApplication(application)
                     .WithIdentifier(entitlementIdClaim.Value)
-                    .AddIpAddress(ipAddress); 
+                    .AddIpAddress(ipAddress);
 
                 return Errorable.Success(result);
             }
