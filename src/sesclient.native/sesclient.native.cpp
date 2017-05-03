@@ -7,7 +7,7 @@
 void ShowUsage(const char* exeName)
 {
     std::cout << exeName << ":" << std::endl;
-    std::cout << "Contacts the specified azure batch software entitlement server to verify the provided token." << std::endl;
+    std::cout << "Contacts the specified Azure Batch software entitlement server to verify the provided token." << std::endl;
     std::cout << "Parameters:" << std::endl;
     std::cout << "    --url <software entitlement server URL>" << std::endl;
     std::cout << "    --thumbprint <thumbprint of a certificate expected in the server's SSL certificate chain>" << std::endl;

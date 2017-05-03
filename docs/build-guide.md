@@ -104,7 +104,7 @@ Again, if you are not running on PowerShell, you'll need run the executable dire
 You should get output similar to this:
 
 ``` 
-Contacts the specified azure batch software entitlement server to verify the provided token.
+Contacts the specified Azure Batch software entitlement server to verify the provided token.
 Parameters:
     --url <software entitlement server URL>
     --thumbprint <thumbprint of a certificate expected in the server's SSL certificate chain>
