@@ -2,16 +2,6 @@
 
 This walk-through describes how the *Software Entitlement Service SDK* is used to enable on-premise integration of licensed commercial software with Azure Batch.
 
-## Table of Contents
-
-* [Prerequisites](#prerequisites)
-* [Building the tools](#building-the-tools)
-* [Selecting Certificates](#selecting-certificates)
-* [Generating a token](#generating-a-token)
-* [Starting the test server](#starting-the-test-server)
-* [Verifying a token](#verifying-a-token)
-* [Bringing it all together](#bringing-it-all-together)
-
 ## Overview
 
 In production, Azure Batch will generate a software entitlements token for each task run on a compute node. The application software installed on the node (for the purposes of this walk-through, ContosoApp) securely contacts a software entitlement server to verify that the token is authentic. 
