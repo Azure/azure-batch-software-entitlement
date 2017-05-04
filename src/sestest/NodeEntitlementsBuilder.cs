@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
+using System.Net.Sockets;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -151,7 +152,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 {
                     foreach (var info in unicast)
                     {
-                        var ip = info.Address;
+                        // Strip out the ScopeId for any local IPv6 addresses
+                        // (Can't just assign 0 to ScopeId, that doesn't work)
+                        var bytes = info.Address.GetAddressBytes();
+                        var ip = new IPAddress(bytes);
+
                         yield return Errorable.Success(ip);
                     }
                 }
