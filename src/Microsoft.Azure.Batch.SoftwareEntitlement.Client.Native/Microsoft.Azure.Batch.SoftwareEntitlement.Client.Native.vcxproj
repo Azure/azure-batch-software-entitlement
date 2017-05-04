@@ -133,10 +133,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="json.hpp" />
+    <ClInclude Include="json_vc11.hpp" />
     <ClInclude Include="SoftwareEntitlementClient.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SoftwareEntitlementClient.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="README.md" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">

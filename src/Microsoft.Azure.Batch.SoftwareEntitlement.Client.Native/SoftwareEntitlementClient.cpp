@@ -4,13 +4,33 @@
 #include <mutex>
 #include <sstream>
 #include <vector>
+#include <cstdint>
 #include <curl/curl.h>
 #include <openssl/bio.h>
 #include <openssl/err.h>
 #include <openssl/pem.h>
 #include <openssl/ssl.h>
 #include <openssl/x509.h>
+
+//
+// Work around non-standard/incomplete C++ support in VC11/VC12
+//
+#if defined _MSC_VER && _MSC_VER < 1900
+//
+// When building with earlier versions of Visual Studio, users must:
+// - modify 'AdditionalIncludeDirectories' to include the vcpkg include
+//   directory, e.g. 'D:\GitHub\vcpkg\installed\x64-windows\include'
+// - modify 'AdditionalLibraryDirectories' to include the vcpkg lib
+//   directory, e.g. 'D:\GitHub\vcpkg\installed\x64-windows\lib'
+// - modify 'AdditionalDependencies' to include the following libs:
+//      o ssleay32.lib
+//      o libeay32.lib
+//      o libcurl_imp.lib
+//
+#include "json_vc11.hpp"
+#else
 #include "json.hpp"
+#endif
 
 #ifdef _WIN32
 #include "Wincrypt.h"
@@ -51,6 +71,7 @@ extern "C" int cout_cb(const char* val, size_t /*len*/, void* u)
 }
 
 
+#ifdef _WIN32
 void ThrowIfOpenSSLError(bool error)
 {
     if (error)
@@ -63,7 +84,6 @@ void ThrowIfOpenSSLError(bool error)
 }
 
 
-#ifdef _WIN32
 void ThrowIfWin32Error(bool error)
 {
     if (!error)
@@ -87,7 +107,12 @@ public:
     {
     }
 
-    bool operator !=(nullptr_t)
+    X509(X509&& rhs)
+    {
+        _cert.swap(rhs._cert);
+    }
+
+    bool operator !=(std::nullptr_t)
     {
         return _cert != nullptr;
     }
@@ -205,12 +230,6 @@ private:
         }
     }
 
-    long GetResponseCode()
-    {
-        long code;
-        curl_easy_getinfo(_curl.get(), CURLINFO_RESPONSE_CODE, &code);
-    }
-
     std::string GetDetailedErrorMessage()
     {
         try
@@ -316,8 +335,9 @@ private:
 public:
     Curl()
         : _curl(curl_easy_init())
-        , _errbuf{ 0 }
     {
+        memset(_errbuf, 0, sizeof(_errbuf));
+
         if (_curl == nullptr)
         {
             throw Exception("curl_easy_init failed.");
@@ -370,7 +390,11 @@ public:
         //
         struct headers_guard
         {
-            curl_slist *value = nullptr;
+            curl_slist *value;
+
+            headers_guard()
+                :value(nullptr)
+            {}
 
             ~headers_guard()
             {
@@ -388,12 +412,11 @@ public:
             throw Exception("Failed to allocate Content-Type header");
         }
 
-        ThrowIfCurlError(curl_easy_setopt(_curl.get(), CURLOPT_HTTPHEADER, headers));
+        ThrowIfCurlError(curl_easy_setopt(_curl.get(), CURLOPT_HTTPHEADER, headers.value));
 
-        nlohmann::json j = {
-            {"token", entitlement_token},
-            {"applicationId", requested_entitlement}
-        };
+        nlohmann::json j;
+        j["token"] = entitlement_token;
+        j["applicationId"] = requested_entitlement;
 
         //
         // We need to ensure the payload remains resident for the duration of
@@ -432,7 +455,7 @@ public:
 
         if (code == 200)
         {
-            return std::make_unique<Entitlement>(_response);
+            return std::unique_ptr<Entitlement>(new Entitlement(_response));
         }
 
         throw Exception(GetErrorMessage(code));
