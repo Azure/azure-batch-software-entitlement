@@ -1,6 +1,3 @@
-// sesclient.native.cpp : Defines the entry point for the console application.
-//
-
 #include "stdafx.h"
 
 
@@ -16,7 +13,8 @@ void ShowUsage(const char* exeName)
     std::cout << "    --application <name of the license ID being requested>" << std::endl;
 }
 
-std::vector<std::string> parameterNames = {
+
+static const std::array<std::string, 5> parameterNames = {
     "--url",
     "--thumbprint",
     "--common-name",

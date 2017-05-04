@@ -9,6 +9,15 @@ This project depends on two open-source packages: [OpenSSL](https://www.openssl.
 ## Windows build
 The included project for Visual Studio 2017 depends libcurl and OpenSSL being available.  The simplest mechanism to achieve this is to use [vcpkg](https://github.com/Microsoft/vcpkg), following the Quick Start instructions, including user-wide integration.
 
+## Building with Visual Studio 2012 or Visual Studio 2013
+The libcurl and OpenSSL libraries expose a standard C interface, so can be built using Visual Studio 2017 and referenced in projects using earlier versions of Visual Studio without issue.  However, the vcpkg user-wide integration does not support versions prior to Visual Studio 2015, requiring the following project configuration settings to be modified:
+* C/C++ | General | AdditionalIncludeDirectories: include the vcpkg include directory, e.g. 'D:\GitHub\vcpkg\installed\x64-windows\include'
+* Linker | General | AdditionalLibraryDirectories: include the vcpkg lib directory, e.g. 'D:\GitHub\vcpkg\installed\x64-windows\lib'
+* Linker | Input | AdditionalDependencies: include the following libs:
+	* ssleay32.lib
+	* libeay32.lib
+	* libcurl_imp.lib
+
 ## Installing OpenSSL
 For 32-bit builds:
 ```
