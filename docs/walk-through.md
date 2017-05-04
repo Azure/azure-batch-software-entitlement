@@ -1,115 +1,30 @@
 # Software Entitlement Service Walk-through
 
-This walk-through will guide you through use of the Software Entitlement Service SDK, building the tooling from source code, generating and verifying a software entitlement token.
+Many independent software vendors (ISVs) require users to obtain a license from a server in order to run their software. The traditional license server model is difficult to implement in the cloud. Azure Batch provides a way for ISVs who partner with Microsoft to meter usage, and to enforce that users may only use their software within the Azure Batch environment where that usage can be metered, without the need for a license server.
 
-## Table of Contents
+This walk-through describes how the *Software Entitlement Service SDK* is used to enable integration of licensed commercial software with Azure Batch.
 
-* [Prerequisites](#prerequisites)
-* [Building the tools](#building-the-tools)
-* [Selecting Certificates](#selecting-certificates)
-* [Generating a token](#generating-a-token)
-* [Starting the test server](#starting-the-test-server)
-* [Verifying a token](#verifying-a-token)
-* [Bringing it all together](#bringing-it-all-together)
+## Overview
+
+In production, Azure Batch will generate a software entitlements token for each task run on a compute node. The application software installed on the node (for the purposes of this walk-through, ContosoApp) securely contacts a software entitlement server to verify that the token is authentic. 
+
+![Component integration in the cloud](../img/walk-through-in-cloud.png)
+
+During development, it is important to be able to test locally. The Software Entitlement Service SDK enabless this by providing substitutes for the components normally available only in the cloud:
+
+![Component integration for dev test](../img/walk-through-dev-test.png)
+
+## Prerequisites
+
+Before working through this guide, you will need to have built the tooling and have it ready for execution. See the [Guide to building the Software Entitlement Service SDK](build-guide.md) for details of doing this.
 
 ## A note on shells
 
 The SDK has been written to be cross-platform, working on Windows, Linux and macOS. For brevity, this walk-through uses **PowerShell** only (usable on both Windows and [Linux](https://azure.microsoft.com/blog/powershell-is-open-sourced-and-is-available-on-linux/)); the commands shown should be trivially convertible to your shell of choice, such as `CMD` and `bash` (including `bash` on Windows 10).
 
-## Prerequisites
-
-To build and use the Software Entitlement Services test tool (`sestest`) you will need certain prerequisites installed on your system:
-
-The `sestest` command line utility and associated libraries are written in C#7 and require version 1.1 or higher of [.NET Core](https://www.microsoft.com/net/core#windowsvs2017) to be installed. The tool was written with Visual Studio 2017; it will compile with just the .NET Core SDK installation. For more information see the [Sestest command line utility](../src/sestest/).
-
-The C++ source for the client library requires [libcurl](https://curl.haxx.se/libcurl/) and [OpenSSL](https://www.openssl.org/) libraries as installed by [vcpkg](https://blogs.msdn.microsoft.com/vcblog/2016/09/19/vcpkg-a-tool-to-acquire-and-build-c-open-source-libraries-on-windows/). The library was also written with Visual Studio 2017; it will compile with any modern C++ compiler. For more information (including details of configuration and use of `vcpkg`) see the [Software entitlement service native client library](../src/Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native)
-
-## Building the tools
-
-Open a shell window to the root directory of the repository.
-
-Compile the cross-platform (.NET) tooling with the convenience PowerShell script:
-
-``` PowerShell
-.\build-xplat.ps1
-```
-
-or compile it manually:
-
-``` PowerShell
-dotnet restore .\src\sestest
-dotnet build .\src\sestest
-```
-
-To compile the native code on Windows:
-
-``` PowerShell
-.\build-windows -platform x64 -configuration Debug
-```
-
-or you can compile it manually:
-
-``` PowerShell
-msbuild .\src\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native /property:Configuration=Debug /property:Platform=x64
-msbuild .\src\sesclient.native /property:Configuration=Debug /property:Platform=x64
-```
-
-The first `msbuild` command shown above builds the library, the second builds a wrapper executable provided for testing purposes.
-The commands shown assume that `msbuild` is available on the PATH. If this is not the case, you'll need to provide the full path to `msbuild`&ntypically, this is something like `C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\MSBuild\15.0\Bin\MSBuild.exe` (the actual path will differ according to the version of Visual Studio or SDK you have installed).
-
-Details of how to build the code will differ if you are using a different C++ compiler or are building on a different platform.
-
-### Checking that it works
-
-If compilation works without any issues, you should now have the executables you need for testing.
-
-Run the `sestest` console utility to verify it is ready for use:
-
-``` PowerShell
-.\sestest
-```
-
-You should get output similar to this:
-
-``` 
-sestest 1.0.0
-Copyright (C) 2017 Microsoft
-
-ERROR(S):
-  No verb selected.
-
-  generate             Generate a token with specified parameters
-
-  server               Run as a standalone software entitlement server.
-
-  list-certificates    List all available certificates.
-
-  find-certificate     Show the details of one particular certificate.
-
-  help                 Display more information on a specific command.
-
-  version              Display version information.
-```
-
-Run the `sesclient.native.exe` console utility to verify it is ready for use:
-
-``` PowerShell
-.\sesclient.native
-```
-
-You should get output similar to this:
-
-``` 
-Contacts the specified azure batch software entitlement server to verify the provided token.
-Parameters:
-    --url <software entitlement server URL>
-    --thumbprint <thumbprint of a certificate expected in the server's SSL certificate chain>
-    --common-name <common name of the certificate with the specified thumbprint>
-    --token <software entitlement token to pass to the server>
-    --application <name of the license ID being requested>
-```
-
 ## Selecting Certificates
+
+In production, the software entitlement service generates tokens that are both digitally signed and encrypted in order to prevent misuse. The service also requires connections to be made via HTTPS. To simulate this in a local dev/test environment, we need to select one or more digital certificates that are available on the local machine.
 
 The software entitlement service makes use of three digital certificates:
 
@@ -121,220 +36,113 @@ In production, three different certificates will be used, but for test scenarios
 
 For each required certificate you will need to know its *thumbprint*. Both condensed (e.g. `d4de20d05e66fc53fe1a50882c78db2852cae474`) and expanded (e.g. `d4 de 20 d0 5e 66 fc 53 fe 1a 50 88 2c 78 db 28 52 ca e4 74`) formats are supported.
 
-### Windows
+If you already have suitable certificates on your machine (e.g. if you use HTTPS locally for development and testing), you can use those. See [*Finding Certificates*](finding-certificates.md) for information on finding a certificate on your machine.
 
-On the Windows platform, one way to find suitable certificates is to use the built in certificate manager.
-
-![Certificate Manager](img/certificate-manager.png)
-
-At minimum, you must use a certificate that has a private key.
-
-![Certificate with Private Key](img/certificate-details.png)
-
-### Listing possible certificates
-
-To assist with finding a suitable certificate, the `sestest` utility has a **list-certificates** mode that will list certificates that *may* work (the tool lists certificates with a private key but doesn't check for other characteristics):
-
-``` PowerShell
-.\sestest list-certificates
-```
-
-The output from this command is tabular, so we recommend using a console window that is as wide as possible.
-
-![Sample output of list-certificates](img/list-certificates.png)
-
-(Yes, this output is obfuscated.)
-
-### Checking a thumbprint
-
-Once you've selected a thumbprint for use, you can verify it using `sestest` (Substitute your own thumbprint for `XXX`):
-
-``` PowerShell
-.\sestest find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-```
-
-For a thumbprint containing whitespace (as it will if copied from the Windows certificate properties dialog), wrap the thumbprint in quotes:
-
-``` PowerShell
-.\sestest find-certificate --thumbprint "XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX"
-```
-
-If `sestest` finds the certificate, some information will be shown:
-
-``` 
-10:26:13.119 [Information] ---------------------------------------------
-10:26:13.119 [Information]   Software Entitlement Service Test Utility
-10:26:13.119 [Information] ---------------------------------------------
-10:26:13.168 [Information] [Subject]
-10:26:13.170 [Information]   CN=localhost
-10:26:13.171 [Information]
-10:26:13.171 [Information] [Issuer]
-10:26:13.172 [Information]   CN=localhost
-10:26:13.174 [Information]
-10:26:13.175 [Information] [Serial Number]
-10:26:13.176 [Information]   XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-10:26:13.177 [Information]
-10:26:13.180 [Information] [Not Before]
-10:26:13.182 [Information]   7/12/2016 10:50:46 AM
-10:26:13.182 [Information]
-10:26:13.184 [Information] [Not After]
-10:26:13.185 [Information]   7/12/2021 12:00:00 PM
-10:26:13.186 [Information]
-10:26:13.187 [Information] [Thumbprint]
-10:26:13.188 [Information]   XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-```
-
-If `sestest` is unable to find the certificate, you will get an error:
-
-``` 
-10:34:59.211 [Information] ---------------------------------------------
-10:34:59.211 [Information]   Software Entitlement Service Test Utility
-10:34:59.211 [Information] ---------------------------------------------
-10:34:59.305 [Error] Did not find cert certificate XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-```
+If you don't already have suitable certificates (or if you're not sure), creating your own certificates is straightforward. The blog entry [Creating self signed certificates with makecert.exe for development](https://blog.jayway.com/2014/09/03/creating-self-signed-certificates-with-makecert-exe-for-development/) is one useful guide for this.
 
 ## Generating a token
 
-The `generate` mode of `sestest` is used to generate a token. The command has the following parameters:
+In production, Azure Batch will generate a software entitlement token and make it available in the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN`. For local development and testing, we can use `generate` mode of `sestest` to generate a token and then manually define the required variable.
 
-| Parameter        | Required  | Definition                                                                                                                                                                           |
-| ---------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| --application-id | Mandatory | Unique identifier(s) for the application(s) to include in the entitlement (comma separated).                                                                                         |
-| --vmid           | Mandatory | Unique identifier for the Azure virtual machine. If you are testing outside of Azure, we suggest you use the name of the machine (e.g. `%COMPUTERNAME%`).                            |
-| --not-before     | Optional  | The moment at which the token becomes active and the application is entitled to execute <br/> Format: 'yyyy-mm-ddThh-mm'; 24 hour clock; local time; defaults to now.                |
-| --not-after      | Optional  | The moment at which the token expires and the application is no longer entitled to execute <br/> Format: 'yyyy-mm-ddThh-mm'; 24 hour clock; local time; defaults to 7 days from now. |
-| --address        | Optional  | The IP addresses of the machine entitled to execute the application(s). <br/> Defaults to all the IP addresses of the current machine.                                               |
-| --sign           | Optional  | Certificate thumbprint of the certificate to use for signing the token                                                                                                               |
-| --encrypt        | Optional  | Certificate thumbprint of the certificate to use for encryption of the token.                                                                                                        |
-| --token-file     | Optional  | The name of a file into which the token will be written <br/> If not specified, the token will be shown in the log.                                                                  |
-| --log-level      | Optional  | Specify the level of logging output. <br/> One of *error*, *warning*, *information* or *debug*; defaults to *information*.                                                           |
-| --log-file       | Optional  | Specify a file into which log messages should be written. <br/> Logging is shown on the console by default.                                                                          |
-
-You can see this documentation for yourself by running `sestest generate --help` in your console.
-
-Running `sestest generate` with no parameters will tell you about the mandatory parameters:
+Run the following command to generate a minimal token and store it in `token.txt`:
 
 ``` PowerShell
-.\sestest generate
+PS> .\sestest generate --vmid $env:COMPUTERNAME --application-id contosoapp --token-file token.txt
+10:18:27.531 [Information] ---------------------------------------------
+10:18:27.548 [Information]   Software Entitlement Service Test Utility
+10:18:27.548 [Information] ---------------------------------------------
+10:18:27.745 [Information] Token file: "token.txt"
 ```
 
-```
-10:53:59.102 [Information] ---------------------------------------------
-10:53:59.102 [Information]   Software Entitlement Service Test Utility
-10:53:59.102 [Information] ---------------------------------------------
-10:53:59.164 [Error] No applications specified.
-10:53:59.164 [Error] No virtual machine identifier specified.
-```
+The `token.txt` file will contain the software entitlement token, stored as a single line of encoded text. 
 
-The output tells you that you need to supply both an application and a virtual machine identifier.
+To see more details about what's included in the token, optionally include the option `--log-level debug`. For a full reference of all the available parameters for this mode, see [../src/sestest/readme.md](../src/sestest/readme.md).
 
-Running `sestest generate` with just the mandatory parameters supplied will generate a minimal token:
+Set the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN` to the content of the `token.txt` file:
 
 ``` PowerShell
-.\sestest generate --vmid machine-identifier --application-id contosoapp
+PS> $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN = (get-content token.txt)
 ```
 
-```
-10:57:15.616 [Information] ---------------------------------------------
-10:57:15.616 [Information]   Software Entitlement Service Test Utility
-10:57:15.616 [Information] ---------------------------------------------
-10:57:15.882 [Information] Token: "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ2bWlkIjoibWFjaGluZS1pZGVu
-... elided ...
-L2JhdGNoLmF6dXJlLmNvbS9zb2Z0d2FyZS1lbnRpdGxlbWVudCJ9."
-```
-(This has been artificially wrapped at 100 columns width.)
+Or, if you're using CMD:
 
-Include the option `--log-level debug` to get more information about what is included in the token:
+``` cmd
+C:> set /p AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN= < token.txt
+```
+
+The `/p` option is required to read the value for the variable from stdin.
+
+### Generating signed and encrypted tokens
+
+In production, Azure Batch generates software entitlement tokens that are both signed and encrypted. The digital signature  allows the production software entitlement server to verify tokens were generated by Azure Batch, and the encryption prevents the signature from being stripped from the token and replaced.
+
+When working in a local development/test environment, signing and encryption of tokens are both optional. We do recommend that you do at least some testing with fully secured tokens as they are significantly longer.
+
+To sign a token, you will need to specify the thumbprint of a certificate to use for signing. Remember which certificate you use for signing as you'll need to provide the same thumbprint to  `sestest server` for verifying the signature (described [below](#starting-the-test-server)).
+
+Encryption works in the same way - the same thumbprint needs to be provided both for token generation and for token verification.
+
+You may use the same certificate for both signing and encryption if you prefer.
+
+Define `$signingThumbprint` and `$encryptingThumbprint` with the appropriate thumbprint values to make it easier to reference the thumbprints:
 
 ``` PowerShell
-.\sestest generate --vmid machine-identifier --application-id contosoapp --log-level debug
+PS> $signingThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+PS> $encryptingThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 ```
 
-```
-12:27:36.577 [Information] ---------------------------------------------
-12:27:36.577 [Information]   Software Entitlement Service Test Utility
-12:27:36.577 [Information] ---------------------------------------------
-12:27:36.656 [Debug] Virtual machine Id: machine-identifier
-12:27:36.668 [Debug] IP Address: 99.999.999.999
-12:27:36.669 [Debug] IP Address: xx99::x99x:99x9:x99:9x9x%9
-12:27:36.670 [Debug] IP Address: ::9
-12:27:36.671 [Debug] IP Address: 999.9.9.9
-12:27:36.673 [Debug] IP Address: 9999:x999:9999:999:x99x:99x9:x99:9x9x
-12:27:36.674 [Debug] IP Address: 9999:x999:9999:999:9999:9xx9:9xxx:9xx9
-12:27:36.679 [Debug] Application Id: contosoapp
-12:27:36.680 [Debug] Not Before: 2017-04-20T12:27
-12:27:36.681 [Debug] Not After: 2017-04-27T14:27
-12:27:36.812 [Debug] Raw token: {"alg":"none","typ":"JWT"}.{"vmid":"machine-identifier","ip":["99.9
-99.999.999","xx99::x99x:99x9:x99:9x9x%9","::9","999.9.9.9","9999:x999:9999:999:x99x:99x9:x99:9x9x",
-"9999:x999:9999:999:9999:9xx9:9xxx:9xx9"],"app":"contosoapp","nbf":1492648056,"exp":1493252856,"iat
-":1492648056,"iss":"https://batch.azure.com/software-entitlement","aud":"https://batch.azure.com/so
-ftware-entitlement"}
-12:27:36.818 [Information] Token: "eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ2bWlkIjoibWFjaGluZS1pZGVu
-... elided ...
-L2JhdGNoLmF6dXJlLmNvbS9zb2Z0d2FyZS1lbnRpdGxlbWVudCJ9."
-```
+Defining these variables makes it easier to type the commands and reducing the opportunity for error. (Both `PowerShell` and `bash` do auto completion of variable names.)
 
-Note the `[Debug]` log lines that show the actual values that have been used, including the default values selected for parameters we haven't supplied ourselves, such as `--not-before`, `--not-after` and `--address`. (Again, the above output has been wrapped to 100 columns and partially obfuscated.)
-
-To digitally sign the token, define `$signingThumbprint` with the thumbprint of an appropriate certificate and include `--sign $signingThumbprint` on the command line.
-Similarly, to encrypt the token define `$encryptingThumbprint` with a certificate thumbprint and include `--encrypt $encryptingThumbprint` on the command line. 
-(Defining variables to hold the thumbprints makes it easier to reuse the values later on.)
-
-A full command line that both signs and encrypts a token would look like this:
+Add the options `--sign` and `--encrypt` to the command line used above to generate a fully secured token:
 
 ``` PowerShell
-.\sestest generate --vmid machine-identifier --application-id contosoapp --sign $signingThumbprint --encrypt $encryptingThumbprint --log-level debug
-```
-
-```
+PS> .\sestest generate --vmid $env:COMPUTERNAME --application-id contosoapp --sign $signingThumbprint --encrypt $encryptingThumbprint --token-file token.txt
 14:06:43.861 [Information] ---------------------------------------------
 14:06:43.861 [Information]   Software Entitlement Service Test Utility
 14:06:43.861 [Information] ---------------------------------------------
-14:06:43.966 [Debug] Virtual machine Id: machine-identifier
-14:06:43.977 [Debug] IP Address: 99.999.999.999
-14:06:43.977 [Debug] IP Address: ::9
-14:06:43.980 [Debug] IP Address: xx99::x99x:99x9:x99:9x9x%9
-14:06:43.980 [Debug] IP Address: 999.9.9.9
-14:06:43.982 [Debug] IP Address: 9999:x999:9999:999:x99x:99x9:x99:9x9x
-14:06:43.982 [Debug] IP Address: 9999:x999:9999:999:9999:9xx9:9xxx:9xx9
-14:06:43.985 [Debug] Application Id: contosoapp
-14:06:43.987 [Debug] Not Before: 2017-04-20T14:06
-14:06:43.989 [Debug] Not After: 2017-04-27T14:06
-14:06:44.165 [Debug] Raw token: {"alg":"RSA-OAEP","enc":"A256CBC-HS512","kid":"<thumbprint>","typ":
-"JWT"}.{"vmid":"machine-identifier","ip":["99.999.999.999","::9","xx99::x99x:99x9:x99:9x9x%9","999.
-9.9.9","9999:x999:9999:999:x99x:99x9:x99:9x9x","9999:x999:9999:999:9999:9xx9:9xxx:9xx9"],"app":"con
-tosoapp","nbf":1492654003,"exp":1493258803,"iat":1492654003,"iss":"https://batch.azure.com/software
--entitlement","aud":"https://batch.azure.com/software-entitlement"}
-14:06:44.172 [Information] Token: "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZDQkMtSFM1MTIiLCJraWQiOiI2
-... elided ...
-Ajt9tTffxB6lRlMxeXi25ejR-b4Kul34A3A3w"
+14:06:44.172 [Information] Token file: "token.txt"
 ```
 
-An encrypted token is significantly longer, in part due to information about the required key that's included within.
-In production, all tokens will be both signed and encrypted and we therefore encourage you to do all your testing with signed and encrypted tokens as well.
+Open `token.txt` in your favorite text editor; you'll see that the secured token is substantially longer than an unsecured one.
+
+As we did above, set the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN` to the generated token value:
+
+``` PowerShell
+PS> $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN = (get-content token.txt)
+```
+
+Testing with an encrypted token is useful because these are significantly longer, in part due to information about the required key that's included within. Note that your application doesn't need to do anything different with encrypted vs unencrypted tokens.
 
 ## Starting the test server
 
-The **server** mode of `sestest` provides an HTTPS endpoint that acts as a fully functioning software entitlement server that can be used during development and testing. The command has the following parameters:
+In production, Azure Batch provides a software entitlement server that will verify a software entitlement token is valid. It also validates that the compute node requesting verification of the token is the virtual machine to which the token was issued.
 
-| Parameter    | Required  | Definition                                                                                                                              |
-| ------------ | --------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| --connection | Mandatory | Thumbprint of the certificate to use with HTTPS.                                                                                        |
-| --sign       | Optional  | Thumbprint of the certificate used to sign tokens. <br/> If specified, only tokens signed with this certificate will be approved.       |
-| --encrypt    | Optional  | Thumbprint of the certificate used to encrypt tokens. <br/> If specified, only tokens encrypted with this certificate will be approved. |
-| --url        | Optional  | The URL at which the server should process requests <br/> Defaults to `https://localhost:4443`; must start with `https:`.               |
-| --log-level  | Optional  | Specify the level of logging output.<br/>One of *error*, *warning*, *information* or *debug*; defaults to *information*.                |
-| --log-file   | Optional  | Specify a file into which log messages should be written.                                                                               |
+Once your application has read the token from the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN`, it will call the software entitlement service to verify the token grants permission to use your application.
 
-You can see this documentation for yourself by running `sestest server --help` in your shell.
+The production software entitlement server only accepts connections from Azure Batch compute nodes. To enable your local development/test environment, the `server` mode of `sestest` provides an HTTPS endpoint that acts as a fully functioning server.
 
-Run the server with minimum parameters (just a connection certificate thumbprint):
+Open a new shell window and set the variable `$connectionThumbprint` to specify the certificate that should be used for HTTPS.
 
 ``` PowerShell
-.\sestest server --connection <thumbprint>
+PS> $connectionThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 ```
 
-The server will start up and wait for connections
+If your token was encrypted and/or secured, set the variables `$signingThumbprint` and `$encryptingThumbprint` to the same thumbprint values used earlier when the token was generated.
+
+``` PowerShell
+PS> $signingThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+PS> $encryptingThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+```
+
+Run the server:
+
+``` PowerShell
+PS> .\sestest server --connection $connectionThumbprint --sign $signingThumbprint --encrypt $encryptingThumbprint
+```
+
+The `--connection` option is mandatory because the server only works with an HTTPS connection. Omit the `--sign` and `--encrypt` options if you're not using secured tokens. For a full reference of all the available parameters for this mode, see [../src/sestest/readme.md](../src/sestest/readme.md).
+
+The server will start up and wait for connections.
 
 ```
 17:20:02.676 [Information] ---------------------------------------------
@@ -348,113 +156,33 @@ Now listening on: https://localhost:4443
 Application started. Press Ctrl+C to shut down.
 ```
 
-Using a web browser, connect to the server by entering the URL shown on the console.
+Test the server with a web browser, connecting to the server by entering the URL shown on the console.
 
 ![Browser](img/browser.png)
 
-* Only an HTTPS connection will work. The server does not listen for HTTP connections.
-* If you specified any kind of locally signed certificate, you will likely need to override security features of your browser to connect.
+Only an HTTPS connection will work. The server does not listen for HTTP connections. If you specified any kind of locally signed certificate, you will likely need to override security features of your browser to connect.
 
-Use Ctrl+C to shut down the server when no longer needed.
+Leave the server running in this shell window and return to the first. You may want to arrange the two shell windows so you can observe the one running the test server while you work in the original window.
 
+In your original shell window, define an environment variable with the URL shown by the server:
+
+``` PowerShell
+$env:AZ_BATCH_ACCOUNT_URL = "https://localhost:4443"
 ```
-Application is shutting down...
-17:20:09.008 [Debug] Hosting shutdown
-```
-
-***TODO: Checking the server is running***
 
 ## Verifying a token
 
-The `sesclient` console application allows you to submit a previously generated token to a software entitlement server and see the result. The command has the following parameters:
+To independently check a software entitlement token, use the `sesclient` console application. This allows you to check the consistency of the system without involving your application, helping you to identify the source of any issues. 
 
-| Parameter     | Required  | Definition                                                                                      |
-| ------------- | --------- | ----------------------------------------------------------------------------------------------- |
-| --url         | Mandatory | The url of the software entitlement server to contact for token verification.                   |
-| --thumbprint  | Mandatory | Thumbprint of a certificate expected in the server's SSL certificate chain                      |
-| --common-name | Mandatory | Common name of the certificate with the specified thumbprint                                    |
-| --token       | Mandatory | Software entitlement token to pass to the server <br/> Specify `-` to read the token from stdin |
-| --application | Mandatory | Name of the license ID being requested                                                          |
-
-Assuming a token previously generated into `token.txt`:
+With the environment variables previously defined (`AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN` and `AZ_BATCH_ACCOUNT_URL`), plus the certificate variable `$connectionThumbprint`, verify your token with this command:
 
 ``` PowerShell
-$token = get-content token.txt
-.\sesclient --url https://localhost:4443 --thumbprint XXXX --common-name localhost --token $token --application contosoapp
+PS> .\sesclient --url $env:AZ_BATCH_ACCOUNT_URL --thumbprint $connectionThumbprint --common-name localhost --token $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN --application contosoapp
 ```
 
-Alternatively, in `bash` or `CMD` you can use a redirect to feed the token in by specifying `-` for `--token`:
+## Troubleshooting
 
-``` sh
-sesclient --url https://localhost:4443 --thumbprint XXXX --common-name localhost --token - --application contosoapp < token.txt
-```
-
-## Bringing it all together
-
-Now that we've seen all of the individual components of the SDK, let's pull them all together into a full workflow.
-
-### Select your certificates
-
-Select the certificate or certificates you want to use &ndash; one to secure the connection to the server, one to sign each token and one to encrypt each token. Define three variables, one for each certificate (this makes it easier to reference the thumbprints later on):
-
-``` PowerShell
-$connectionThumbprint = "9X9X9X99X9X99X99X999XX9999XX99XX9999XX9X"
-$signingThumbprint    = "99999999XX999X999X999X999X9999X99XX99X99"
-$encryptingThumbprint = "99X9999XXX9XX9999XX99X9X9999X9X9999X999X"
-```
-
-### Generate a token
-
-Generate an encrypted and signed token for the application `contosoapp`:
-
-``` PowerShell
-.\sestest generate --vmid $env:COMPUTERNAME --application-id contosoapp --sign $signingThumbprint --encrypt $encryptingThumbprint --token-file token.txt
-```
-
-This uses the name of your current computer as the "virtual machine identifier" to embed in the token.
-
-```
-11:30:29.763 [Information] ---------------------------------------------
-11:30:29.783 [Information]   Software Entitlement Service Test Utility
-11:30:29.784 [Information] ---------------------------------------------
-11:30:30.091 [Information] Token file: "...elided...\token.txt"
-```
-You may want to inspect the token file using a text editor.
-
-### Start the software entitlement server
-
-Open a second shell window and define the same certificate variables as above. Start a test server:
-
-``` PowerShell
-.\sestest server --connection $connectionThumbprint --sign $signingThumbprint --encrypt $encryptingThumbprint
-```
-
-The server will start up:
-
-```
-11:44:48.705 [Information] ---------------------------------------------
-11:44:48.724 [Information]   Software Entitlement Service Test Utility
-11:44:48.725 [Information] ---------------------------------------------
-Hosting environment: Production
-Content root path: ... elided ...
-Now listening on: https://localhost:4443
-Application started. Press Ctrl+C to shut down.
-```
-
-The "Now listening on:" line gives you the URL needed for the next step.
-
-### Checking the token
-
-Back in your original shell window, use `sesclient` to verify the token:
-
-``` PowerShell
-$token = get-content token.txt
-.\sesclient --url https://localhost:4443 --thumbprint $connectionThumbprint --common-name localhost --token $token --application contosoapp
-```
-
-### Troubleshooting
-
-#### SSPI Errors
+### SSPI Errors
 
 If the connection certificate you selected previously isn't fully trusted, the `sestest server` window will show messages like this:
 
@@ -467,7 +195,7 @@ If the connection certificate you selected previously isn't fully trusted, the `
 
 One way to remedy this is to install the certificate as a **Trusted Root Certificate Authority**. Since this is a global configuration change on your machine, please make sure you are comfortable with the consequences before doing this.
 
-#### Using a self-signed certificate
+### Using a self-signed certificate
 
 If using a self-signed certificate, secure connection validation code in the native client library will prevent you from connecting. The error message reads:
 
@@ -487,11 +215,16 @@ ThrowIfCurlError(curl_easy_setopt(_curl.get(), CURLOPT_SSL_VERIFYPEER, /* 1 */ 0
 
 **NOTE**: Don't leave these checks disabled when you do the release build of your package. Failing to restore these checks will make it much easier for a man-in-the-middle attack.
 
-### Things to try
+## Suggested test cases
 
-Once you've successfully validated a token, here are some things to try:
+Once you have successfully integrated the software entitlement library into your application, test that your application does not run in each of the following cases:
 
-* Try a token that has already expired.
-* Try a token that is not yet enabled.
-* Try requesting entitlement for an application not listed in the token
-* Try requesting entitlement from a different machine on your network
+* When no value is defined for the environment `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN`.
+* When no value is defined for the environment variable `AZ_BATCH_ACCOUNT_URL`.
+* When the server identified by `AZ_BATCH_ACCOUNT_URL` is unresponsive.
+* When the server identified by `AZ_BATCH_ACCOUNT_URL` returns an error (5xx response code).
+* When the token has already expired.
+* When the token is not yet valid.
+* When the token does not enable your application but does enable other applications.
+* When the token enables your application on a machine with a different IP address.
+

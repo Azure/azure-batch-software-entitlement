@@ -47,17 +47,18 @@ These parameters are available for every mode
 
 Run `sestest server` to stand up a diagnostic software entitlement server, able to accept and verify tokens submitted by either the application. This allows full testing of the integration.
 
-**NOTE**: On Windows, ensure you run `sestest server` from an elevated command prompt - this is required for certificate credential exchange to work. An error like _"The credentials supplie
-d to the package were not recognized"_ may indicate that `sestest server` is running in at user level.
+**NOTE**: On Windows, ensure you run `sestest server` from an elevated shell window - this is required for certificate credential exchange to work. An error like _"The credentials supplied to the package were not recognized"_ may indicate that `sestest server` is running in a non-elevated shell window.
 
 
-| Parameter            | Required  | Definition                                                                                                                               |
-| -------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| --connection-cert    | Mandatory | Thumbprint of the certificate to pin for use with HTTPS                                                                                  |
-| --url                | Optional  | The URL at which the server should process requests (defaults to https://localhost:4443). <p/> **Validation**: must start with `https:`. |
-| --signing-cert       | Optional  | ***PLANNED*** Certificate thumbprint of the certificate used to sign the token                                                           |
-| --encryption-cert    | Optional  | ***PLANNED*** Certificate thumbprint of the certificate used to encrypt the token                                                        |
-| --exit-after-request | Optional  | ***PLANNED*** The server will exit after processing a single request.                                                                    |
+| Parameter            | Required  | Definition                                                                                                                              |
+| -------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| --connection         | Mandatory | Thumbprint of the certificate to use with HTTPS.                                                                                        |
+| --url                | Optional  | The URL at which the server should process requests <br/> Defaults to `https://localhost:4443`; must start with `https:`.               |
+| --sign               | Optional  | Thumbprint of the certificate used to sign tokens. <br/> If specified, only tokens signed with this certificate will be approved.       |
+| --encrypt            | Optional  | Thumbprint of the certificate used to encrypt tokens. <br/> If specified, only tokens encrypted with this certificate will be approved. |
+| --exit-after-request | Optional  | ***PLANNED*** The server will exit after processing a single request.                                                                   |
+
+You can see this documentation for yourself by running `sestest server --help` in your shell.
 
 The exit code for `sestest server` will be zero (**0**) for normal exit of the server, non-zero (typically **-1**) if there were any command line parameter issues, if the server could not start or if the server crashes.
 
@@ -65,16 +66,19 @@ The exit code for `sestest server` will be zero (**0**) for normal exit of the s
 
 The `generate` mode allows you to generate a software entitlement token with the details required for your test scenario.
 
-| Parameter     | Required  | Definition                                                                                                                                                                                                                |
-| ------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| --application | Mandatory | Unique identifier(s) for the application(s) to include (comma separated).                                                                                                                                                 |
-| --vmid        | Mandatory | Unique identifier for the Azure virtual machine                                                                                                                                                                           |
-| --not-before  | Optional  | The moment at which the token becomes active and the application is entitled to execute. <p/> **Format**: `hh:mm d-mmm-yyyy`; 24 hour clock; local time. <br/> **Default**: Now.                                          |
-| --not-after   | Optional  | The moment at which the token expires and the application is no longer entitled to execute. <p/> **Format**: `hh:mm d-mmm-yyyy`; 24 hour clock; local time. <br/> **Default**: 7 days (168 hours) after **--not-before**. |
-| --address     | Optional  | ***PLANNED*** The externally visible IP address of the machine entitled to execute the application. <p/> **Default**: The IP address of the current machine.                                                              |
-| --sign        | Optional  | ***PLANNED*** Certificate thumbprint of the certificate that should be used to sign the token.                                                                                                                            |
-| --encrypt     | Optional  | ***PLANNED*** Certificate thumbprint of the certificate that should be used to encrypt the token.                                                                                                                         |
-| --token-file  | Optional  | ***PLANNED***The name of a file into which the token will be written (token will be written to stdout otherwise).                                                                                                         |
+| Parameter     | Required  | Definition                                                                                                                                                                           |
+| ------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| --application | Mandatory | Unique identifier(s) for the application(s) to include (comma separated).                                                                                                            |
+| --vmid        | Mandatory | Unique identifier for the Azure virtual machine. If you are testing outside of Azure, we suggest you use the name of the machine (e.g. `%COMPUTERNAME%`).                            |
+| --not-before  | Optional  | The moment at which the token becomes active and the application is entitled to execute <br/> Format: 'yyyy-mm-ddThh-mm'; 24 hour clock; local time; defaults to now.                |
+| --not-after   | Optional  | The moment at which the token expires and the application is no longer entitled to execute <br/> Format: 'yyyy-mm-ddThh-mm'; 24 hour clock; local time; defaults to 7 days from now. |
+| --address     | Optional  | The IP addresses of the machine entitled to execute the application(s). <br/> Defaults to all the IP addresses of the current machine.                                               |
+| --sign        | Optional  | Thumbprint of the certificate to use for signing the token                                                                                                                           |
+| --encrypt     | Optional  | Thumbprint of the certificate to use for encryption of the token.                                                                                                                    |
+| --token-file  | Optional  | The name of a file into which the token will be written <br/> If not specified, the token will be shown in the log.                                                                  |
+
+You can see this documentation for yourself by running `sestest generate --help` in your console.
+
 
 The exit code for `sestest generate` will be zero (**0**) if a token was correctly generated, non-zero (typically **-1**) if there were any issues.
 

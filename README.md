@@ -10,6 +10,8 @@ The SDK includes the following:
 
 * Reference documentation on the [REST API](src/Microsoft.Azure.Batch.SoftwareEntitlement.Server), detailing the interaction between the library code used by the software application and the software entitlement server.
 
+* A [guide to compilation](docs/build-guide.md) for getting the supplied source ready for use.
+
 * A [full walk-through](docs/walk-through.md) to take new partners through the end to end process of compilation and use.
 
 * A [repository guide](docs/repository-guide.md) that identifies key documents, folders, scripts and classes for developers working with the code.
