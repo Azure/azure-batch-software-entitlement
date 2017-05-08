@@ -106,7 +106,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             EncryptingCredentials encryptingCredentials = null;
             if (encryptionCert != null)
             {
-                var encryptionKey = new X509SecurityKey(encryptionCert);
+                var encryptionKey = new X509SecurityKey(encryptionCert)
+                {
+                    // Custom provider to ensure we can unwrap the key properly when decrypting the token
+                    // See https://github.com/Azure/azure-batch-software-entitlement/issues/31
+                    CryptoProviderFactory = new UnwrappingCryptoProviderFactory()
+                };
+
                 encryptingCredentials = new EncryptingCredentials(
                     encryptionKey, SecurityAlgorithms.RsaOAEP, SecurityAlgorithms.Aes256CbcHmacSha512);
             }
@@ -146,7 +152,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var allCertificates = certificateStore.FindAll();
             var withPrivateKey = allCertificates.Where(c => c.HasPrivateKey).ToList();
             _logger.LogInformation("Found {count} certificates with private keys", withPrivateKey.Count);
-
 
             var rows = withPrivateKey.Select(DescribeCertificate).ToList();
             rows.Insert(0, new List<string>{ "Name", "Friendly Name", "Thumbprint"});

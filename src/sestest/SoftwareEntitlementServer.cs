@@ -96,7 +96,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             _logger.LogDebug("Creating security key for {purpose}", purpose);
-            var result = new X509SecurityKey(certificate);
+            var result = new X509SecurityKey(certificate)
+            {
+                // Custom provider to ensure we can unwrap the key properly when decrypting the token
+                // See https://github.com/Azure/azure-batch-software-entitlement/issues/31
+                CryptoProviderFactory = new UnwrappingCryptoProviderFactory()
+            };
 
             if (!result.HasPrivateKey)
             {
