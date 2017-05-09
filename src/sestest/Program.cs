@@ -147,7 +147,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var withPrivateKey = allCertificates.Where(c => c.HasPrivateKey).ToList();
             _logger.LogInformation("Found {count} certificates with private keys", withPrivateKey.Count);
 
-
             var rows = withPrivateKey.Select(DescribeCertificate).ToList();
             rows.Insert(0, new List<string>{ "Name", "Friendly Name", "Thumbprint"});
 
