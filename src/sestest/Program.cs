@@ -106,13 +106,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             EncryptingCredentials encryptingCredentials = null;
             if (encryptionCert != null)
             {
-                var encryptionKey = new X509SecurityKey(encryptionCert)
-                {
-                    // Custom provider to ensure we can unwrap the key properly when decrypting the token
-                    // See https://github.com/Azure/azure-batch-software-entitlement/issues/31
-                    CryptoProviderFactory = new UnwrappingCryptoProviderFactory()
-                };
-
+                var encryptionKey = new X509SecurityKey(encryptionCert);
                 encryptingCredentials = new EncryptingCredentials(
                     encryptionKey, SecurityAlgorithms.RsaOAEP, SecurityAlgorithms.Aes256CbcHmacSha512);
             }

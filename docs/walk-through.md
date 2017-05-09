@@ -215,6 +215,17 @@ ThrowIfCurlError(curl_easy_setopt(_curl.get(), CURLOPT_SSL_VERIFYPEER, /* 1 */ 0
 
 **NOTE**: Don't leave these checks disabled when you do the release build of your package. Failing to restore these checks will make it much easier for a man-in-the-middle attack.
 
+### Requested Operation is not supported
+
+If you get an error that reads:
+
+```
+15:24:39.774 [Error] The requested operation is not supported
+15:24:39.777 [Error] The requested operation is not supported (WindowsCryptographicException)
+```
+
+This means the certificate you've selected does not support encryption (this is a flag set on the certificate when it is created). You will need to select a different certificate.
+
 ## Suggested test cases
 
 Once you have successfully integrated the software entitlement library into your application, test that your application does not run in each of the following cases:

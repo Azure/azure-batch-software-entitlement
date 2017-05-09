@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 
 using FluentAssertions;
@@ -367,7 +368,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
         public class WithCertificates : TokenEnforcementTests
         {
-            [Theory]
+            [Theory(Skip = "Need a thumbprint specified in TestCaseKeys()")]
             [MemberData(nameof(TestCaseKeys))]
             public void WhenSignedByCertificate_ReturnsExpectedResult(SecurityKey key)
             {
@@ -383,7 +384,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 result.Value.Applications.Should().Contain(_contosoFinanceApp);
             }
 
-            [Theory]
+            [Theory(Skip = "Need a thumbprint specified in TestCaseKeys()")]
             [MemberData(nameof(TestCaseKeys))]
             public void WhenEncryptedByCertificate_ReturnsExpectedResult(SecurityKey key)
             {
@@ -402,7 +403,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public static IEnumerable<object[]> TestCaseKeys()
             {
                 // To use this test, change the next line by entering a thumbprint that exists on the test machine
-                var thumbprint = new CertificateThumbprint("6D4C8E23E9C70D78F402BE9422BF44CE5465CD1A");
+                var thumbprint = new CertificateThumbprint("<thumbprint-goes-here>");
                 var store = new CertificateStore();
                 var cert = store.FindByThumbprint("test", thumbprint);
                 if (!cert.HasValue)
@@ -410,10 +411,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                     throw new InvalidOperationException(cert.Errors.First());
                 }
 
-                var key = new X509SecurityKey(cert.Value)
-                {
-                   CryptoProviderFactory = new UnwrappingCryptoProviderFactory()
-                };
+                var key = new RsaSecurityKey(cert.Value.GetRSAPrivateKey().ExportParameters(true));
 
                 yield return new object[] { key };
             }

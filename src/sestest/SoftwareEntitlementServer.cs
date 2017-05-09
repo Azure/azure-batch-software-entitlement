@@ -57,8 +57,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         private void ConfigureServices(IServiceCollection services)
         {
-            var signingKey = CreateKey(_options.SigningCertificate, "signing");
-            var encryptingKey = CreateKey(_options.EncryptionCertificate, "encryption");
+            var signingKey = CreateX509SecurityKey(_options.SigningCertificate, "signing");
+            var encryptingKey = CreateRsaSecurityKey(_options.EncryptionCertificate, "encryption");
             var controllerOptions = new SoftwareEntitlementsController.Options(signingKey, encryptingKey);
             services.AddSingleton(controllerOptions);
         }
@@ -87,7 +87,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return hostFileInfo.Directory;
         }
 
-        private SecurityKey CreateKey(X509Certificate2 certificate, string purpose)
+        private RsaSecurityKey CreateRsaSecurityKey(X509Certificate2 certificate, string purpose)
         {
             if (certificate == null)
             {
@@ -95,21 +95,32 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 return null;
             }
 
-            _logger.LogDebug("Creating security key for {purpose}", purpose);
-            var result = new X509SecurityKey(certificate)
-            {
-                // Custom provider to ensure we can unwrap the key properly when decrypting the token
-                // See https://github.com/Azure/azure-batch-software-entitlement/issues/31
-                CryptoProviderFactory = new UnwrappingCryptoProviderFactory()
-            };
-
-            if (!result.HasPrivateKey)
+            if (!certificate.HasPrivateKey)
             {
                 _logger.LogDebug("Private key for {Certificate} is not available", certificate.Thumbprint);
                 return null;
             }
 
-            return result;
+            _logger.LogDebug("Creating security key for {purpose}", purpose);
+            return new RsaSecurityKey(certificate.GetRSAPrivateKey().ExportParameters(true));
+        }
+
+        private X509SecurityKey CreateX509SecurityKey(X509Certificate2 certificate, string purpose)
+        {
+            if (certificate == null)
+            {
+                _logger.LogDebug("No certificate specified for {purpose}", purpose);
+                return null;
+            }
+
+            if (!certificate.HasPrivateKey)
+            {
+                _logger.LogDebug("Private key for {Certificate} is not available", certificate.Thumbprint);
+                return null;
+            }
+
+            _logger.LogDebug("Creating security key for {purpose}", purpose);
+            return new X509SecurityKey(certificate);
         }
     }
 }
