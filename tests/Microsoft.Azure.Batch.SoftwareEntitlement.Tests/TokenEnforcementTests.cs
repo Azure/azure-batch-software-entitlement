@@ -411,7 +411,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                     throw new InvalidOperationException(cert.Errors.First());
                 }
 
-                var key = new RsaSecurityKey(cert.Value.GetRSAPrivateKey().ExportParameters(true));
+                var parameters = cert.Value.GetRSAPrivateKey().ExportParameters(includePrivateParameters: true);
+                var key = new RsaSecurityKey(parameters);
 
                 yield return new object[] { key };
             }

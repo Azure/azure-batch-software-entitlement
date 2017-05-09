@@ -102,7 +102,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             _logger.LogDebug("Creating security key for {purpose}", purpose);
-            return new RsaSecurityKey(certificate.GetRSAPrivateKey().ExportParameters(true));
+            var parameters = certificate.GetRSAPrivateKey().ExportParameters(includePrivateParameters: true);
+            return new RsaSecurityKey(parameters);
         }
 
         private X509SecurityKey CreateX509SecurityKey(X509Certificate2 certificate, string purpose)
