@@ -16,9 +16,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         // Logger used for program output
         private static ILogger _logger;
 
+        // Provider used for ASP.NET logging
+        private static ILoggerProvider _provider;
+
         // Store used to scan for and obtain certificates
         private static readonly CertificateStore _certificateStore = new CertificateStore();
-
+        
         public static int Main(string[] args)
         {
             var parser = new Parser(ConfigureParser);
@@ -113,7 +116,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             var entitlementWithIdentifier = entitlements.WithIdentifier($"entitlement-{Guid.NewGuid():D}");
 
-            var generator = new TokenGenerator(GlobalLogger.Logger, signingCredentials, encryptingCredentials);
+            var generator = new TokenGenerator(_logger, signingCredentials, encryptingCredentials);
             return generator.Generate(entitlementWithIdentifier);
         }
 
@@ -130,7 +133,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         private static int RunServer(ServerOptions options)
         {
-            var server = new SoftwareEntitlementServer(options, _logger);
+            var server = new SoftwareEntitlementServer(options, _logger, _provider);
             server.Run();
             return 0;
         }
@@ -207,33 +210,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="commandLine">Options selected by the user (if any).</param>
         private static void ConfigureLogging(CommandLineBase commandLine)
         {
-            var level = LogLevel.Information;
-            var parseFailed = false;
-
-            if (!string.IsNullOrEmpty(commandLine.LogLevel))
+            using (var log = new LoggerSetup())
             {
-                if (!Enum.TryParse(commandLine.LogLevel, true, out level))
+                var consoleLevel = log.TryParse(commandLine.LogLevel, "console", LogLevel.Information);
+                log.ToConsole(consoleLevel);
+
+                if (!string.IsNullOrEmpty(commandLine.LogFile))
                 {
-                    level = LogLevel.Information;
-                    parseFailed = true;
+                    var fileLevel = log.TryParse(commandLine.LogFileLevel, "file", consoleLevel);
+                    var file = new FileInfo(commandLine.LogFile);
+                    log.ToFile(file, fileLevel);
                 }
-            }
 
-            if (string.IsNullOrEmpty(commandLine.LogFile))
-            {
-                _logger = GlobalLogger.CreateLogger(level);
-            }
-            else
-            {
-                var file = new FileInfo(commandLine.LogFile);
-                _logger = GlobalLogger.CreateLogger(level, file);
-            }
-
-            _logger.LogHeader("Software Entitlement Service Test Utility");
-
-            if (parseFailed)
-            {
-                _logger.LogWarning("Failed to recognise log level '{level}'; defaulting to {default}", level, "Information");
+                _logger = log.Logger;
+                _provider = log.Provider;
+                _logger.LogHeader("Software Entitlement Service Test Utility");
             }
         }
 
