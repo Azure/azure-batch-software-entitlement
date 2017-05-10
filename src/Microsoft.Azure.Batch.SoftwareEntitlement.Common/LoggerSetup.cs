@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using Microsoft.Extensions.Logging;
@@ -13,9 +12,9 @@ using LogLevel = Microsoft.Extensions.Logging.LogLevel;
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
     /// <summary>
-    /// Configuration of logging
+    /// Utility class to configure logging for use
     /// </summary>
-    public class LoggerSetup : IDisposable
+    public class LoggerSetup
     {
         // Serilog configuration
         private readonly LoggerConfiguration _configuration = new LoggerConfiguration().MinimumLevel.Debug();
@@ -25,12 +24,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 
         // Reference to a root logger
         private readonly Lazy<ILogger> _logger;
-
-        /// <summary>
-        /// List of actions that were deferred until after our logging was fully configured
-        /// </summary>
-        /// <remarks>Used so we can log information about how logging was configured.</remarks>
-        private readonly List<Action<ILogger>> _pending = new List<Action<ILogger>>();
 
         /// <summary>
         /// Gets a reference to our root logger
@@ -53,7 +46,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// Configure logging to write to the console
         /// </summary>
         /// <param name="level">Desired logging level</param>
-        public LoggerSetup ToConsole(LogLevel level)
+        public LoggerSetup SendToConsole(LogLevel level)
         {
             const string consoleTemplate = "{Timestamp:HH:mm:ss.fff} [{Level}] {Message}{NewLine}";
 
@@ -68,7 +61,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// </summary>
         /// <param name="logFile">Destination log file.</param>
         /// <param name="level">Desired logging level</param>
-        public LoggerSetup ToFile(FileInfo logFile, LogLevel level)
+        public LoggerSetup SendToFile(FileInfo logFile, LogLevel level)
         {
             const string fileTemplate = "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level}] {Message}{NewLine}";
 
@@ -82,44 +75,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 logFile.FullName,
                 eventLevel,
                 outputTemplate: fileTemplate,
-                buffered: true, 
+                buffered: true,
                 flushToDiskInterval: TimeSpan.FromSeconds(10));
 
             return this;
-        }
-
-        public LogLevel TryParse(string level, string purpose, LogLevel fallback)
-        {
-            if (string.IsNullOrEmpty(level))
-            {
-                // Default to fallback if not specified
-                return fallback;
-            }
-
-            if (Enum.TryParse<LogLevel>(level, true, out var result))
-            {
-                // Successfully parsed the string
-                return result;
-            }
-
-            _pending.Add(
-                l => l.LogWarning("Failed to recognize {purpose} log level '{level}'; defaulting to {default}", purpose, level, fallback));
-
-            return fallback;
-        }
-
-        public void Dispose()
-        {
-            LogPending();
-        }
-
-        // Write any log messages that have been held over until configuration is complete
-        private void LogPending()
-        {
-            foreach (var p in _pending)
-            {
-                p(Logger);
-            }
         }
 
         private ILoggerProvider CreateProvider()
@@ -166,3 +125,5 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         }
     }
 }
+
+
