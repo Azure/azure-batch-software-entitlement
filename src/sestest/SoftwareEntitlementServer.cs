@@ -31,13 +31,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Initializes a new instance of the <see cref="SoftwareEntitlementServer"/> class
         /// </summary>
         /// <param name="options">Options to control our behavior.</param>
-        /// <param name="logger">Logger to use for diagnostic output.</param>
         /// <param name="provider">Provider required by ASP.NET.</param>
-        public SoftwareEntitlementServer(ServerOptions options, ILogger logger, ILoggerProvider provider)
+        public SoftwareEntitlementServer(ServerOptions options, ILoggerProvider provider)
         {
             _options = options;
-            _logger = logger;
             _provider = provider;
+            _logger = _provider.CreateLogger(nameof(SoftwareEntitlementServer));
         }
 
         /// <summary>

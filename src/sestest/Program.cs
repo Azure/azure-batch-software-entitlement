@@ -139,7 +139,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         private static int RunServer(ServerOptions options)
         {
-            var server = new SoftwareEntitlementServer(options, _logger, _provider);
+            var server = new SoftwareEntitlementServer(options, _provider);
             server.Run();
             return 0;
         }
