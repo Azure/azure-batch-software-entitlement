@@ -21,7 +21,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         // Store used to scan for and obtain certificates
         private static readonly CertificateStore _certificateStore = new CertificateStore();
-        
+
         public static int Main(string[] args)
         {
             var parser = new Parser(ConfigureParser);
@@ -31,17 +31,23 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             parseResult.WithParsed((CommandLineBase options) => ConfigureLogging(options));
 
-            var exitCode = parseResult.MapResult(
-                (GenerateCommandLine commandLine) => RunCommand(Generate, commandLine),
-                (ServerCommandLine commandLine) => RunCommand(Serve, commandLine),
-                (ListCertificatesCommandLine commandLine) => RunCommand(ListCertificates, commandLine),
-                (FindCertificateCommandLine commandLine) => RunCommand(FindCertificate, commandLine),
-                errors => 1);
-
-            if (Debugger.IsAttached)
+            int exitCode = -1;
+            if (_logger != null)
             {
-                Console.WriteLine("Press enter to exit.");
-                Console.ReadLine();
+                // Logging is ready for use, can try other things
+
+                exitCode = parseResult.MapResult(
+                    (GenerateCommandLine commandLine) => RunCommand(Generate, commandLine),
+                    (ServerCommandLine commandLine) => RunCommand(Serve, commandLine),
+                    (ListCertificatesCommandLine commandLine) => RunCommand(ListCertificates, commandLine),
+                    (FindCertificateCommandLine commandLine) => RunCommand(FindCertificate, commandLine),
+                    errors => 1);
+
+                if (Debugger.IsAttached)
+                {
+                    Console.WriteLine("Press enter to exit.");
+                    Console.ReadLine();
+                }
             }
 
             return exitCode;
@@ -151,7 +157,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             _logger.LogInformation("Found {count} certificates with private keys", withPrivateKey.Count);
 
             var rows = withPrivateKey.Select(DescribeCertificate).ToList();
-            rows.Insert(0, new List<string>{ "Name", "Friendly Name", "Thumbprint"});
+            rows.Insert(0, new List<string> { "Name", "Friendly Name", "Thumbprint" });
 
             _logger.LogTable(
                 LogLevel.Information,
@@ -210,22 +216,36 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="commandLine">Options selected by the user (if any).</param>
         private static void ConfigureLogging(CommandLineBase commandLine)
         {
-            using (var log = new LoggerSetup())
+            var logSetup = new LoggerSetup();
+
+            var consoleLevel = TryParse(commandLine.LogLevel, "console", LogLevel.Information);
+            var actualLevel = consoleLevel.HasValue ? consoleLevel.Value : LogLevel.Information;
+
+            logSetup.SendToConsole(actualLevel);
+
+            var fileLevel = TryParse(commandLine.LogFileLevel, "file", actualLevel);
+            if (!string.IsNullOrEmpty(commandLine.LogFile))
             {
-                var consoleLevel = log.TryParse(commandLine.LogLevel, "console", LogLevel.Information);
-                log.ToConsole(consoleLevel);
-
-                if (!string.IsNullOrEmpty(commandLine.LogFile))
+                if (fileLevel.HasValue)
                 {
-                    var fileLevel = log.TryParse(commandLine.LogFileLevel, "file", consoleLevel);
                     var file = new FileInfo(commandLine.LogFile);
-                    log.ToFile(file, fileLevel);
+                    logSetup.SendToFile(file, fileLevel.Value);
                 }
-
-                _logger = log.Logger;
-                _provider = log.Provider;
-                _logger.LogHeader("Software Entitlement Service Test Utility");
             }
+
+            var logger = logSetup.Logger;
+            logger.LogHeader("Software Entitlement Service Test Utility");
+            logger.LogErrors(consoleLevel.Errors);
+            logger.LogErrors(fileLevel.Errors);
+
+            if (!consoleLevel.HasValue || !fileLevel.HasValue)
+            {
+                // A problem during setup, don't share our config
+                return;
+            }
+
+            _logger = logger;
+            _provider = logSetup.Provider;
         }
 
         /// <summary>
@@ -276,12 +296,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         private static int LogErrors(IEnumerable<string> errors)
         {
-            foreach (var e in errors)
+            _logger.LogErrors(errors);
+            return -1;
+        }
+
+        private static Errorable<LogLevel> TryParse(string level, string purpose, LogLevel defaultLevel)
+        {
+            if (string.IsNullOrEmpty(level))
             {
-                _logger.LogError(e);
+                return Errorable.Success(defaultLevel);
             }
 
-            return -1;
+            if (Enum.TryParse<LogLevel>(level, true, out var result))
+            {
+                // Successfully parsed the string
+                return Errorable.Success(result);
+            }
+
+            return Errorable.Failure<LogLevel>(
+                $"Failed to recognize {purpose} log level '{level}'; valid choices are: error, warning, information, and debug.");
         }
     }
 }

@@ -58,5 +58,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             logger.Log(level, (EventId)0, "  " + heading, null, (s, ex) => s);
             logger.Log(level, (EventId)0, line, null, (s, ex) => s);
         }
+
+        /// <summary>
+        /// Log a series of errors
+        /// </summary>
+        /// <param name="logger">Actual logger to use.</param>
+        /// <param name="errors">Sequence of errors to log.</param>
+        public  static void LogErrors(this ILogger logger, IEnumerable<string> errors)
+        {
+            foreach (var e in errors)
+            {
+                logger.LogError(e);
+            }
+        }
     }
 }
