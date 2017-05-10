@@ -36,12 +36,13 @@ You should observe the request for entitlement being processed by the window run
 
 These parameters are available for every mode
 
-| Parameter   | Required | Definition                                                                                                        |
-| ----------- | -------- | ----------------------------------------------------------------------------------------------------------------- |
-| --log-level | Optional | Specify the level of logging output (one of error, warning, information or debug). <p/> **Default**: Information. |
-| --log-file  | Optional | Sends all log messages into a file for later review.                                                              |
-| --help      | Optional | Display this help screen.                                                                                         |
-| --version   | Optional | Display version information.                                                                                      |
+| Parameter        | Required | Definition                                                                                                                 |
+| ---------------- | -------- | -------------------------------------------------------------------------------------------------------------------------- |
+| --log-level      | Optional | Specify the level of logging output (one of error, warning, information or debug). <p/> **Default**: Information.          |
+| --log-file       | Optional | Sends all log messages into a file for later review.                                                                       |
+| --log-file-level | Optional | Specify the level of logging output to the log file (one of error, warning, information or debug; defaults to --log-level) |
+| --help           | Optional | Display this help screen.                                                                                                  |
+| --version        | Optional | Display version information.                                                                                               |
 
 ## Standalone server
 

@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -12,8 +11,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server
 {
     public class Startup
     {
-        public Startup(IHostingEnvironment env)
+        private readonly ILoggerProvider _provider;
+
+        public Startup(IHostingEnvironment env, ILoggerProvider provider)
         {
+            _provider = provider;
             var builder = new ConfigurationBuilder()
                 .SetBasePath(env.ContentRootPath)
                 .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
@@ -29,14 +31,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server
         {
             services.AddMvc();
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.TryAddSingleton(GlobalLogger.Logger);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         [SuppressMessage("Redundancy", "RCS1163:Unused parameter.")]
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddProvider(GlobalLogger.Provider);
+            loggerFactory.AddProvider(_provider);
             app.UseDefaultFiles();
             app.UseStaticFiles();
             app.UseMvc();

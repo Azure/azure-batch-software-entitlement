@@ -1,6 +1,4 @@
 ﻿using FluentAssertions;
-using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
-using Microsoft.Extensions.Logging;
 using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
@@ -12,14 +10,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
         // Server options for testing
         private readonly ServerCommandLine _commandLine = new ServerCommandLine();
-
-        // Fake logger for testing
-        private readonly FakeLogger _logger = new FakeLogger();
-
-        public ServerOptionBuilderTests()
-        {
-            GlobalLogger.CreateLogger(LogLevel.Debug);
-        }
 
         [Fact]
         public void Build_WithEmptyServerUrl_DoesNotReturnValue()

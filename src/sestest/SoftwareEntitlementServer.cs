@@ -5,7 +5,6 @@ using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Server.Kestrel;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
-using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,15 +24,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         // Logger used for diagnostics
         private readonly ILogger _logger;
 
+        // Provider used to make more loggers
+        private readonly ILoggerProvider _provider;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SoftwareEntitlementServer"/> class
         /// </summary>
         /// <param name="options">Options to control our behavior.</param>
-        /// <param name="logger">Logger to use for diagnostic output.</param>
-        public SoftwareEntitlementServer(ServerOptions options, ILogger logger)
+        /// <param name="provider">Provider required by ASP.NET.</param>
+        public SoftwareEntitlementServer(ServerOptions options, ILoggerProvider provider)
         {
             _options = options;
-            _logger = logger;
+            _provider = provider;
+            _logger = _provider.CreateLogger(nameof(SoftwareEntitlementServer));
         }
 
         /// <summary>
@@ -61,6 +64,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var encryptingKey = CreateRsaSecurityKey(_options.EncryptionCertificate, "encryption");
             var controllerOptions = new SoftwareEntitlementsController.Options(signingKey, encryptingKey);
             services.AddSingleton(controllerOptions);
+            services.AddSingleton(_logger);
+            services.AddSingleton(_provider);
         }
 
         private void ConfigureKestrel(KestrelServerOptions options)
@@ -78,7 +83,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Find our content directory for static content
         /// </summary>
-        /// <remarks>Does not include the wwwroot part of the path.</remarks>
+        /// <remarks>Does not include the "wwwroot" part of the path.</remarks>
         /// <returns>Information about the directory to use.</returns>
         private static DirectoryInfo FindContentDirectory()
         {
