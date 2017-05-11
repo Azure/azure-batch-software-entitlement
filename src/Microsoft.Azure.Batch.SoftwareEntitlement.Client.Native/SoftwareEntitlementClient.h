@@ -41,9 +41,9 @@ public:
 
     virtual ~Entitlement();
 
-    const std::string& Id();
+    const std::string& Id() const;
 
-    const std::string& VmId();
+    const std::string& VmId() const;
 };
 
 
@@ -53,10 +53,14 @@ public:
 //
 std::unique_ptr<Entitlement> GetEntitlement(
     const std::string& url,
-    const std::string& ssl_cert_thumbprint,
-    const std::string& ssl_cert_common_name,
     const std::string& entitlement_token,
     const std::string& requested_entitlement
+);
+
+
+void AddSslCertificate(
+    const std::string& ssl_cert_thumbprint,
+    const std::string& ssl_cert_common_name
 );
 
 }
