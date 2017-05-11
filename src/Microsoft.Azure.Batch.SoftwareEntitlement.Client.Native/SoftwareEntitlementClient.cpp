@@ -5,6 +5,7 @@
 #include <sstream>
 #include <vector>
 #include <cstdint>
+#include <cstring>
 #include <curl/curl.h>
 #include <openssl/bio.h>
 #include <openssl/err.h>
@@ -45,6 +46,56 @@ namespace {
 
 std::mutex s_lock;
 
+typedef std::array<std::uint8_t, 20> SHA256Thumbprint;
+struct CertInfo
+{
+    SHA256Thumbprint thumbprint;
+    std::string common_name;
+};
+
+//
+// Published Microsoft Intermediate Certificates from https://www.microsoft.com/pki/mscorp/cps/
+//
+CertInfo s_Microsoft_IT_SSL_SHA2 = {
+    { 0x97,0xef,0xf3,0x02,0x86,0x77,0x89,0x4b,0xdd,0x4f,0x9a,0xc5,0x3f,0x78,0x9b,0xee,0x5d,0xf4,0xad,0x86 } ,
+    "Microsoft IT SSL SHA2"
+};
+
+CertInfo s_Microsoft_IT_SSL_SHA2_2 = {
+    { 0x94,0x8e,0x16,0x52,0x58,0x62,0x40,0xd4,0x53,0x28,0x7a,0xb6,0x9c,0xae,0xb8,0xf2,0xf4,0xf0,0x21,0x17 },
+    "Microsoft IT SSL SHA2"
+};
+
+CertInfo s_Microsoft_IT_TLS_CA_1 = {
+    { 0x41,0x7e,0x22,0x50,0x37,0xfb,0xfa,0xa4,0xf9,0x57,0x61,0xd5,0xae,0x72,0x9e,0x1a,0xea,0x7e,0x3a,0x42 },
+    "Microsoft IT TLS CA 1"
+};
+
+CertInfo s_Microsoft_IT_TLS_CA_2 = {
+    { 0x54,0xd9,0xd2,0x02,0x39,0x08,0x0c,0x32,0x31,0x6e,0xd9,0xff,0x98,0x0a,0x48,0x98,0x8f,0x4a,0xdf,0x2d },
+    "Microsoft IT TLS CA 2"
+};
+
+CertInfo s_Microsoft_IT_TLS_CA_4 = {
+    { 0x8a,0x38,0x75,0x5d,0x09,0x96,0x82,0x3f,0xe8,0xfa,0x31,0x16,0xa2,0x77,0xce,0x44,0x6e,0xac,0x4e,0x99 },
+    "Microsoft IT TLS CA 4"
+};
+
+CertInfo s_Microsoft_IT_TLS_CA_5 = {
+    { 0xad,0x89,0x8a,0xc7,0x3d,0xf3,0x33,0xeb,0x60,0xac,0x1f,0x5f,0xc6,0xc4,0xb2,0x21,0x9d,0xdb,0x79,0xb7 },
+    "Microsoft IT TLS CA 5"
+};
+
+std::array<CertInfo, 6> s_microsoftIntermediateCerts = {
+    s_Microsoft_IT_SSL_SHA2,
+    s_Microsoft_IT_SSL_SHA2_2,
+    s_Microsoft_IT_TLS_CA_1,
+    s_Microsoft_IT_TLS_CA_2,
+    s_Microsoft_IT_TLS_CA_4,
+    s_Microsoft_IT_TLS_CA_5
+};
+
+std::vector<CertInfo> s_sslCerts;
 
 std::string ExtractValue(const std::string& response, const std::string& key)
 {
@@ -112,9 +163,20 @@ public:
         _cert.swap(rhs._cert);
     }
 
-    bool operator !=(std::nullptr_t)
+    bool MatchesThumbprint(const SHA256Thumbprint& thumb) const
     {
-        return _cert != nullptr;
+        if (_cert == nullptr)
+        {
+            return false;
+        }
+
+        auto myThumb = Thumbprint();
+        if (myThumb.size() != thumb.size())
+        {
+            return false;
+        }
+
+        return std::memcmp(thumb.data(), myThumb.data(), thumb.size()) == 0;
     }
 
     std::string CommonName() const
@@ -163,10 +225,11 @@ std::string StripNonHexThumbprintDigits(const std::string& input)
 }
 
 
-std::vector<std::uint8_t> ThumbprintToBinary(const std::string& thumbprint)
+SHA256Thumbprint ThumbprintToBinary(const std::string& thumbprint)
 {
     std::string digits = StripNonHexThumbprintDigits(thumbprint);
-    if (digits.size() != 40)
+    SHA256Thumbprint sha256Thumb;
+    if (digits.size() != sha256Thumb.size() * 2)
     {
         throw Exception("Malformed thumbprint: '" + digits + "'");
     }
@@ -174,17 +237,12 @@ std::vector<std::uint8_t> ThumbprintToBinary(const std::string& thumbprint)
     //
     // Convert to binary representation of thumbprint.
     //
-    std::vector<std::uint8_t> input;
-    input.reserve(EVP_MAX_MD_SIZE);
-
-    size_t pos = 0;
-    while (pos < digits.size() && input.size() < EVP_MAX_MD_SIZE)
+    for (size_t digit = 0; digit < sha256Thumb.size(); digit++)
     {
-        input.push_back(static_cast<std::uint8_t>(std::stoul(digits.substr(pos, 2), 0, 16)));
-        pos += 2;
+        sha256Thumb[digit] = static_cast<std::uint8_t>(std::stoul(digits.substr(digit * 2, 2), 0, 16));
     }
 
-    return input;
+    return sha256Thumb;
 }
 
 
@@ -429,23 +487,46 @@ public:
         ThrowIfCurlError(curl_easy_perform(_curl.get()));
     }
 
-    X509 FindCertificate(const std::string& thumbprint)
+    //
+    // Perform additional certificate checks:
+    // - Find any one of the certificates in the s_sslCerts vector by thumbprint.
+    // - Verify that such cetificate has the matching common name.
+    //
+    void VerifyIntermediateCertificate()
     {
-        std::vector<std::uint8_t> thumb = ThumbprintToBinary(thumbprint);
-
         curl_certinfo* info;
         ThrowIfCurlError(curl_easy_getinfo(_curl.get(), CURLINFO_CERTINFO, &info));
 
         for (int i = 0; i < info->num_of_certs; i++)
         {
             X509 cert = GetCertificate(info->certinfo[i]);
-            if (cert != nullptr && cert.Thumbprint() == thumb)
+
+            for (const auto& validCert : s_sslCerts)
             {
-                return cert;
+                if (!cert.MatchesThumbprint(validCert.thumbprint))
+                {
+                    continue;
+                }
+
+                auto certName = cert.CommonName();
+                if (certName != validCert.common_name)
+                {
+                    //
+                    // Thumbprint match, but common name mismatch.
+                    //
+                    throw Exception(
+                        "Certificate common name does not match, expected '" +
+                        validCert.common_name +
+                        "' but got '" +
+                        certName +
+                        "'");
+                }
+
+                return;
             }
         }
 
-        throw Exception("Certificate with thumbprint '" + thumbprint + "' not found in certificate chain.");
+        throw Exception("None of the candidate certificates were found in certificate chain.");
     }
 
     std::unique_ptr<Entitlement> GetEntitlement()
@@ -486,12 +567,12 @@ Entitlement::~Entitlement()
 {
 }
 
-const std::string& Entitlement::Id()
+const std::string& Entitlement::Id() const
 {
     return m_id;
 }
 
-const std::string& Entitlement::VmId()
+const std::string& Entitlement::VmId() const
 {
     return m_vmId;
 }
@@ -499,6 +580,7 @@ const std::string& Entitlement::VmId()
 
 int Init()
 {
+    s_sslCerts.insert(s_sslCerts.end(), s_microsoftIntermediateCerts.cbegin(), s_microsoftIntermediateCerts.cend());
     return curl_global_init(CURL_GLOBAL_ALL);
 }
 
@@ -515,11 +597,8 @@ void Cleanup()
 //
 std::unique_ptr<Entitlement> GetEntitlement(
     const std::string& url,
-    const std::string& ssl_cert_thumbprint,
-    const std::string& ssl_cert_common_name,
     const std::string& entitlement_token,
-    const std::string& requested_entitlement
-    )
+    const std::string& requested_entitlement)
 {
     std::lock_guard<std::mutex> lock(s_lock);
 
@@ -536,25 +615,22 @@ std::unique_ptr<Entitlement> GetEntitlement(
     Curl curl;
     curl.Post(url + "/softwareEntitlements/?apiVersion=2017-01-01.3.1", entitlement_token, requested_entitlement);
 
-    //
-    // Perform additional certificate checks:
-    // - Find the certificate identified by 'ssl_cert_thumbprint' in the certificate chain.
-    // - Verify that the cetificate has 'ssl_cert_common_name' as common name.
-    //
-    auto cert = curl.FindCertificate(ssl_cert_thumbprint);
-    std::string actual = cert.CommonName();
-    if (ssl_cert_common_name != actual)
-    {
-        throw Exception(
-            "Certificate common name does not match, expected '" +
-            ssl_cert_common_name +
-            "' but got '" +
-            actual +
-            "'");
-    }
+    curl.VerifyIntermediateCertificate();
 
     return curl.GetEntitlement();
 }
+
+
+void AddSslCertificate(
+    const std::string& ssl_cert_thumbprint,
+    const std::string& ssl_cert_common_name)
+{
+    std::lock_guard<std::mutex> lock(s_lock);
+
+    CertInfo info = { ThumbprintToBinary(ssl_cert_thumbprint), ssl_cert_common_name };
+    s_sslCerts.push_back(info);
+}
+
 
 }
 }

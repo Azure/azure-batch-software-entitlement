@@ -77,15 +77,18 @@ int main(int argc, char** argv)
         if (token == "-")
         {
             //
-            // Read the thumbprint from stdin.
+            // Read the token from stdin.
             //
             std::getline(std::cin, token);
         }
 
+        Microsoft::Azure::Batch::SoftwareEntitlement::AddSslCertificate(
+            parameters.find("--thumbprint")->second,
+            parameters.find("--common-name")->second
+        );
+
         auto entitlement = Microsoft::Azure::Batch::SoftwareEntitlement::GetEntitlement(
             parameters.find("--url")->second,
-            parameters.find("--thumbprint")->second,
-            parameters.find("--common-name")->second,
             token,
             parameters.find("--application")->second
         );
