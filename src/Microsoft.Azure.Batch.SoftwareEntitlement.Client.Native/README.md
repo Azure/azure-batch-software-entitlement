@@ -1,6 +1,6 @@
 # Software entitlement service native client library
 
-This static library implements the client-side logic for verifying a software entitlement token provides a particular entitlement.
+This static library implements the client-side logic for verifying a software entitlement token provides a particular entitlement.  By default, it validates the connection to the server against a list of well-known Microsoft intermediate certificates, but supports additional certificates programatically.
 
 **This is draft documentation subject to change.**
 
@@ -86,10 +86,17 @@ if (err != 0)
 
 try
 {
+    //
+    // During development, it is useful to be able to validate against custom SSL
+    // certificates.  This logic would generally be removed in official releases.
+    //
+    Microsoft::Azure::Batch::SoftwareEntitlement::AddSslCertificate(
+        ssl_cert_thumbprint,
+        ssl_cert_common_name
+    );
+
     auto entitlement = Microsoft::Azure::Batch::SoftwareEntitlement::GetEntitlement(
         url,
-        ssl_cert_thumbprint,
-        ssl_cert_common_name,
         entitlement_token,
         requested_entitlement
     );
@@ -107,7 +114,7 @@ Microsoft::Azure::Batch::SoftwareEntitlement::Cleanup();
 ```
 
 ## Limitations
-The root certificate in the server's SSL certificate chain cannot be referenced by the ```ssl_cert_thumbprint```.
+The root certificate in the server's SSL certificate chain cannot be referenced by the ```ssl_cert_thumbprint``` specified in the call to ```AddSslCertificate```.
 
 ## Troubleshooting
 
