@@ -1,6 +1,6 @@
 # Software entitlement service native client library
 
-This static library implements the client-side logic for verifying a software entitlement token provides a particular entitlement.  By default, the connection to the server is validated against a list of well-known long-lived Microsoft intermediate certificates, but supports additional certificates programatically.
+This static library implements the client-side logic for verifying a software entitlement token provides a particular entitlement.  By default, it validates the connection to the server against a list of well-known long-lived Microsoft intermediate certificates, but supports additional certificates programatically.
 
 **This is draft documentation subject to change.**
 
