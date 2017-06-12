@@ -41,20 +41,32 @@ For 64-bit builds:
 ```
 
 ## Configuring libcurl to use OpenSSL
-In order to validate an intermediate certificate in the server's certificate chain (not just the server's certificate), configure libcurl to use OpenSSL as the SSL library.
+In order to validate an intermediate certificate in the server's certificate chain (not just the server's certificate), configure libcurl to use OpenSSL as the SSL library.  Note that for our usage of libcurl, we do not require ZLIB or LIBSSH2, so we remove those dependencies too.
 
 In your vcpkg git repository clone, apply the following patch:
 
 ```
+diff --git a/ports/curl/CONTROL b/ports/curl/CONTROL
+index 9ae7e7e5..e6fe237d 100644
+--- a/ports/curl/CONTROL
++++ b/ports/curl/CONTROL
+@@ -1,4 +1,4 @@
+ Source: curl
+ Version: 7.51.0-3
+-Build-Depends: zlib, openssl, libssh2
++Build-Depends: openssl
+ Description: A library for transferring data with URLs
 diff --git a/ports/curl/portfile.cmake b/ports/curl/portfile.cmake
-index 35bfbd5..ac3b57f 100644
+index 35bfbd59..0191abb2 100644
 --- a/ports/curl/portfile.cmake
 +++ b/ports/curl/portfile.cmake
-@@ -43,6 +43,7 @@ else()
+@@ -43,6 +43,9 @@ else()
              -DBUILD_TESTING=OFF
              -DBUILD_CURL_EXE=OFF
              -DENABLE_MANUAL=OFF
 +            -DCMAKE_USE_OPENSSL=ON
++            -DCURL_ZLIB=OFF
++            -DCMAKE_USE_LIBSSH2=OFF
              -DCURL_STATICLIB=${CURL_STATICLIB}
          OPTIONS_DEBUG
              -DENABLE_DEBUG=ON
@@ -118,6 +130,20 @@ Microsoft::Azure::Batch::SoftwareEntitlement::Cleanup();
 
 ## Limitations
 When calling ```AddSslCertificate```, you must not specify the thumbprint and common name of the root certificate of the server's SSL certificate chain.  This is because OpenSSL does not include the root certificate in the list of certificates.
+
+## Attribution
+This project depends on libcurl and OpenSSL.  As such, the following licenses apply and must be included in projects integrating this library:
+
+| Open Source Project | Author | License URL |
+| ------------------- | ------ | ----------- |
+| [libcurl](http://curl.haxx.se) | [Daniel Stenberg](mailto:daniel@haxx.se) | <https://curl.haxx.se/docs/copyright.html> |
+| [OpenSSL](http://www.openssl.org) | [OpenSSL Project](http://www.openssl.org/) | <https://www.openssl.org/source/license.html> |
+| [JSON for Modern C++](https://github.com/nlohmann/json) | [Niels Lohmann](http://nlohmann.me) | <https://github.com/nlohmann/json/blob/develop/LICENSE.MIT> |
+
+The OpenSSL license requires the following acknowledgements:
+
+"This product includes software developed by the OpenSSL Project for use in the OpenSSL Toolkit (http://www.openssl.org)"  
+"This product includes cryptographic software written by Eric Young (eay@cryptsoft.com)"
 
 ## Troubleshooting
 
