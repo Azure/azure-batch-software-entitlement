@@ -151,4 +151,7 @@ The OpenSSL license requires the following acknowledgements:
 
 Cannot open include file: 'curl/curl.h' may indicate that you don't have the appropriate version of [**libcurl**](https://curl.haxx.se/libcurl/c/libcurl.html) installed for your target platform. (This can happen if you install the x64 version of `libcurl` but then ask for an `x86` build.)
 
-**Solution**: Install `libcurl` for your target platform.
+**Possible Solutions**: 1) Install `libcurl` for your target platform.
+			2) Check that 'vcpkg' has been "integrated" correctly as per 	https://github.com/Microsoft/vcpkg/blob/master/README.md
+
+
