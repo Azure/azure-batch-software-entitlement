@@ -10,11 +10,11 @@ The repository contains the following documentation:
 | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | [Repository guide](repository-guide.md)                                                        | This file, a summary of the content of this repository.                                                     |
 | [Walk-through](walk-through.md)                                                                | An introductory walk-through of the various components of the SDK, demonstrating their use and interaction. |
-| [Native library readme](src\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native\README.md) | Purpose and compilation of the embeddable native library.                                                   |
-| [Source readme](src\readme.md)                                                                 | Development notes for the code of the SDK.                                                                  |
-| [Native client readme](src\sesclient.native\README.md)                                         | Guidance for using the native client.                                                                       |
-| [Test tool readme](src\sestest\readme.md)                                                      | Guidance for using the testing tool.                                                                        |
-| [Rest API documentation](src\Microsoft.Azure.Batch.SoftwareEntitlement.Server\readme.md)       | Documentation for the REST API.                                                                             |
+| [Native library readme](..\src\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native\README.md) | Purpose and compilation of the embeddable native library.                                                   |
+| [Source readme](..\src\readme.md)                                                                 | Development notes for the code of the SDK.                                                                  |
+| [Native client readme](..\src\sesclient.native\README.md)                                         | Guidance for using the native client.                                                                       |
+| [Test tool readme](..\src\sestest\readme.md)                                                      | Guidance for using the testing tool.                                                                        |
+| [Rest API documentation](..\src\Microsoft.Azure.Batch.SoftwareEntitlement.Server\readme.md)       | Documentation for the REST API.                                                                             |
 
 ## Scripts
 
