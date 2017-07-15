@@ -71,11 +71,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         }
 
         [Fact]
-        public void Build_WithEmptyAudience_HasErrorForAudience()
+        public void Build_WithEmptyAudience_HasDefaultValueForAudience()
         {
             _commandLine.Audience = string.Empty;
             var options = ServerOptionBuilder.Build(_commandLine);
-            options.Errors.Should().Contain(e => e.Contains("audience"));
+            options.Value.Audience.Should().NotBeNullOrEmpty();
         }
     }
 }
