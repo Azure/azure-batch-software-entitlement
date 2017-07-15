@@ -52,7 +52,7 @@ public:
 // entitlement validation failure.
 //
 std::unique_ptr<Entitlement> GetEntitlement(
-    const std::string& url,
+    std::string& url,
     const std::string& entitlement_token,
     const std::string& requested_entitlement
 );
