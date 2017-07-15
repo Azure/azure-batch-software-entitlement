@@ -53,12 +53,27 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             [FromBody] SoftwareEntitlementRequest entitlementRequest,
             [FromQuery(Name = "api-version")] string apiVersion)
         {
+            if (!IsValidApiVersion(apiVersion))
+            {
+                _logger.LogError(
+                    "Selected api-version of {apiversion} is not supported; denying entitlement request.",
+                    apiVersion);
+
+                var error = new SoftwareEntitlementFailureResponse
+                {
+                    Code = "EntitlementDenied",
+                    Message = new ErrorMessage($"Entitlement for {entitlementRequest.ApplicationId} was denied.")
+                };
+
+                return StatusCode(403, error);
+            }
+
             _logger.LogInformation(
                 "Selected api-version is {apiversion}",
                 apiVersion);
 
             _logger.LogInformation(
-                "Request entitlement for {application}",
+                "Requesting entitlement for {application}",
                 entitlementRequest.ApplicationId);
             _logger.LogDebug("Request token: {token}", entitlementRequest.Token);
 
@@ -94,6 +109,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             };
 
             return Ok(response);
+        }
+
+        /// <summary>
+        /// Check to see whether the specified <c>api-version</c> is valid for software entitlements
+        /// </summary>
+        /// <param name="apiVersion">Api version from the query parameter</param>
+        /// <returns>True if it is valid, false otherwise.</returns>
+        private bool IsValidApiVersion(string apiVersion)
+        {
+            // Check all the valid apiVersions
+            // TODO: Once this list passes three or four items, use a HashSet<string> to do the check more efficiently
+            return apiVersion.Equals("2017-05-01.5.0", StringComparison.Ordinal)
+                   || apiVersion.Equals("2017-06-01.5.1", StringComparison.Ordinal);
         }
 
         public class Options
