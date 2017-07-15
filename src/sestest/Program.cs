@@ -57,7 +57,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Generation mode - create a new token for testing
         /// </summary>
         /// <param name="commandLine">Options from the command line.</param>
-        /// 
         /// <returns>Exit code to return from this process.</returns>
         public static int Generate(GenerateCommandLine commandLine)
         {

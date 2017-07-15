@@ -34,7 +34,7 @@ class Entitlement
 {
 private:
     std::string m_id;
-    std::string m_vmId;
+    std::string m_vmid;
 
 public:
     Entitlement(const std::string& response);
