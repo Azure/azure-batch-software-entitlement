@@ -463,7 +463,7 @@ public:
             }
         } headers;
 
-        headers.value = curl_slist_append(nullptr, "Content-Type: application/json");
+        headers.value = curl_slist_append(nullptr, "Content-Type: application/json; odata=minimalmetadata");
 
         if (headers.value == nullptr)
         {
@@ -596,7 +596,7 @@ void Cleanup()
 // providing details of entitlement validation failure.
 //
 std::unique_ptr<Entitlement> GetEntitlement(
-    const std::string& url,
+    std::string& url,
     const std::string& entitlement_token,
     const std::string& requested_entitlement)
 {
@@ -607,13 +607,28 @@ std::unique_ptr<Entitlement> GetEntitlement(
         throw Exception("Invalid input URL: must start with \"https://\"");
     }
 
-    if (url.find("/", 8) != std::string::npos)
+    if (url.find('?') != std::string::npos)
     {
-        throw Exception("Invalid input URL: should not include any slashes after the hostname.");
+        throw Exception("Invalid input URL: must not contain any query params");
+    }
+
+    size_t pos = url.find('/', 8);
+    if (pos < url.length() - 1)
+    {
+        pos = url.find('/', pos + 1);
+        if (pos < url.length() - 1)
+        {
+            throw Exception("Invalid input URL: should not include more than one slash after the hostname (excluding trailing slash).");
+        }
+    }
+
+    if (pos == std::string::npos)
+    {
+        url += '/';
     }
 
     Curl curl;
-    curl.Post(url + "/softwareEntitlements/?apiVersion=2017-01-01.3.1", entitlement_token, requested_entitlement);
+    curl.Post(url + "softwareEntitlements?api-version=2017-05-01.5.0", entitlement_token, requested_entitlement);
 
     curl.VerifyIntermediateCertificate();
 
