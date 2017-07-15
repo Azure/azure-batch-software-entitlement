@@ -3,6 +3,10 @@ using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 {
+    /// <summary>
+    /// Negative tests to ensure the <see cref="ServerOptionBuilder"/> correctly reports error 
+    /// cases for each possible parameter
+    /// </summary>
     public class ServerOptionBuilderTests
     {
         // One thumbprint string to use for testing
@@ -64,6 +68,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             _commandLine.ConnectionCertificateThumbprint = _thumbprint;
             var options = ServerOptionBuilder.Build(_commandLine);
             options.Errors.Should().Contain(e => e.Contains("connection"));
+        }
+
+        [Fact]
+        public void Build_WithEmptyAudience_HasErrorForAudience()
+        {
+            _commandLine.Audience = string.Empty;
+            var options = ServerOptionBuilder.Build(_commandLine);
+            options.Errors.Should().Contain(e => e.Contains("audience"));
         }
     }
 }

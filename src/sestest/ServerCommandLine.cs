@@ -11,8 +11,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option("sign", HelpText = "Thumbprint of the certificate used to sign tokens (optional; if specified, all tokens must be signed).")]
         public string SigningCertificateThumbprint { get; set; }
 
-        //TODO: Document where this looks to find the certificate (in a cross platform way)
-        [Option("encrypt", HelpText = "Thumbprint of the certificate used to encrypt tokens (optional; if specified, all tokens must be encrypted.).")]
+        [Option("encrypt", HelpText = "Thumbprint of the certificate used to encrypt tokens (optional; if specified, all tokens must be encrypted).")]
         public string EncryptionCertificateThumbprint { get; set; }
 
         [Option("connection", HelpText = "Thumbprint of the certificate to pin for use with HTTPS (mandatory).")]
@@ -20,5 +19,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         [Option("url", HelpText = "The URL at which the server should process requests (defaults to https://localhost:4443; must start with 'https:').")]
         public string ServerUrl { get; set; } = "https://localhost:4443";
+
+        [Option("audience", HelpText = "Audience to which all tokens must be addressed (optional; defaults to https://batch.azure.test/software-entitlement).")]
+        public string Audience { get; set; }
     }
 }

@@ -76,6 +76,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             Configure(ConnectionCertificate, cert => options.WithConnectionCertificate(cert));
             ConfigureOptional(SigningCertificate, cert => options.WithSigningCertificate(cert));
             ConfigureOptional(EncryptingCertificate, cert => options.WithEncryptionCertificate(cert));
+            ConfigureOptional(Audience, audience => options.WithAudience(audience));
 
             if (errors.Any())
             {
@@ -150,6 +151,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             return FindCertificate("encrypting", _commandLine.EncryptionCertificateThumbprint);
+        }
+
+        /// <summary>
+        /// Return the audience required 
+        /// </summary>
+        /// <returns>Error, if provided; error details otherwise.</returns>
+        private Errorable<string> Audience()
+        {
+            if (string.IsNullOrEmpty(_commandLine.Audience))
+            {
+                return Errorable.Success(Claims.DefaultAudience);
+            }
+
+            return Errorable.Success(_commandLine.Audience);
         }
 
         /// <summary>

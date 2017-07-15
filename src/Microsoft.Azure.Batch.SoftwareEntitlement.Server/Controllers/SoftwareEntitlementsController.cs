@@ -52,13 +52,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         public IActionResult RequestEntitlement(
             [FromBody] SoftwareEntitlementRequest entitlementRequest)
         {
-            _logger.LogInformation("Request entitlement for {application}", entitlementRequest.ApplicationId);
+            _logger.LogInformation(
+                "Request entitlement for {application}",
+                entitlementRequest.ApplicationId);
             _logger.LogDebug("Request token: {token}", entitlementRequest.Token);
 
             var remoteAddress = HttpContext.Connection.RemoteIpAddress;
             _logger.LogDebug("Remote Address: {address}", remoteAddress);
 
-            var verificationResult = _verifier.Verify(entitlementRequest.Token, entitlementRequest.ApplicationId, remoteAddress);
+            var verificationResult = _verifier.Verify(
+                entitlementRequest.Token,
+                _options.Audience,
+                entitlementRequest.ApplicationId,
+                remoteAddress);
             if (!verificationResult.HasValue)
             {
                 foreach (var e in verificationResult.Errors)
@@ -98,14 +104,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             public SecurityKey EncryptionKey { get; }
 
             /// <summary>
+            /// Gets the audience to which tokens should be addressed
+            /// </summary>
+            public string Audience { get; }
+
+            /// <summary>
             /// Initializes a new instance of the <see cref="Options"/> class.
             /// </summary>
             /// <param name="signingKey">Key to use when checking token signatures.</param>
             /// <param name="encryptionKey">Key to use when decrypting tokens.</param>
-            public Options(SecurityKey signingKey, SecurityKey encryptionKey)
+            /// <param name="audience">Audience to which tokens should be addressed.</param>
+            public Options(SecurityKey signingKey, SecurityKey encryptionKey, string audience)
             {
                 SigningKey = signingKey;
                 EncryptionKey = encryptionKey;
+                Audience = audience;
             }
         }
     }

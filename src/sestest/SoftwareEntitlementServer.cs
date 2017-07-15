@@ -62,7 +62,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             var signingKey = CreateX509SecurityKey(_options.SigningCertificate, "signing");
             var encryptingKey = CreateRsaSecurityKey(_options.EncryptionCertificate, "encryption");
-            var controllerOptions = new SoftwareEntitlementsController.Options(signingKey, encryptingKey);
+
+            _logger.LogDebug(
+                "Expected audience for all tokens {audience}",
+                _options.Audience);
+
+            var controllerOptions = new SoftwareEntitlementsController.Options(signingKey, encryptingKey, _options.Audience);
             services.AddSingleton(controllerOptions);
             services.AddSingleton(_logger);
             services.AddSingleton(_provider);

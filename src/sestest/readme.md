@@ -75,6 +75,7 @@ The `generate` mode allows you to generate a software entitlement token with the
 | --not-before  | Optional  | The moment at which the token becomes active and the application is entitled to execute <br/> Format: 'yyyy-mm-ddThh-mm'; 24 hour clock; local time; defaults to now.                |
 | --not-after   | Optional  | The moment at which the token expires and the application is no longer entitled to execute <br/> Format: 'yyyy-mm-ddThh-mm'; 24 hour clock; local time; defaults to 7 days from now. |
 | --address     | Optional  | The IP addresses of the machine entitled to execute the application(s). <br/> Defaults to all the IP addresses of the current machine.                                               |
+| --audience    | Optional  | Audience to the token will be addressed. <br/> Defaults to https://batch.azure.test/software-entitlement.                                                                            |
 | --sign        | Optional  | Thumbprint of the certificate to use for signing the token                                                                                                                           |
 | --encrypt     | Optional  | Thumbprint of the certificate to use for encryption of the token.                                                                                                                    |
 | --token-file  | Optional  | The name of a file into which the token will be written <br/> If not specified, the token will be shown in the log.                                                                  |
