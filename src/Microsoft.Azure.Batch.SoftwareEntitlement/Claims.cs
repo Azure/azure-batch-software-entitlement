@@ -11,9 +11,11 @@
         public const string Application = "app";
 
         /// <summary>
-        /// The audience for each software entitlement token (essentially we self sign)
+        /// The default audience for each software entitlement token (essentially we self sign)
         /// </summary>
-        public const string Audience = "https://batch.azure.com/software-entitlement";
+        /// <remarks>In production, the audience for each token will be the batch account for whom 
+        /// it is issued.</remarks>
+        public const string DefaultAudience = "https://batch.azure.test/software-entitlement";
 
         /// <summary>
         /// The identifier to use for the actual entitlement id

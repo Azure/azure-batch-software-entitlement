@@ -86,7 +86,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 Expires = entitlements.NotAfter.UtcDateTime,
                 IssuedAt = DateTimeOffset.Now.UtcDateTime,
                 Issuer = Claims.Issuer,
-                Audience = Claims.Audience,
+                Audience = entitlements.Audience ?? Claims.DefaultAudience,
                 SigningCredentials = SigningCredentials,
                 EncryptingCredentials = EncryptingCredentials
             };

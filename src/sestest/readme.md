@@ -57,13 +57,14 @@ Run `sestest server` to stand up a diagnostic software entitlement server, able 
 | --url                | Optional  | The URL at which the server should process requests <br/> Defaults to `https://localhost:4443`; must start with `https:`.               |
 | --sign               | Optional  | Thumbprint of the certificate used to sign tokens. <br/> If specified, only tokens signed with this certificate will be approved.       |
 | --encrypt            | Optional  | Thumbprint of the certificate used to encrypt tokens. <br/> If specified, only tokens encrypted with this certificate will be approved. |
+| --audience           | Optional  | Audience to which all tokens must be addressed. <br/> Defaults to https://batch.azure.test/software-entitlement.                        |
 | --exit-after-request | Optional  | ***PLANNED*** The server will exit after processing a single request.                                                                   |
 
 You can see this documentation for yourself by running `sestest server --help` in your shell.
 
 The exit code for `sestest server` will be zero (**0**) for normal exit of the server, non-zero (typically **-1**) if there were any command line parameter issues, if the server could not start or if the server crashes.
 
-## Token generation 
+## Token generation
 
 The `generate` mode allows you to generate a software entitlement token with the details required for your test scenario.
 

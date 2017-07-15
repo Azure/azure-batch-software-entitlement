@@ -14,8 +14,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         private readonly GenerateCommandLine _commandLine = new GenerateCommandLine
         {
             VirtualMachineId = "Sample",
-            Addresses = new List<string> { "127.0.0.1" },
-            ApplicationIds = new List<string> { "contosoapp" }
+            Addresses = new List<string> {"127.0.0.1"},
+            ApplicationIds = new List<string> {"contosoapp"},
+            Audience = "https://account.region.batch.azure.test"
         };
 
         public class BuildMethod : NodeEntitlementsBuilderTests
@@ -154,6 +155,27 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 // Compare as formatted strings to avoid issues with extra seconds we don't care about
                 entitlement.Value.NotAfter.ToString(TimestampParser.ExpectedFormat)
                     .Should().Be(_validNotAfter);
+            }
+        }
+
+        public class AudienceProperty : NodeEntitlementsBuilderTests
+        {
+            private readonly string _audience = "https://account.region.batch.azure.test";
+
+            [Fact]
+            public void WhenMissing_BuildReturnsValue()
+            {
+                _commandLine.Audience = string.Empty;
+                var result = NodeEntitlementsBuilder.Build(_commandLine);
+                result.HasValue.Should().BeTrue();
+            }
+
+            [Fact]
+            public void WhenValid_PropertyIsSet()
+            {
+                _commandLine.Audience = _audience;
+                var result = NodeEntitlementsBuilder.Build(_commandLine);
+                result.Value.Audience.Should().Be(_audience);
             }
         }
 
