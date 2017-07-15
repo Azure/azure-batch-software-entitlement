@@ -19,7 +19,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <remarks>
         /// This may be verified by the calling software package as an (optional) additional check.
         /// </remarks>
-        [JsonProperty(PropertyName = "vmId")]
+        [JsonProperty(PropertyName = "vmid")]
         public string VirtualMachineId { get; set; }
     }
 }

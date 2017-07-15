@@ -559,7 +559,7 @@ Exception::Exception(const char *message)
 
 Entitlement::Entitlement(const std::string& response)
     : m_id(ExtractValue(response, "id"))
-    , m_vmId(ExtractValue(response, "vmId"))
+    , m_vmid(ExtractValue(response, "vmid"))
 {
 }
 
@@ -574,7 +574,7 @@ const std::string& Entitlement::Id() const
 
 const std::string& Entitlement::VmId() const
 {
-    return m_vmId;
+    return m_vmid;
 }
 
 
