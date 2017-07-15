@@ -10,12 +10,12 @@ Verifies that a provided software entitlement token grants permission to use a s
 | ------ | ------------------------------------------------------ |
 | POST   | {endpoint}/softwareEntitlements/?api-version={version} |
 
-Sample: `https://samples.westus.batch.azure.com/softwareEntitlements/?api-version=2017-01-01.3.1`
+Sample: `https://samples.westus.batch.azure.com/softwareEntitlements/?api-version=2017-05-01.5.0`
 
 | Placeholder | Type   | Description                                                                     |
 | ----------- | ------ | ------------------------------------------------------------------------------- |
 | endpoint    | string | The Batch account url endpoint supplied by Azure Batch via environment variable |
-| version     | string | The API version of the request                                                  |
+| version     | string | The API version of the request <br/> Must be `2017-05-01.5.0` or later.         |
 
 The following shows a sample JSON payload for the request:
 ```
