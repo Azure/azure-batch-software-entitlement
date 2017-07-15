@@ -203,7 +203,7 @@ If using a self-signed certificate, secure connection validation code in the nat
 libcurl_error 60: SSL certificate problem: unable to get local issuer certificate
 ```
 
-To turn off these checks, modify the source code in `SoftwareEntitlementClient.cpp`, around line #335:
+To turn off these checks, modify the source code in `SoftwareEntitlementClient.cpp`, around line #415:
 
 ``` cplusplus
 // During testing, if the certificate chain leaves something to be

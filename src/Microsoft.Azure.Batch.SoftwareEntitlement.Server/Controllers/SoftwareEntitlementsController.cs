@@ -50,8 +50,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         [HttpPost]
         [Produces("application/json")]
         public IActionResult RequestEntitlement(
-            [FromBody] SoftwareEntitlementRequest entitlementRequest)
+            [FromBody] SoftwareEntitlementRequest entitlementRequest,
+            [FromQuery(Name = "api-version")] string apiVersion)
         {
+            _logger.LogInformation(
+                "Selected api-version is {apiversion}",
+                apiVersion);
+
             _logger.LogInformation(
                 "Request entitlement for {application}",
                 entitlementRequest.ApplicationId);
