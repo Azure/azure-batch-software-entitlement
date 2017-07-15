@@ -463,7 +463,7 @@ public:
             }
         } headers;
 
-        headers.value = curl_slist_append(nullptr, "Content-Type: application/json");
+        headers.value = curl_slist_append(nullptr, "Content-Type: application/json; odata=minimalmetadata");
 
         if (headers.value == nullptr)
         {
