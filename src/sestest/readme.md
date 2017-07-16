@@ -31,7 +31,6 @@ You should observe the request for entitlement being processed by the window run
 | Token rejection   | Use `sestest generate` to create an **invalid** token (one that is not yet valid, one that is already expired, one for a different application, or one for a different computer) and supply it to your application. The diagnostic software entitlement server should **reject** the token and the application should act as non-entitled. |
 | Automated testing | Passing the `--exit-after-request` parameter to `sestest server` will cause the server to cleanly exit after processing one request; this enables an automated integration test with your application.                                                                                                   |
 
-
 ## Common parameters
 
 These parameters are available for every mode
@@ -49,7 +48,6 @@ These parameters are available for every mode
 Run `sestest server` to stand up a diagnostic software entitlement server, able to accept and verify tokens submitted by either the application. This allows full testing of the integration.
 
 **NOTE**: On Windows, ensure you run `sestest server` from an elevated shell window - this is required for certificate credential exchange to work. An error like _"The credentials supplied to the package were not recognized"_ may indicate that `sestest server` is running in a non-elevated shell window.
-
 
 | Parameter            | Required  | Definition                                                                                                                              |
 | -------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------- |
@@ -82,8 +80,9 @@ The `generate` mode allows you to generate a software entitlement token with the
 
 You can see this documentation for yourself by running `sestest generate --help` in your console.
 
-
 The exit code for `sestest generate` will be zero (**0**) if a token was correctly generated, non-zero (typically **-1**) if there were any issues.
+
+**PowerShell users**: If you want to list multiple values for the `--application` parameter, wrap the entire list in double quotes to avoid PowerShell interpreting the comma (`,`) for array construction: `--application "app, app, app"`.
 
 ## List certificates
 
@@ -102,4 +101,3 @@ Find a given certificate given a thumbprint and show some details of that certif
 | --thumbprint | Mandatory | Thumbprint of the certificate to find and display. |
 
 The exit code for `sestest find-certificate` will be zero (**0**) unless the application crashes.
-
