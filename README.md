@@ -16,7 +16,7 @@ The SDK includes the following:
 
 * A [repository guide](docs/repository-guide.md) that identifies key documents, folders, scripts and classes for developers working with the code.
 
-* [Release notes](doc/release-history.md) that detail the changes between releases.
+* [Release notes](docs/release-history.md) that detail the changes between releases.
 
 ## Overview
 

@@ -20,11 +20,11 @@ Initial public release of the Software Entitlement Service SDK for Azure Batch, 
 
 * [Software entitlement library code](src/Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native) for integration into applications.
 
-* The ([sestest](src/sestest)) commandline testing tool.
+* The [sestest](src/sestest) commandline testing tool.
 
 * Reference documentation on the [REST API](src/Microsoft.Azure.Batch.SoftwareEntitlement.Server.
 
 * [Guide to compilation](docs/build-guide.md).
 
-* [Full walk-through](docs/walk-through.md.
+* [Full walk-through](docs/walk-through.md) documentation.
 
