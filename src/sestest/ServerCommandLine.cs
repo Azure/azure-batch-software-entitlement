@@ -17,10 +17,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option("connection", HelpText = "Thumbprint of the certificate to pin for use with HTTPS (mandatory).")]
         public string ConnectionCertificateThumbprint { get; set; }
 
-        [Option("url", HelpText = "The URL at which the server should process requests (defaults to https://localhost:4443; must start with 'https:').")]
+        [Option("url", HelpText = "The URL at which the server should process requests (defaults to 'https://localhost:4443'; must start with 'https:').")]
         public string ServerUrl { get; set; } = "https://localhost:4443";
 
-        [Option("audience", HelpText = "Audience to which all tokens must be addressed (optional; defaults to https://batch.azure.test/software-entitlement).")]
+        [Option("audience", HelpText = "Audience to which all tokens must be addressed (optional; defaults to 'https://batch.azure.test/software-entitlement').")]
         public string Audience { get; set; }
     }
 }
