@@ -14,6 +14,8 @@ Critical (but small) fixes to the SDK.
 
 * **Fix**: The response from `sestest server` for a successful entitlement should use `vmid` to pass the identifier for the entitled virtual machine.
 
+* **Fix**: Change the contentType header from `application-json`, to `application/json; odata=minimalmetadata` as required by the Azure Batch services.
+
 ## May 2017
 
 Initial public release of the Software Entitlement Service SDK for Azure Batch, including:
