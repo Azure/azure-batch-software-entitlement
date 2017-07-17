@@ -420,7 +420,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
             public static IEnumerable<object[]> TestCaseKeys()
             {
-                // To use this test, change the next line by entering a thumb-print that exists on the test machine
+                // To use this test, change the next line by entering a thumbprint that exists on the test machine
                 var thumbprint = new CertificateThumbprint("<thumbprint-goes-here>");
                 var store = new CertificateStore();
                 var cert = store.FindByThumbprint("test", thumbprint);

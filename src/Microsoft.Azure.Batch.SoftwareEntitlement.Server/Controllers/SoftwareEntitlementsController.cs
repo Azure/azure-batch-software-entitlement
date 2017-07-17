@@ -65,7 +65,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
                     Message = new ErrorMessage($"Entitlement for {entitlementRequest.ApplicationId} was denied.")
                 };
 
-                return StatusCode(403, error);
+                return StatusCode(400, error);
             }
 
             _logger.LogInformation(

@@ -199,7 +199,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
 
             [Fact]
-            public void GivenIpAddress_ModifiesConfiguration()
+            public void GivenAudience_ModifiesConfiguration()
             {
                 var entitlement = _emptyEntitlement.WithAudience(_audience);
                 entitlement.Audience.Should().Be(_audience);

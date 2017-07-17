@@ -14,8 +14,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         private readonly GenerateCommandLine _commandLine = new GenerateCommandLine
         {
             VirtualMachineId = "Sample",
-            Addresses = new List<string> {"127.0.0.1"},
-            ApplicationIds = new List<string> {"contosoapp"},
+            Addresses = new List<string> { "127.0.0.1" },
+            ApplicationIds = new List<string> { "contosoapp" },
             Audience = "https://account.region.batch.azure.test"
         };
 
