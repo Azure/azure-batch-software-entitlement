@@ -62,7 +62,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             var signingKey = CreateX509SecurityKey(_options.SigningCertificate, "signing");
             var encryptingKey = CreateRsaSecurityKey(_options.EncryptionCertificate, "encryption");
-            var controllerOptions = new SoftwareEntitlementsController.Options(signingKey, encryptingKey);
+
+            _logger.LogDebug(
+                "Expected audience for all tokens {Audience}",
+                _options.Audience);
+
+            var controllerOptions = new SoftwareEntitlementsController.Options(signingKey, encryptingKey, _options.Audience);
             services.AddSingleton(controllerOptions);
             services.AddSingleton(_logger);
             services.AddSingleton(_provider);
@@ -96,7 +101,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (certificate == null)
             {
-                _logger.LogDebug("No certificate specified for {purpose}", purpose);
+                _logger.LogDebug("No certificate specified for {Purpose}", purpose);
                 return null;
             }
 
@@ -106,7 +111,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 return null;
             }
 
-            _logger.LogDebug("Creating security key for {purpose}", purpose);
+            _logger.LogDebug("Creating security key for {Purpose}", purpose);
             var parameters = certificate.GetRSAPrivateKey().ExportParameters(includePrivateParameters: true);
             return new RsaSecurityKey(parameters);
         }
@@ -115,7 +120,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (certificate == null)
             {
-                _logger.LogDebug("No certificate specified for {purpose}", purpose);
+                _logger.LogDebug("No certificate specified for {Purpose}", purpose);
                 return null;
             }
 
@@ -125,7 +130,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 return null;
             }
 
-            _logger.LogDebug("Creating security key for {purpose}", purpose);
+            _logger.LogDebug("Creating security key for {Purpose}", purpose);
             return new X509SecurityKey(certificate);
         }
     }

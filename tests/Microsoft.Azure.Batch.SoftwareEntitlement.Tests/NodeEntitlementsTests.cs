@@ -174,5 +174,36 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 entitlement.Identifier.Should().Be(_identifier);
             }
         }
+
+        public class WithAudienceMethod : NodeEntitlementsTests
+        {
+            // An audience to use
+            private readonly string _audience = "http://batch.test.example.com/account";
+
+            [Fact]
+            public void GivenNull_ThrowsException()
+            {
+                var exception =
+                    Assert.Throws<ArgumentException>(
+                        () => _emptyEntitlement.WithAudience(null));
+                exception.ParamName.Should().Be("audience");
+            }
+
+            [Fact]
+            public void GivenBlank_ThrowsException()
+            {
+                var exception =
+                    Assert.Throws<ArgumentException>(
+                        () => _emptyEntitlement.WithAudience(string.Empty));
+                exception.ParamName.Should().Be("audience");
+            }
+
+            [Fact]
+            public void GivenAudience_ModifiesConfiguration()
+            {
+                var entitlement = _emptyEntitlement.WithAudience(_audience);
+                entitlement.Audience.Should().Be(_audience);
+            }
+        }
     }
 }
