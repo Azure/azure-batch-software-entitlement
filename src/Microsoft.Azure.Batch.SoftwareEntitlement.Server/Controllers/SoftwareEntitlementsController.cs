@@ -56,7 +56,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             if (!IsValidApiVersion(apiVersion))
             {
                 _logger.LogError(
-                    "Selected api-version of {apiversion} is not supported; denying entitlement request.",
+                    "Selected api-version of {ApiVersion} is not supported; denying entitlement request.",
                     apiVersion);
 
                 var error = new SoftwareEntitlementFailureResponse
@@ -69,16 +69,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             }
 
             _logger.LogInformation(
-                "Selected api-version is {apiversion}",
+                "Selected api-version is {ApiVersion}",
                 apiVersion);
 
             _logger.LogInformation(
-                "Requesting entitlement for {application}",
+                "Requesting entitlement for {Application}",
                 entitlementRequest.ApplicationId);
-            _logger.LogDebug("Request token: {token}", entitlementRequest.Token);
+            _logger.LogDebug("Request token: {Token}", entitlementRequest.Token);
 
             var remoteAddress = HttpContext.Connection.RemoteIpAddress;
-            _logger.LogDebug("Remote Address: {address}", remoteAddress);
+            _logger.LogDebug("Remote Address: {Address}", remoteAddress);
 
             var verificationResult = _verifier.Verify(
                 entitlementRequest.Token,

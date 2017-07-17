@@ -57,10 +57,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var claims = CreateClaims(entitlements);
 
             _logger.LogDebug(
-                "Not Before: {notBefore}",
+                "Not Before: {NotBefore}",
                 entitlements.NotBefore.ToString(TimestampParser.ExpectedFormat));
             _logger.LogDebug(
-                "Not After: {notAfter}",
+                "Not After: {NotAfter}",
                 entitlements.NotAfter.ToString(TimestampParser.ExpectedFormat));
 
             if (SigningCredentials != null)
@@ -94,7 +94,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var handler = new JwtSecurityTokenHandler();
             var token = handler.CreateToken(securityTokenDescriptor);
 
-            _logger.LogDebug("Raw token: {token}", token);
+            _logger.LogDebug("Raw token: {Token}", token);
 
             return handler.WriteToken(token);
         }
@@ -105,25 +105,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             if (!string.IsNullOrEmpty(entitlements.VirtualMachineId))
             {
-                _logger.LogDebug("Virtual machine Id: {vmid}", entitlements.VirtualMachineId);
+                _logger.LogDebug("Virtual machine Id: {VirtualMachineId}", entitlements.VirtualMachineId);
                 claims.Add(new Claim(Claims.VirtualMachineId, entitlements.VirtualMachineId));
             }
 
             if (!string.IsNullOrEmpty(entitlements.Identifier))
             {
-                _logger.LogDebug("Entitlement Id: {identifier}", entitlements.Identifier);
+                _logger.LogDebug("Entitlement Id: {EntitlementId}", entitlements.Identifier);
                 claims.Add(new Claim(Claims.EntitlementId, entitlements.Identifier));
             }
 
             foreach (var ip in entitlements.IpAddresses)
             {
-                _logger.LogDebug("IP Address: {ip}", ip);
+                _logger.LogDebug("IP Address: {IP}", ip);
                 claims.Add(new Claim(Claims.IpAddress, ip.ToString()));
             }
 
             foreach (var app in entitlements.Applications)
             {
-                _logger.LogDebug("Application Id: {app}", app);
+                _logger.LogDebug("Application Id: {ApplicationId}", app);
                 var claim = new Claim(Claims.Application, app);
                 claims.Add(claim);
             }
