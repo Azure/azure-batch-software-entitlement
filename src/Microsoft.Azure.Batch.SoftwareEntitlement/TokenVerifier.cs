@@ -73,16 +73,17 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Verify the provided software entitlement token
         /// </summary>
         /// <param name="tokenString">A software entitlement token to verify.</param>
+        /// <param name="expectedAudience">The audience for whom the token should be intended.</param>
         /// <param name="application">The specific application id of the application </param>
         /// <param name="ipAddress">Address of the machine requesting token validation.</param>
         /// <returns>Either a software entitlement describing the approved entitlement, or errors
         /// explaining why it wasn't approved.</returns>
-        public Errorable<NodeEntitlements> Verify(string tokenString, string application, IPAddress ipAddress)
+        public Errorable<NodeEntitlements> Verify(string tokenString, string expectedAudience, string application, IPAddress ipAddress)
         {
             var validationParameters = new TokenValidationParameters
             {
                 ValidateAudience = true,
-                ValidAudience = Claims.Audience,
+                ValidAudience = expectedAudience,
                 ValidateIssuer = true,
                 ValidIssuer = Claims.Issuer,
                 ValidateLifetime = true,

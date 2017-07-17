@@ -79,7 +79,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             var fileInfo = new FileInfo(commandLine.TokenFile);
-            _logger.LogInformation("Token file: {filename}", fileInfo.FullName);
+            _logger.LogInformation("Token file: {FileName}", fileInfo.FullName);
             try
             {
                 File.WriteAllText(fileInfo.FullName, token);
@@ -153,7 +153,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var certificateStore = new CertificateStore();
             var allCertificates = certificateStore.FindAll();
             var withPrivateKey = allCertificates.Where(c => c.HasPrivateKey).ToList();
-            _logger.LogInformation("Found {count} certificates with private keys", withPrivateKey.Count);
+            _logger.LogInformation("Found {Count} certificates with private keys", withPrivateKey.Count);
 
             var rows = withPrivateKey.Select(DescribeCertificate).ToList();
             rows.Insert(0, new List<string> { "Name", "Friendly Name", "Thumbprint" });

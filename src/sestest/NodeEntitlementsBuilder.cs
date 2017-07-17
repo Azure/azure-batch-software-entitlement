@@ -82,6 +82,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             Configure(VirtualMachineId, url => entitlement.WithVirtualMachineId(url));
             Configure(NotBefore, notBefore => entitlement.FromInstant(notBefore));
             Configure(NotAfter, notAfter => entitlement.UntilInstant(notAfter));
+            Configure(Audience, audience => entitlement.WithAudience(audience));
             ConfigureAll(Addresses, address => entitlement.AddIpAddress(address));
             ConfigureAll(Applications, app => entitlement.AddApplication(app));
 
@@ -123,6 +124,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             return _timestampParser.TryParse(_commandLine.NotAfter, "NotAfter");
+        }
+
+        private Errorable<string> Audience()
+        {
+            if (string.IsNullOrEmpty(_commandLine.Audience))
+            {
+                return Errorable.Success(Claims.DefaultAudience);
+            }
+
+            return Errorable.Success(_commandLine.Audience);
         }
 
         private IEnumerable<Errorable<IPAddress>> Addresses()

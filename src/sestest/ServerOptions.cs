@@ -30,6 +30,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         public Uri ServerUrl { get; }
 
+        /// <summary> 
+        /// The token audience for which we will grant entitlements
+        /// </summary> 
+        public string Audience { get; }
+
         /// <summary>
         /// Initialize a blank set of server options
         /// </summary>
@@ -97,6 +102,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return new ServerOptions(this, serverUrl: url);
         }
 
+        /// <summary> 
+        /// Specify the audience expected in the token  
+        /// </summary> 
+        /// <param name="audience">The audience expected within the generated token.</param> 
+        /// <returns>New instance of <see cref="ServerOptions"/>.</returns>
+        public ServerOptions WithAudience(string audience)
+        {
+            if (string.IsNullOrEmpty(audience))
+            {
+                throw new ArgumentException("Expect to have an audience", nameof(audience));
+            }
+
+            return new ServerOptions(this, audience: audience);
+        }
+
         /// <summary>
         /// Mutating constructor used to create variations of an existing set of options
         /// </summary>
@@ -105,12 +125,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="encryptionCertificate">Certificate to use for encrypting tokens (optional).</param>
         /// <param name="connectionCertificate">Certificate to use for our HTTPS connection (optional).</param>
         /// <param name="serverUrl">Server host URL (optional).</param>
+        /// <param name="audience">Audience expected of tokens.</param>
         private ServerOptions(
             ServerOptions original,
             X509Certificate2 signingCertificate = null,
             X509Certificate2 encryptionCertificate = null,
             X509Certificate2 connectionCertificate = null,
-            Uri serverUrl = null)
+            Uri serverUrl = null,
+            string audience = null)
         {
             if (original == null)
             {
@@ -121,6 +143,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             EncryptionCertificate = encryptionCertificate ?? original.EncryptionCertificate;
             ConnectionCertificate = connectionCertificate ?? original.ConnectionCertificate;
             ServerUrl = serverUrl ?? original.ServerUrl;
+            Audience = audience ?? original.Audience;
         }
     }
 }

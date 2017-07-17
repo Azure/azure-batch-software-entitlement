@@ -10,15 +10,16 @@ Verifies that a provided software entitlement token grants permission to use a s
 | ------ | ------------------------------------------------------ |
 | POST   | {endpoint}/softwareEntitlements/?api-version={version} |
 
-Sample: `https://samples.westus.batch.azure.com/softwareEntitlements/?api-version=2017-01-01.3.1`
+Sample: `https://samples.westus.batch.azure.com/softwareEntitlements/?api-version=2017-05-01.5.0`
 
-| Placeholder | Type   | Description                                                                     |
-| ----------- | ------ | ------------------------------------------------------------------------------- |
-| endpoint    | string | The Batch account url endpoint supplied by Azure Batch via environment variable |
-| version     | string | The API version of the request                                                  |
+| Placeholder | Type   | Description                                                                                                                                                                                     |
+| ----------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| endpoint    | string | The Batch account URL endpoint supplied by Azure Batch via environment variable.                                                                                                                |
+| version     | string | The API version of the request. <p/> Must be `2017-05-01.5.0` or higher. <p/>API versions are listed @ https://docs.microsoft.com/en-us/rest/api/batchservice/batch-service-rest-api-versioning |
 
 The following shows a sample JSON payload for the request:
-```
+
+``` json
 {
     "token": "...",
     "applicationId": "contosoapp"
@@ -37,9 +38,10 @@ Specific unique application identifiers for each software package will be agreed
 If the token grants permission to the requested application, the service will return HTTP Status 200 and the response body will contain details of the entitlement.
 
 The following example shows a sample JSON response:
-```
+
+``` json
 {
-    "id": "24223578-1CE8-4168-91E0-126C2D5EAA0B",
+    "id": "entitlement-24223578-1CE8-4168-91E0-126C2D5EAA0B",
     "vmid": "..."
 }
 ```
@@ -54,7 +56,8 @@ The following example shows a sample JSON response:
 If the token does not grant permission to use the requested application, the service will return HTTP status 403 and the response body will contain extended error information.
 
 The following example shows a sample JSON response:
-```
+
+``` json
 {
     "code": "EntitlementDenied",
     "message":
@@ -64,10 +67,13 @@ The following example shows a sample JSON response:
     }
 }
 ```
+
 See [Batch status and error codes](https://docs.microsoft.com/rest/api/batchservice/batch-status-and-error-codes) for more information.
 
 ### RESPONSE 400 - BAD REQUEST
 
-If the token is missing, invalid, corrupt, or the request is otherwise badly formed, the service will return HTTP status 400 and the response body will be empty.
+The service will return HTTP status 400 and the response body will be empty if:
 
-
+* The software entitlement token is missing, invalid, or corrupt;
+* The request is badly formed; or
+* The `api-version` specified on the URL is invalid.
