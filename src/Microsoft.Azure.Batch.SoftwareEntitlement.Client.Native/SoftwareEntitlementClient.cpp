@@ -596,7 +596,7 @@ void Cleanup()
 // providing details of entitlement validation failure.
 //
 std::unique_ptr<Entitlement> GetEntitlement(
-    std::string& url,
+    std::string url,
     const std::string& entitlement_token,
     const std::string& requested_entitlement)
 {
