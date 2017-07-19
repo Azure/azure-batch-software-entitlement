@@ -77,6 +77,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             ConfigureOptional(SigningCertificate, cert => options.WithSigningCertificate(cert));
             ConfigureOptional(EncryptingCertificate, cert => options.WithEncryptionCertificate(cert));
             ConfigureOptional(Audience, audience => options.WithAudience(audience));
+            ConfigureOptional(Issuer, issuer => options.WithIssuer(issuer));
 
             if (errors.Any())
             {
@@ -165,6 +166,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             return Errorable.Success(_commandLine.Audience);
+        }
+
+        /// <summary>
+        /// Return the issuer required 
+        /// </summary>
+        /// <returns>Error, if provided; error details otherwise.</returns>
+        private Errorable<string> Issuer()
+        {
+            if (string.IsNullOrEmpty(_commandLine.Issuer))
+            {
+                return Errorable.Success(Claims.DefaultIssuer);
+            }
+
+            return Errorable.Success(_commandLine.Issuer);
         }
 
         /// <summary>
