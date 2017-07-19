@@ -148,7 +148,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             public string Issuer { get; }
 
             /// <summary>
-            /// Initializes a new instance of the <see cref="Options"/> class.
+            /// Initializes a new instance of the <see cref="Options"/> class
             /// </summary>
             /// <param name="signingKey">Key to use when checking token signatures.</param>
             /// <param name="encryptionKey">Key to use when decrypting tokens.</param>
