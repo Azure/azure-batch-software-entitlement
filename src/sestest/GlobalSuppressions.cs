@@ -10,3 +10,17 @@ using System.Diagnostics.CodeAnalysis;
     "Performance",
     "RCS1080:Use 'Count/Length' property instead of 'Any' method.",
     Justification = "This project prefers the clarity of Any().")]
+
+[assembly: SuppressMessage(
+    "Language Usage Opportunities",
+    "RECS0002:Convert anonymous method to method group",
+    Justification = "Specifying parameter names helps with code clarity",
+    Scope = "type",
+    Target = "Microsoft.Azure.Batch.SoftwareEntitlement.ServerOptionBuilder")]
+
+[assembly: SuppressMessage(
+    "Language Usage Opportunities",
+    "RECS0002:Convert anonymous method to method group",
+    Justification = "Specifying parameter names helps with code clarity",
+    Scope = "type",
+    Target = "Microsoft.Azure.Batch.SoftwareEntitlement.NodeEntitlementsBuilder")]

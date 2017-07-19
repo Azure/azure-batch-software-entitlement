@@ -11,6 +11,7 @@ function Write-Divider {
 function Write-Header($header) {
     Write-Output ""
     Write-Divider
-    Write-Output $header
+    Write-Output ("  " + $header)
     Write-Divider
+    Write-Output ""
 }
