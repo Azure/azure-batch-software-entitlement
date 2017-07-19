@@ -16,7 +16,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             VirtualMachineId = "Sample",
             Addresses = new List<string> { "127.0.0.1" },
             ApplicationIds = new List<string> { "contosoapp" },
-            Audience = "https://account.region.batch.azure.test"
+            Audience = "https://account.region.batch.azure.test",
+            Issuer= "https://account.region.batch.azure.test"
         };
 
         public class BuildMethod : NodeEntitlementsBuilderTests
@@ -269,6 +270,27 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
                 entitlement.HasValue.Should().BeFalse();
                 entitlement.Errors.Should().Contain(e => e.Contains("address"));
+            }
+        }
+
+        public class IssuerProperty : NodeEntitlementsBuilderTests
+        {
+            private readonly string _issuer = "https://account.region.batch.azure.test";
+
+            [Fact]
+            public void WhenMissing_BuildReturnsValue()
+            {
+                _commandLine.Issuer = string.Empty;
+                var result = NodeEntitlementsBuilder.Build(_commandLine);
+                result.HasValue.Should().BeTrue();
+            }
+
+            [Fact]
+            public void WhenValid_PropertyIsSet()
+            {
+                _commandLine.Issuer = _issuer;
+                var result = NodeEntitlementsBuilder.Build(_commandLine);
+                result.Value.Issuer.Should().Be(_issuer);
             }
         }
     }

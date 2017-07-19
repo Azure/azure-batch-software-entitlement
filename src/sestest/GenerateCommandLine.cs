@@ -34,5 +34,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         [Option("audience", HelpText = "Audience to which tokens will be addressed (optional; defaults to 'https://batch.azure.test/software-entitlement').")]
         public string Audience { get; set; }
+
+        [Option("issuer", HelpText = "Issuer by whom the tokens are created (optional; defaults to 'http://batch.azure.test/software-entitlement').")]
+        public string Issuer { get; set; }
     }
 }
