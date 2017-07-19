@@ -89,8 +89,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             var certWithPrivateKey = candidates.Find(cert => cert.HasPrivateKey);
             if (certWithPrivateKey != null)
             {
-                // We might have multiple copies of the certificate available
+                // We might have multiple copies of the same certificate available in different stores.
                 // If so, prefer any copies that have their private key over those that do not
+                // Certificates with private keys can be used to both encrypt/decrypt and to 
+                // sign/verify - copies without can only be used to encrypt and verify.
                 return Errorable.Success(certWithPrivateKey);
             }
 
