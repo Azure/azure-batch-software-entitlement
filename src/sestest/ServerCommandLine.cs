@@ -23,7 +23,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option("audience", HelpText = "Audience to which all tokens must be addressed (optional; defaults to 'https://batch.azure.test/software-entitlement').")]
         public string Audience { get; set; }
 
-        [Option("issuer", HelpText = "Issuer by which all tokens must have been created (optional; defaults to ''https://batch.azure.test/software-entitlement').")]
+        [Option("issuer", HelpText = "Issuer by which all tokens must have been created (optional; defaults to https://batch.azure.test/software-entitlement').")]
         public string Issuer { get; set; }
     }
 }
