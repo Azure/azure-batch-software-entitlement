@@ -84,13 +84,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 from location in _storeLocations
                 select FindByThumbprint(thumbprint, name, location);
 
-            var certificate = query.FirstOrDefault(cert => cert != null);
-            if (certificate == null)
+            var candidates = query.Where(cert => cert != null).ToList();
+
+            var certWithPrivateKey = candidates.Find(cert => cert.HasPrivateKey);
+            if (certWithPrivateKey != null)
             {
-                return Errorable.Failure<X509Certificate2>($"Did not find {purpose} certificate {thumbprint}");
+                // We might have multiple copies of the same certificate available in different stores.
+                // If so, prefer any copies that have their private key over those that do not
+                // Certificates with private keys can be used to both encrypt/decrypt and to 
+                // sign/verify - copies without can only be used to encrypt and verify.
+                return Errorable.Success(certWithPrivateKey);
             }
 
-            return Errorable.Success(certificate);
+            var certificate = candidates.FirstOrDefault();
+            if (certificate != null)
+            {
+                return Errorable.Success(certificate);
+            }
+
+            return Errorable.Failure<X509Certificate2>($"Did not find {purpose} certificate {thumbprint}");
         }
 
         /// <summary>
