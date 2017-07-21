@@ -389,7 +389,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
         public class WithCertificates : TokenEnforcementTests
         {
-            [Theory(Skip = "Need a thumbprint specified in TestCaseKeys()")]
+            [Theory(Skip = "Specify a certificate thumbprint in TestCaseKeys() to enable this test.")]
             [MemberData(nameof(TestCaseKeys))]
             public void WhenSignedByCertificate_ReturnsExpectedResult(SecurityKey key)
             {
@@ -405,7 +405,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 result.Value.Applications.Should().Contain(_contosoFinanceApp);
             }
 
-            [Theory(Skip = "Need a thumbprint specified in TestCaseKeys()")]
+            [Theory(Skip = "Specify a certificate thumbprint in TestCaseKeys() to enable this test.")]
             [MemberData(nameof(TestCaseKeys))]
             public void WhenEncryptedByCertificate_ReturnsExpectedResult(SecurityKey key)
             {

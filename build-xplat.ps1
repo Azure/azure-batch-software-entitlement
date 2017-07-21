@@ -12,3 +12,8 @@ Write-Header "Restoring Nuget packages"
 Write-Header "Building SESTEST"
 & $dotnetExe build .\src\sestest
 
+Write-Header "Running Unit Tests"
+foreach ($project in (resolve-path .\tests\*\*.csproj))
+{
+    & $dotnetExe test $project
+}

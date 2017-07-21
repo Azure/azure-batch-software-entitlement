@@ -18,16 +18,22 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         // Reference to a store in which we can search for certificates
         private readonly CertificateStore _certificateStore = new CertificateStore();
 
+        // Options used to configure validation
+        private readonly ServerOptionBuilderOptions _options;
+
         /// <summary>
         /// Build an instance of <see cref="ServerOptions"/> from the information supplied on the 
         /// command line by the user
         /// </summary>
         /// <param name="commandLine">Command line parameters supplied by the user.</param>
+        /// <param name="options">Options for configuring validation.</param>
         /// <returns>Either a usable (and completely valid) <see cref="ServerOptions"/> or a set 
         /// of errors.</returns>
-        public static Errorable<ServerOptions> Build(ServerCommandLine commandLine)
+        public static Errorable<ServerOptions> Build(
+            ServerCommandLine commandLine,
+            ServerOptionBuilderOptions options = ServerOptionBuilderOptions.None)
         {
-            var builder = new ServerOptionBuilder(commandLine);
+            var builder = new ServerOptionBuilder(commandLine, options);
             return builder.Build();
         }
 
@@ -35,9 +41,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Initializes a new instance of the <see cref="ServerOptionBuilder"/> class
         /// </summary>
         /// <param name="commandLine">Options provided on the command line.</param>
-        private ServerOptionBuilder(ServerCommandLine commandLine)
+        /// <param name="options">Options for configuring validation.</param>
+        private ServerOptionBuilder(
+            ServerCommandLine commandLine,
+            ServerOptionBuilderOptions options)
         {
             _commandLine = commandLine;
+            _options = options;
         }
 
         /// <summary>
@@ -73,7 +83,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             Configure(ServerUrl, url => options.WithServerUrl(url));
-            Configure(ConnectionCertificate, cert => options.WithConnectionCertificate(cert));
+            ConfigureOptional(ConnectionCertificate, cert => options.WithConnectionCertificate(cert));
             ConfigureOptional(SigningCertificate, cert => options.WithSigningCertificate(cert));
             ConfigureOptional(EncryptingCertificate, cert => options.WithEncryptionCertificate(cert));
             ConfigureOptional(Audience, audience => options.WithAudience(audience));
@@ -96,6 +106,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (string.IsNullOrWhiteSpace(_commandLine.ServerUrl))
             {
+                if (_options.HasFlag(ServerOptionBuilderOptions.ServerUrlOptional))
+                {
+                    return Errorable.Success(new Uri("http://test"));
+                }
+
                 return Errorable.Failure<Uri>("No server endpoint URL specified.");
             }
 
@@ -121,6 +136,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>Certificate, if found; error details otherwise.</returns>
         private Errorable<X509Certificate2> ConnectionCertificate()
         {
+            if (string.IsNullOrEmpty(_commandLine.ConnectionCertificateThumbprint))
+            {
+                if (_options.HasFlag(ServerOptionBuilderOptions.ConnectionThumbprintOptional))
+                {
+                    return Errorable.Success<X509Certificate2>(null);
+                }
+
+                return Errorable.Failure<X509Certificate2>("A connection thumbprint is required.");
+            }
+
             return FindCertificate("connection", _commandLine.ConnectionCertificateThumbprint);
         }
 
@@ -198,5 +223,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var certificateThumbprint = new CertificateThumbprint(thumbprint);
             return _certificateStore.FindByThumbprint(purpose, certificateThumbprint);
         }
+    }
+
+
+    [Flags]
+    public enum ServerOptionBuilderOptions
+    {
+        None,
+        ServerUrlOptional,
+        ConnectionThumbprintOptional
     }
 }
