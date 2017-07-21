@@ -89,7 +89,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             var result = new NodeEntitlements()
                 .FromInstant(_now)
                 .UntilInstant(_now + TimeSpan.FromDays(7))
-                .WithAudience(_audience);
+                .WithAudience(_audience)
+                .WithIssuer(_issuer);
 
             if (!creationOptions.HasFlag(EntitlementCreationOptions.OmitIpAddress))
             {
