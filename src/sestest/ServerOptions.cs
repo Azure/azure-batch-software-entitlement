@@ -31,12 +31,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public Uri ServerUrl { get; }
 
         /// <summary> 
-        /// The token audience for which we will grant entitlements
+        /// The issuer we expect to see on tokens presented to use for verification
         /// </summary> 
         public string Audience { get; }
 
         /// <summary>
-        /// The expected issuer of the tokens we will verifiy
+        /// The issuer we expect to see on tokens presented to us for verification
         /// </summary>
         public string Issuer { get; }
 
@@ -145,8 +145,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="encryptionCertificate">Certificate to use for encrypting tokens (optional).</param>
         /// <param name="connectionCertificate">Certificate to use for our HTTPS connection (optional).</param>
         /// <param name="serverUrl">Server host URL (optional).</param>
-        /// <param name="audience">Audience expected of tokens.</param>
-        /// <param name="issuer">Issuer expected of tokens.</param>
+        /// <param name="audience">Audience we expect to find in each token.</param>
+        /// <param name="issuer">Issuer we expect to find in each token.</param>
         private ServerOptions(
             ServerOptions original,
             X509Certificate2 signingCertificate = null,
