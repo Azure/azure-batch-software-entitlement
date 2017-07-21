@@ -87,19 +87,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void Build_WithEmptyAudience_HasDefaultValueForAudience()
             {
                 _commandLine.Audience = string.Empty;
-                var options = ServerOptionBuilder.Build(
-                    _commandLine,
-                    ServerOptionBuilderOptions.ServerUrlOptional | ServerOptionBuilderOptions.ConnectionThumbprintOptional);
+                var options = ServerOptionBuilder.Build(_commandLine, _permissiveOptions);
                 options.Value.Audience.Should().NotBeNullOrEmpty();
             }
         }
 
-        [Fact]
-        public void Build_WithEmptyIssuer_HasDefaultValueForIssuer()
+        public class Issuer : ServerOptionBuilderTests
         {
-            _commandLine.Issuer = string.Empty;
-            var options = ServerOptionBuilder.Build(_commandLine);
-            options.Value.Issuer.Should().NotBeNullOrEmpty();
+            [Fact]
+            public void Build_WithEmptyIssuer_HasDefaultValueForIssuer()
+            {
+                _commandLine.Issuer = string.Empty;
+                var options = ServerOptionBuilder.Build(_commandLine, _permissiveOptions);
+                options.Value.Issuer.Should().NotBeNullOrEmpty();
+            }
         }
     }
 }

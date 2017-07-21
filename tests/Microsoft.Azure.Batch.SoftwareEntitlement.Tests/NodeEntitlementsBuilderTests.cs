@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Text;
 using FluentAssertions;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Xunit;
@@ -70,7 +69,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
 
             [Fact]
-            public void WithId_PropertyIsSet()
+            public void WithId_PropertyHasExpectedValue()
             {
                 const string virtualMachineId = "virtualMachine";
                 _commandLine.VirtualMachineId = virtualMachineId;
@@ -85,7 +84,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 DateTimeOffset.Now.ToString(TimestampParser.ExpectedFormat);
 
             [Fact]
-            public void WhenMissing_BuildReturnsValue()
+            public void WhenMissing_BuildStillReturnsValue()
             {
                 _commandLine.NotBefore = string.Empty;
                 var result = NodeEntitlementsBuilder.Build(_commandLine);
@@ -109,7 +108,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
 
             [Fact]
-            public void WhenValid_PropertyIsSet()
+            public void WhenValid_PropertyHasExpectedValue()
             {
                 _commandLine.NotBefore = _validNotBefore;
                 var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
@@ -125,7 +124,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 DateTimeOffset.Now.AddDays(7).ToString(TimestampParser.ExpectedFormat);
 
             [Fact]
-            public void WhenMissing_BuildReturnsValue()
+            public void WhenMissing_BuildStillReturnsValue()
             {
                 _commandLine.NotAfter = string.Empty;
                 var result = NodeEntitlementsBuilder.Build(_commandLine);
@@ -149,7 +148,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
 
             [Fact]
-            public void WhenValid_PropertyIsSet()
+            public void WhenValid_PropertyHasExpectedValue()
             {
                 _commandLine.NotAfter = _validNotAfter;
                 var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
@@ -164,11 +163,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             private readonly string _audience = "https://account.region.batch.azure.test";
 
             [Fact]
-            public void WhenMissing_BuildReturnsValue()
+            public void WhenMissing_BuildReturnsDefaultValue()
             {
                 _commandLine.Audience = string.Empty;
                 var result = NodeEntitlementsBuilder.Build(_commandLine);
-                result.HasValue.Should().BeTrue();
+                result.Value.Audience.Should().Be(Claims.DefaultAudience);
             }
 
             [Fact]
@@ -202,7 +201,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
 
             [Fact]
-            public void WhenSingleApplication_PropertyIsSet()
+            public void WhenSingleApplication_PropertyHasExpectedValue()
             {
                 var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
                 entitlement.Value.Applications.Should().BeEquivalentTo(_commandLine.ApplicationIds);
@@ -216,7 +215,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
 
             [Fact]
-            public void WhenMultipleApplications_PropertyIsSet()
+            public void WhenMultipleApplications_PropertyHasExpectedValues()
             {
                 _commandLine.ApplicationIds.Add(ContosoHrApp);
                 _commandLine.ApplicationIds.Add(ContosoItApp);
@@ -248,14 +247,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
 
             [Fact]
-            public void WhenSingleAddress_PropertyIsSet()
+            public void WhenSingleAddress_PropertyHasExpectedValue()
             {
                 var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
                 entitlement.Value.IpAddresses.Should().HaveCount(1);
             }
 
             [Fact]
-            public void WhenMultipleAddresses_PropertyIsSet()
+            public void WhenMultipleAddresses_PropertyHasExpectedValues()
             {
                 _commandLine.Addresses.Add(_addressA.ToString());
                 _commandLine.Addresses.Add(_addressB.ToString());
@@ -278,15 +277,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             private readonly string _issuer = "https://account.region.batch.azure.test";
 
             [Fact]
-            public void WhenMissing_BuildReturnsValue()
+            public void WhenMissing_BuildReturnsDefaultValue()
             {
                 _commandLine.Issuer = string.Empty;
                 var result = NodeEntitlementsBuilder.Build(_commandLine);
-                result.HasValue.Should().BeTrue();
+                result.Value.Issuer.Should().Be(Claims.DefaultIssuer);
             }
 
             [Fact]
-            public void WhenValid_PropertyIsSet()
+            public void WhenValid_PropertyHasExpectedValue()
             {
                 _commandLine.Issuer = _issuer;
                 var result = NodeEntitlementsBuilder.Build(_commandLine);
