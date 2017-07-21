@@ -28,9 +28,9 @@
         public const string IpAddress = "ip";
 
         /// <summary>
-        /// The issuer of each software entitlement token
+        /// The default issuer of each software entitlement token
         /// </summary>
-        public const string Issuer = "https://batch.azure.com/software-entitlement";
+        public const string DefaultIssuer = "'https://batch.azure.test/software-entitlement";
 
         /// <summary>
         /// Identifier use for the claim specifying the permitted virtual machine

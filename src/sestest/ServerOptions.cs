@@ -31,9 +31,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public Uri ServerUrl { get; }
 
         /// <summary> 
-        /// The token audience for which we will grant entitlements
+        /// The issuer we expect to see on tokens presented to use for verification
         /// </summary> 
         public string Audience { get; }
+
+        /// <summary>
+        /// The issuer we expect to see on tokens presented to us for verification
+        /// </summary>
+        public string Issuer { get; }
 
         /// <summary>
         /// Initialize a blank set of server options
@@ -117,6 +122,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return new ServerOptions(this, audience: audience);
         }
 
+        /// <summary> 
+        /// Specify the issuer expected in the token  
+        /// </summary> 
+        /// <param name="issuer">The audience expected within the generated token.</param> 
+        /// <returns>New instance of <see cref="ServerOptions"/>.</returns>
+        public ServerOptions WithIssuer(string issuer)
+        {
+            if (string.IsNullOrEmpty(issuer))
+            {
+                throw new ArgumentException("Expect to have an issuer", nameof(issuer));
+            }
+
+            return new ServerOptions(this, issuer: issuer);
+        }
+
         /// <summary>
         /// Mutating constructor used to create variations of an existing set of options
         /// </summary>
@@ -125,14 +145,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="encryptionCertificate">Certificate to use for encrypting tokens (optional).</param>
         /// <param name="connectionCertificate">Certificate to use for our HTTPS connection (optional).</param>
         /// <param name="serverUrl">Server host URL (optional).</param>
-        /// <param name="audience">Audience expected of tokens.</param>
+        /// <param name="audience">Audience we expect to find in each token.</param>
+        /// <param name="issuer">Issuer we expect to find in each token.</param>
         private ServerOptions(
             ServerOptions original,
             X509Certificate2 signingCertificate = null,
             X509Certificate2 encryptionCertificate = null,
             X509Certificate2 connectionCertificate = null,
             Uri serverUrl = null,
-            string audience = null)
+            string audience = null,
+            string issuer = null)
         {
             if (original == null)
             {
@@ -144,6 +166,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             ConnectionCertificate = connectionCertificate ?? original.ConnectionCertificate;
             ServerUrl = serverUrl ?? original.ServerUrl;
             Audience = audience ?? original.Audience;
+            Issuer = issuer ?? original.Issuer;
         }
     }
 }
