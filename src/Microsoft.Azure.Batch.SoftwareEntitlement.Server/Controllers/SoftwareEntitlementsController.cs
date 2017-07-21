@@ -83,6 +83,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             var verificationResult = _verifier.Verify(
                 entitlementRequest.Token,
                 _options.Audience,
+                _options.Issuer,
                 entitlementRequest.ApplicationId,
                 remoteAddress);
             if (!verificationResult.HasValue)
@@ -142,16 +143,23 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             public string Audience { get; }
 
             /// <summary>
-            /// Initializes a new instance of the <see cref="Options"/> class.
+            /// Gets the issuer by which tokens should have been created
+            /// </summary>
+            public string Issuer { get; }
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="Options"/> class
             /// </summary>
             /// <param name="signingKey">Key to use when checking token signatures.</param>
             /// <param name="encryptionKey">Key to use when decrypting tokens.</param>
             /// <param name="audience">Audience to which tokens should be addressed.</param>
-            public Options(SecurityKey signingKey, SecurityKey encryptionKey, string audience)
+            /// <param name="issuer">Issuer by which tokens should have been created.</param>
+            public Options(SecurityKey signingKey, SecurityKey encryptionKey, string audience, string issuer)
             {
                 SigningKey = signingKey;
                 EncryptionKey = encryptionKey;
                 Audience = audience;
+                Issuer = issuer;
             }
         }
     }

@@ -21,7 +21,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option("url", HelpText = "The URL at which the server should process requests (defaults to 'https://localhost:4443'; must start with 'https:').")]
         public string ServerUrl { get; set; } = "https://localhost:4443";
 
-        [Option("audience", HelpText = "Audience to which all tokens must be addressed (optional; defaults to 'https://batch.azure.test/software-entitlement').")]
+        [Option("audience", HelpText = "[Internal] Audience to which all tokens must be addressed (optional).")]
         public string Audience { get; set; }
+
+        [Option("issuer", HelpText = "[Internal] Issuer by which all tokens must have been created (optional).")]
+        public string Issuer { get; set; }
     }
 }
