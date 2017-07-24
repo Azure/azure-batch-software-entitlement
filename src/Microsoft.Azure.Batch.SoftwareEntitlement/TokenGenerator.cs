@@ -54,8 +54,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 throw new ArgumentNullException(nameof(entitlements));
             }
 
-            var claims = CreateClaims(entitlements);
-
             _logger.LogDebug(
                 "Not Before: {NotBefore}",
                 entitlements.NotBefore.ToString(TimestampParser.ExpectedFormat));
@@ -84,6 +82,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var effectiveAudience = entitlements.Audience ?? Claims.DefaultAudience;
             _logger.LogDebug("Audience is {Audience}", effectiveAudience);
 
+            var claims = CreateClaims(entitlements);
             var claimsIdentity = new ClaimsIdentity(claims);
             var securityTokenDescriptor = new SecurityTokenDescriptor
             {
