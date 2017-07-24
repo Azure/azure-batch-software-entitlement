@@ -30,7 +30,7 @@ The Batch service provides two pieces of information to a metered software appli
 
 | Variable                              | Definition                                                                                                        |
 | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `AZ_BATCH_ACCOUNT_URL`                | The URL of an endpoint for the batch service account. <p/> Sample: `https://demo.westus.batch.azure.com` |
+| `AZ_BATCH_ACCOUNT_URL`                | The URL of an endpoint for the batch service account. <br/> Sample: `https://demo.westus.batch.azure.com` |
 | `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN` | An encoded string containing the actual software entitlement token.                                               |
 
 The software package will check that the provided batch account endpoint specifies a *known host* (such as `*.batch.azure.com` or one of the equivalents for national clouds); if it does not, the software package should not consider itself entitled. If the endpoint is known, the software application will request a software entitlement from the specified server over a secured HTTPS/TLS connection.
