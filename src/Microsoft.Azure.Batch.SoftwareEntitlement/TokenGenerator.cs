@@ -54,8 +54,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 throw new ArgumentNullException(nameof(entitlements));
             }
 
-            var claims = CreateClaims(entitlements);
-
             _logger.LogDebug(
                 "Not Before: {NotBefore}",
                 entitlements.NotBefore.ToString(TimestampParser.ExpectedFormat));
@@ -78,6 +76,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     EncryptingCredentials.Key.KeyId);
             }
 
+            var effectiveIssuer = entitlements.Issuer ?? Claims.DefaultIssuer;
+            _logger.LogDebug("Issued by {Issuer}", effectiveIssuer);
+
+            var effectiveAudience = entitlements.Audience ?? Claims.DefaultAudience;
+            _logger.LogDebug("Audience is {Audience}", effectiveAudience);
+
+            var claims = CreateClaims(entitlements);
             var claimsIdentity = new ClaimsIdentity(claims);
             var securityTokenDescriptor = new SecurityTokenDescriptor
             {
@@ -85,8 +90,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 NotBefore = entitlements.NotBefore.UtcDateTime,
                 Expires = entitlements.NotAfter.UtcDateTime,
                 IssuedAt = DateTimeOffset.Now.UtcDateTime,
-                Issuer = entitlements.Issuer ?? Claims.DefaultIssuer,
-                Audience = entitlements.Audience ?? Claims.DefaultAudience,
+                Issuer = effectiveIssuer,
+                Audience = effectiveAudience,
                 SigningCredentials = SigningCredentials,
                 EncryptingCredentials = EncryptingCredentials
             };
