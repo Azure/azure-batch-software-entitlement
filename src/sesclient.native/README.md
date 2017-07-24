@@ -11,8 +11,8 @@ The executable expects the following parameters (in any order):
 
 | Parameter            | Required  | Definition                                                                                                                         |
 | -------------------- | --------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| --url                | Mandatory | The URL at which the server should process requests. <p/> **Note**: must start with `https:`.                                      |
-| --thumbprint         | Mandatory | Thumbprint of a certificatein the server's SSL certificate chain. <p/> **Note**: cannot be the thumbprint of the root certificate. |
+| --url                | Mandatory | The URL at which the server should process requests. <br/> **Note**: must start with `https:`.                                      |
+| --thumbprint         | Mandatory | Thumbprint of a certificatein the server's SSL certificate chain. <br/> **Note**: cannot be the thumbprint of the root certificate. |
 | --common-name        | Mandatory | The common name of the certificate indicated by `--thumbprint`.                                                                    |
 | --token              | Mandatory | The token as returned by `sestest generate`.                                                                                       |
 | --application        | Mandatory | Unique identifier for the application being requested.                                                                             |
