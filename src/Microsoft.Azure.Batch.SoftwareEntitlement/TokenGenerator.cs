@@ -81,6 +81,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var effectiveIssuer = entitlements.Issuer ?? Claims.DefaultIssuer;
             _logger.LogDebug("Issued by {Issuer}", effectiveIssuer);
 
+            var effectiveAudience = entitlements.Audience ?? Claims.DefaultAudience;
+            _logger.LogDebug("Audience is {Audience}", effectiveAudience);
+
             var claimsIdentity = new ClaimsIdentity(claims);
             var securityTokenDescriptor = new SecurityTokenDescriptor
             {
@@ -88,8 +91,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 NotBefore = entitlements.NotBefore.UtcDateTime,
                 Expires = entitlements.NotAfter.UtcDateTime,
                 IssuedAt = DateTimeOffset.Now.UtcDateTime,
-                Audience = entitlements.Audience ?? Claims.DefaultAudience,
                 Issuer = effectiveIssuer,
+                Audience = effectiveAudience,
                 SigningCredentials = SigningCredentials,
                 EncryptingCredentials = EncryptingCredentials
             };
