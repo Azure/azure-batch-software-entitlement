@@ -50,6 +50,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public string Audience { get; }
 
         /// <summary>
+        /// The issuer who hands out entitlement tokens
+        /// </summary>
+        public string Issuer { get; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="NodeEntitlements"/> class
         /// </summary>
         public NodeEntitlements()
@@ -63,6 +68,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             Applications = ImmutableHashSet<string>.Empty;
             IpAddresses = ImmutableHashSet<IPAddress>.Empty;
             Audience = Claims.DefaultAudience;
+            Issuer = Claims.DefaultIssuer;
         }
 
         /// <summary>
@@ -161,6 +167,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
+        /// Specify the issuer to use in the token 
+        /// </summary>
+        /// <param name="issuer">The issuer for the generated token.</param>
+        /// <returns>A new entitlement</returns>
+        public NodeEntitlements WithIssuer(string issuer)
+        {
+            if (string.IsNullOrEmpty(issuer))
+            {
+                throw new ArgumentException("Expect to have an issuer", nameof(issuer));
+            }
+
+            return new NodeEntitlements(this, issuer: issuer);
+        }
+
+        /// <summary>
         /// Cloning constructor to initialize a new instance of the <see cref="NodeEntitlements"/>
         /// class as a (near) copy of an existing one.
         /// </summary>
@@ -173,6 +194,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="identifier">Identifier to use for this entitlement.</param>
         /// <param name="addresses">Addresses of the entitled machine.</param>
         /// <param name="audience">Audience for whom the token is intended.</param>
+        /// <param name="issuer">Issuer identifier for the token.</param>
         private NodeEntitlements(
             NodeEntitlements original,
             DateTimeOffset? notBefore = null,
@@ -181,7 +203,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             ImmutableHashSet<string> applications = null,
             string identifier = null,
             ImmutableHashSet<IPAddress> addresses = null,
-            string audience = null)
+            string audience = null,
+            string issuer = null)
         {
             Created = original.Created;
 
@@ -192,6 +215,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             Identifier = identifier ?? original.Identifier;
             IpAddresses = addresses ?? original.IpAddresses;
             Audience = audience ?? original.Audience;
+            Issuer = issuer ?? original.Issuer;
         }
     }
 }

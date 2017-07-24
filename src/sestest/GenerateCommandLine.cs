@@ -32,7 +32,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option('f', "token-file", HelpText = "The name of a file into which the token will be written (token will be written to the console otherwise).")]
         public string TokenFile { get; set; }
 
-        [Option("audience", HelpText = "Audience to which tokens will be addressed (optional; defaults to 'https://batch.azure.test/software-entitlement').")]
+        [Option("audience", HelpText = "[Internal] Audience to which tokens will be addressed (optional).")]
         public string Audience { get; set; }
+
+        [Option("issuer", HelpText = "[Internal] Issuer by whom the tokens are created (optional).")]
+        public string Issuer { get; set; }
     }
 }

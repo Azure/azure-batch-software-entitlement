@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
-using System.Net.Sockets;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -83,6 +82,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             Configure(NotBefore, notBefore => entitlement.FromInstant(notBefore));
             Configure(NotAfter, notAfter => entitlement.UntilInstant(notAfter));
             Configure(Audience, audience => entitlement.WithAudience(audience));
+            Configure(Issuer, issuer => entitlement.WithIssuer(issuer));
             ConfigureAll(Addresses, address => entitlement.AddIpAddress(address));
             ConfigureAll(Applications, app => entitlement.AddApplication(app));
 
@@ -134,6 +134,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             return Errorable.Success(_commandLine.Audience);
+        }
+
+        private Errorable<string> Issuer()
+        {
+            if (string.IsNullOrEmpty(_commandLine.Issuer))
+            {
+                return Errorable.Success(Claims.DefaultIssuer);
+            }
+
+            return Errorable.Success(_commandLine.Issuer);
         }
 
         private IEnumerable<Errorable<IPAddress>> Addresses()
