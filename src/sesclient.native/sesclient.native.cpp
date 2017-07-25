@@ -14,14 +14,11 @@ void ShowUsage(const char* exeName)
 }
 
 
-static const std::array<std::string, 5> parameterNames = {
+static const std::array<std::string, 3> mandatoryParameterNames = {
     "--url",
-    "--thumbprint",
-    "--common-name",
     "--token",
     "--application"
 };
-
 
 struct Initializer
 {
@@ -64,7 +61,7 @@ int main(int argc, char** argv)
             parameters.emplace(key, value);
         }
 
-        for (const auto& param : parameterNames)
+        for (const auto& param : mandatoryParameterNames)
         {
             if (parameters.find(param) == parameters.end())
             {
