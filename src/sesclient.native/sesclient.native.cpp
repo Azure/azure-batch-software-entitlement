@@ -14,10 +14,15 @@ void ShowUsage(const char* exeName)
 }
 
 
-static const std::array<std::string, 3> mandatoryParameterNames = {
+static const std::vector<std::string> mandatoryParameterNames = {
 	"--url",
 	"--token",
 	"--application"
+};
+
+static const std::vector<std::string> optionalParameterNames = {
+	"--thumbprint",
+	"--common-name"
 };
 
 struct Initializer
@@ -43,6 +48,35 @@ struct Initializer
 auto shouldShowUsage = false;
 auto configurationError = false;
 
+void CheckForMandatoryParameters(const std::unordered_map<std::string, std::string>& parameters)
+{
+	for (const auto& param : mandatoryParameterNames)
+	{
+		if (parameters.find(param) == parameters.end())
+		{
+			std::cout << "Missing mandatory parameter " << param << std::endl;
+			configurationError = true;
+		}
+	}
+}
+
+void CheckForExtraParameters(const std::unordered_map<std::string, std::string>& parameters)
+{
+	for (const auto& parameter : parameters)
+	{
+		if (std::find(mandatoryParameterNames.begin(), mandatoryParameterNames.end(), parameter.first) != mandatoryParameterNames.end()) {
+			continue;
+		}
+
+		if (std::find(optionalParameterNames.begin(), optionalParameterNames.end(), parameter.first) != optionalParameterNames.end()) {
+			continue;
+		}
+
+		std::cout << "Unexpected additional parameter " << parameter.second << std::endl;
+		configurationError = true;
+	}
+}
+
 std::unordered_map<std::string, std::string> ReadParameters(int argc, char** argv)
 {
 	std::unordered_map<std::string, std::string> parameters;
@@ -64,14 +98,8 @@ std::unordered_map<std::string, std::string> ReadParameters(int argc, char** arg
 	}
 	else
 	{
-		for (const auto& param : mandatoryParameterNames)
-		{
-			if (parameters.find(param) == parameters.end())
-			{
-				std::cout << "Missing mandatory parameter " << param << std::endl;
-				configurationError = true;
-			}
-		}
+		CheckForMandatoryParameters(parameters);
+		CheckForExtraParameters(parameters);
 	}
 
 	return parameters;
