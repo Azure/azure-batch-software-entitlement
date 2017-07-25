@@ -77,6 +77,18 @@ std::unordered_map<std::string, std::string> ReadParameters(int argc, char** arg
 	return parameters;
 }
 
+std::string ReadToken(const std::unordered_map<std::string, std::string>& parameters)
+{
+	std::string token = parameters.find("--token")->second;
+	if (token == "-")
+	{
+		// Read the token from stdin.
+		std::getline(std::cin, token);
+	}
+
+	return token;
+}
+
 int main(int argc, char** argv)
 {
     try
@@ -84,15 +96,7 @@ int main(int argc, char** argv)
         Initializer init;
 
 		auto parameters = ReadParameters(argc, argv);
-
-        std::string token = parameters.find("--token")->second;
-        if (token == "-")
-        {
-            //
-            // Read the token from stdin.
-            //
-            std::getline(std::cin, token);
-        }
+		auto token = ReadToken(parameters);
 
         Microsoft::Azure::Batch::SoftwareEntitlement::AddSslCertificate(
             parameters.find("--thumbprint")->second,
