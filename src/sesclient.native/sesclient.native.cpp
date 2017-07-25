@@ -3,14 +3,18 @@
 
 void ShowUsage(const char* exeName)
 {
-	std::cout << exeName << ":" << std::endl;
-	std::cout << "Contacts the specified Azure Batch software entitlement server to verify the provided token." << std::endl;
-	std::cout << "Parameters:" << std::endl;
-	std::cout << "    --url <software entitlement server URL>" << std::endl;
-	std::cout << "    --thumbprint <thumbprint of a certificate expected in the server's SSL certificate chain (optional)>" << std::endl;
-	std::cout << "    --common-name <common name of the certificate with the specified thumbprint (optional)>" << std::endl;
-	std::cout << "    --token <software entitlement token to pass to the server>" << std::endl;
-	std::cout << "    --application <name of the license ID being requested>" << std::endl;
+    std::cout
+        << exeName << ":" << std::endl
+        << "Contacts the specified Azure Batch software entitlement server to verify the provided token." << std::endl
+        << std::endl
+        << "Mandatory parameters:" << std::endl
+        << "    --url <software entitlement server URL>" << std::endl
+        << "    --token <software entitlement token to pass to the server>" << std::endl
+        << "    --application <name of the license ID being requested>" << std::endl
+        << std::endl
+        << "Mandatory parameters:" << std::endl
+        << "    --thumbprint <thumbprint of a certificate expected in the server's SSL certificate chain>" << std::endl
+        << "    --common-name <common name of the certificate with the specified thumbprint>" << std::endl;
 }
 
 
