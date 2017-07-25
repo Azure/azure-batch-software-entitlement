@@ -40,6 +40,42 @@ struct Initializer
     }
 };
 
+auto shouldShowUsage = false;
+auto configurationError = false;
+
+std::unordered_map<std::string, std::string> ReadParameters(int argc, char** argv)
+{
+	std::unordered_map<std::string, std::string> parameters;
+
+	if ((argc % 2) == 1)
+	{
+		// We have pairs of parameters, collect them into our map
+		while (argc != 1)
+		{
+			auto value = argv[--argc];
+			auto key = argv[--argc];
+			parameters.emplace(key, value);
+		}
+	}
+
+	if (parameters.size() == 0)
+	{
+		shouldShowUsage = true;
+	}
+	else
+	{
+		for (const auto& param : mandatoryParameterNames)
+		{
+			if (parameters.find(param) == parameters.end())
+			{
+				std::cout << "Missing mandatory parameter " << param << std::endl;
+				configurationError = true;
+			}
+		}
+	}
+
+	return parameters;
+}
 
 int main(int argc, char** argv)
 {
@@ -47,28 +83,7 @@ int main(int argc, char** argv)
     {
         Initializer init;
 
-        if (argc != 11)
-        {
-            ShowUsage(argv[0]);
-            return -1;
-        }
-
-        std::unordered_map<std::string, std::string> parameters;
-        while (argc != 1)
-        {
-            auto value = argv[--argc];
-            auto key = argv[--argc];
-            parameters.emplace(key, value);
-        }
-
-        for (const auto& param : mandatoryParameterNames)
-        {
-            if (parameters.find(param) == parameters.end())
-            {
-                std::cout << "Missing parameter " << param << std::endl;
-                return -EINVAL;
-            }
-        }
+		auto parameters = ReadParameters(argc, argv);
 
         std::string token = parameters.find("--token")->second;
         if (token == "-")
@@ -83,6 +98,17 @@ int main(int argc, char** argv)
             parameters.find("--thumbprint")->second,
             parameters.find("--common-name")->second
         );
+
+		if (shouldShowUsage)
+		{
+			ShowUsage(argv[0]);
+			return -1;
+		}
+
+		if (configurationError)
+		{
+			return -EINVAL;
+		}
 
         auto entitlement = Microsoft::Azure::Batch::SoftwareEntitlement::GetEntitlement(
             parameters.find("--url")->second,
