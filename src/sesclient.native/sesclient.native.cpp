@@ -18,13 +18,13 @@ void ShowUsage(const char* exeName)
 }
 
 
-static const std::vector<std::string> mandatoryParameterNames = {
+static const std::array<std::string, 3> mandatoryParameterNames = {
     "--url",
     "--token",
     "--application"
 };
 
-static const std::vector<std::string> optionalParameterNames = {
+static const std::array<std::string, 2> optionalParameterNames = {
     "--thumbprint",
     "--common-name"
 };
