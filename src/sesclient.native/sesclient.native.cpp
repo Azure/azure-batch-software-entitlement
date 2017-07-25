@@ -77,6 +77,33 @@ std::unordered_map<std::string, std::string> ReadParameters(int argc, char** arg
 	return parameters;
 }
 
+void ConfigureConnection(const std::unordered_map<std::string, std::string>& parameters)
+{
+	auto thumbprintParameter = parameters.find("--thumbprint");
+	auto commonNameParameter = parameters.find("--common-name");
+
+	if (thumbprintParameter != parameters.end()
+		&& commonNameParameter != parameters.end())
+	{
+		Microsoft::Azure::Batch::SoftwareEntitlement::AddSslCertificate(
+			thumbprintParameter->second,
+			commonNameParameter->second
+		);
+	}
+	else if (thumbprintParameter == parameters.end()
+		&& commonNameParameter != parameters.end())
+	{
+		std::cout << "--thumbprint must be used when --common-name is used" << std::endl;
+		configurationError = true;
+	}
+	else if (thumbprintParameter != parameters.end()
+		&& commonNameParameter == parameters.end())
+	{
+		std::cout << "--common-name must be used when --thumbprint is used" << std::endl;
+		configurationError = true;
+	}
+}
+
 std::string ReadToken(const std::unordered_map<std::string, std::string>& parameters)
 {
 	std::string token = parameters.find("--token")->second;
@@ -97,11 +124,7 @@ int main(int argc, char** argv)
 
 		auto parameters = ReadParameters(argc, argv);
 		auto token = ReadToken(parameters);
-
-        Microsoft::Azure::Batch::SoftwareEntitlement::AddSslCertificate(
-            parameters.find("--thumbprint")->second,
-            parameters.find("--common-name")->second
-        );
+		ConfigureConnection(parameters);
 
 		if (shouldShowUsage)
 		{
