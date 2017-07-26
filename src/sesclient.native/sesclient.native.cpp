@@ -53,7 +53,7 @@ struct ParameterParser
 {
 public:
 
-    void parse(int argc, char** argv)
+    bool parse(int argc, char** argv)
     {
         if ((argc % 2) == 1)
         {
@@ -68,13 +68,14 @@ public:
 
         if (_parameters.size() == 0)
         {
-            _shouldShowUsage = true;
+            // Need to show usage to the end user
+            return true;
         }
-        else
-        {
-            checkForMandatoryParameters(_parameters);
-            checkForExtraParameters(_parameters);
-        }
+
+        checkForMandatoryParameters(_parameters);
+        checkForExtraParameters(_parameters);
+
+        return false;
     }
 
     bool contains(std::string name)
@@ -87,18 +88,12 @@ public:
         return _parameters.find(name)->second;
     }
 
-    bool shouldShowUsage()
-    {
-        return _shouldShowUsage;
-    }
-
     bool hasConfigurationError()
     {
         return _hasConfigurationError;
     }
 
 private:
-    bool _shouldShowUsage = false;
     bool _hasConfigurationError = false;
     std::unordered_map<std::string, std::string> _parameters;
 
@@ -180,9 +175,8 @@ int main(int argc, char** argv)
         Initializer init;
         ParameterParser parser;
 
-        parser.parse(argc, argv);
-
-        if (parser.shouldShowUsage())
+        auto shouldShowUsage = parser.parse(argc, argv);
+        if (shouldShowUsage)
         {
             ShowUsage(argv[0]);
             return -1;
