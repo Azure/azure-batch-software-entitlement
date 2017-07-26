@@ -161,7 +161,10 @@ std::string readToken(ParameterParser& parameters)
     if (token == "-")
     {
         // Read the token from stdin.
-        std::getline(std::cin, token);
+        if (!std::getline(std::cin, token))
+        {
+            throw std::runtime_error("Failed to read token from stdin");
+        }
     }
 
     return token;
