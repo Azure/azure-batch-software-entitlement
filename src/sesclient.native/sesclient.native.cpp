@@ -78,17 +78,17 @@ public:
         return false;
     }
 
-    bool contains(std::string name)
+    bool contains(const std::string& name) const
     {
         return _parameters.find(name) != _parameters.end();
     }
 
-    std::string find(std::string name)
+    std::string find(const std::string& name) const
     {
         return _parameters.find(name)->second;
     }
 
-    bool hasConfigurationError()
+    bool hasConfigurationError() const
     {
         return _hasConfigurationError;
     }
@@ -127,8 +127,7 @@ private:
     }
 };
 
-
-bool configureConnection(ParameterParser& parameters)
+bool configureConnection(const ParameterParser& parameters)
 {
     if (!parameters.contains("--thumbprint")
         && !parameters.contains("--common-name"))
