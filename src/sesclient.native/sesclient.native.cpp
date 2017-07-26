@@ -3,7 +3,7 @@
 
 void ShowUsage(const char* exeName)
 {
-    std::cout
+    std::cerr
         << exeName << ":" << std::endl
         << "Contacts the specified Azure Batch software entitlement server to verify the provided token." << std::endl
         << std::endl
