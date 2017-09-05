@@ -1,14 +1,8 @@
 # REST API for the Software Entitlement Service
 
-Reference documentation for the current version of the REST API supported by the Software Entitlement Service. For historical versions, see the end of this document.
+Reference documentation for the current version of the REST API supported by the Software Entitlement Service. For historical versions and a list of changes, see the end of this document.
 
-## Changes in this version
-
-Changes in this version of the REST API are:
-
-* Removal of the `vmid` value from the response to a successful entitlement verification request.
-
-## Token Verification
+ Token Verification
 
 Verifies that a provided software entitlement token grants permission to use a specific application.
 
@@ -89,3 +83,9 @@ The service will return HTTP status 400 and the response body will be empty if:
 For prior versions of the REST API, see the following pages:
 
 * Initial release, July 2017: [API Version 2017-05-01.5.0](rest-api-2017-05-01.5.0.md)
+
+### Changes in this version
+
+Changes in this version of the REST API are:
+
+* Removal of the `vmid` value from the response to a successful entitlement verification request.
