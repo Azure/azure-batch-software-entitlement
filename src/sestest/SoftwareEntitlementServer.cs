@@ -1,9 +1,9 @@
-﻿using System;
 using System.IO;
+using System.Net;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.Server.Kestrel;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers;
@@ -74,16 +74,23 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             services.AddSingleton(_provider);
         }
 
-        private void ConfigureKestrel(KestrelServerOptions options)
+        private void ConfigureKestrel(KestrelServerOptions serverOptions)
         {
-            var httpsOptions = new HttpsConnectionFilterOptions()
+            var addresses = Dns.GetHostAddresses(_options.ServerUrl.Host);
+            var httpsOptions = new HttpsConnectionAdapterOptions()
             {
                 CheckCertificateRevocation = true,
                 ClientCertificateMode = ClientCertificateMode.AllowCertificate,
                 ServerCertificate = _options.ConnectionCertificate
             };
 
-            options.UseHttps(httpsOptions);
+            foreach (var address in addresses)
+            {
+                serverOptions.Listen(
+                    address,
+                    _options.ServerUrl.Port,
+                    listenOptions => listenOptions.UseHttps(httpsOptions));
+            }
         }
 
         /// <summary>
