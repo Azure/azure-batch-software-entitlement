@@ -1,0 +1,10 @@
+<Project>
+ <PropertyGroup>
+    <OutputPath>$(MSBuildProjectDirectory)\..\..\out\$(MSBuildProjectName)\$(Configuration)\</OutputPath>
+    <DebugType>full</DebugType>
+    <DebugSymbols>True</DebugSymbols>
+    <Company>Microsoft</Company>
+    <Authors>Azure Batch</Authors>
+    <Product>Azure Batch Software Entitlement Service SDK</Product>
+</PropertyGroup>
+</Project>
