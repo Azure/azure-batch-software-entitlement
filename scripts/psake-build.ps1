@@ -7,22 +7,34 @@ properties {
     $buildDir = "$baseDir\build"
     $srcDir = resolve-path $baseDir\src
     $testsDir = resolve-path $baseDir\tests
+    $publishDir = "$baseDir\publish"
 }
 
 Task Build.Xplat -Depends Build.SesTest, Unit.Tests
 
+Task Publish.Xplat -Depends Clean.Publish, Publish.SesTest.Win64, Publish.SesTest.Linux64
+
 Task Build.Windows -Depends Build.SesLibrary, Build.SesClient
 
 ## --------------------------------------------------------------------------------
-##   Build Targets
+##   Preparation Targets
 ## --------------------------------------------------------------------------------
-## Tasks used to perform steps of the actual build
+## Tasks used to prepare for the actual build
 
 Task Restore.NuGetPackages -Depends Requires.DotNetExe {
     exec {
         & $dotnetExe restore $baseDir\src\sestest
     }
 }
+
+Task Clean.Publish {
+    remove-item $publishDir -Force -Recurse
+}
+
+## --------------------------------------------------------------------------------
+##   Build Targets
+## --------------------------------------------------------------------------------
+## Tasks used to perform steps of the actual build
 
 Task Build.SesTest -Depends Requires.DotNetExe, Restore.NuGetPackages {
     exec {
@@ -48,6 +60,26 @@ Task Unit.Tests -Depends Requires.DotNetExe, Build.SesTest {
         exec {
             & $dotnetExe test $project
         }
+    }
+}
+
+Task Publish.SesTest.Win64 -Depends Requires.DotNetExe, Restore.NuGetPackages {
+    exec {
+        & $dotnetExe publish $srcDir\sestest\sestest.csproj --self-contained --output $publishDir\sestest\win10-x64 --runtime win10-x64
+    }
+
+    exec {
+        compress-archive $publishDir\sestest\win10-x64\* $publishDir\sestest-win10-x64.zip
+    }
+}
+
+Task Publish.SesTest.Linux64 -Depends Requires.DotNetExe, Restore.NuGetPackages {
+    exec {
+        & $dotnetExe publish $srcDir\sestest\sestest.csproj --self-contained --output $publishDir\sestest\linux-x64 --runtime linux-x64
+    }
+
+    exec {
+        compress-archive $publishDir\sestest\linux-x64\* $publishDir\sestest-linux-x64.zip
     }
 }
 
