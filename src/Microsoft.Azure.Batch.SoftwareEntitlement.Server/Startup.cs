@@ -33,9 +33,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
         }
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        [SuppressMessage("Redundancy", "RCS1163:Unused parameter.")]
-        [SuppressMessage("Redundancies in Symbol Declarations", "RECS0154:Parameter is never used")]
+        [SuppressMessage(
+            "Redundancy", "RCS1163:Unused parameter.", Justification = "This method gets called by the ASP.NET runtime. ")]
+        [SuppressMessage(
+            "Redundancies in Symbol Declarations", "RECS0154:Parameter is never used", Justification = "This method gets called by the ASP.NET runtime. ")]
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
         {
             loggerFactory.AddProvider(_provider);
