@@ -13,7 +13,6 @@
     <PackageReference Include="System.Collections.Immutable" Version="1.4.0" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="5.1.4" />
     <PackageReference Include="System.Runtime.Analyzers" Version="1.1.0" />
-    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
   </ItemGroup>
 
   <ItemGroup>
