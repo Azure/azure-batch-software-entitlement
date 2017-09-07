@@ -10,16 +10,6 @@
     <AssemblyName>sestest</AssemblyName>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>..\..\out\sestest\Debug\</OutputPath>
-    <DebugType>full</DebugType>
-    <DebugSymbols>True</DebugSymbols>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>..\..\out\sestest\Release\</OutputPath>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.1.1-beta" />
     <PackageReference Include="Desktop.Analyzers" Version="1.1.0" />

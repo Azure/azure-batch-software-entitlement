@@ -4,18 +4,6 @@
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>..\..\out\Microsoft.Azure.Batch.SoftwareEntitlement\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG;NETSTANDARD1_5</DefineConstants>
-    <DebugType>full</DebugType>
-    <DebugSymbols>True</DebugSymbols>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>..\..\out\Microsoft.Azure.Batch.SoftwareEntitlement\Release\</OutputPath>
-    <DefineConstants>TRACE;RELEASE;NETSTANDARD1_5</DefineConstants>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Microsoft.AnalyzerPowerPack" Version="1.1.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />

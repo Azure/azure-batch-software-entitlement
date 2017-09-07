@@ -4,16 +4,6 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <OutputPath>..\..\out\Microsoft.Azure.Batch.SoftwareEntitlement.Tests\Debug\</OutputPath>
-    <DebugType>full</DebugType>
-    <DebugSymbols>True</DebugSymbols>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <OutputPath>..\..\out\Microsoft.Azure.Batch.SoftwareEntitlement.Tests\Release\</OutputPath>
-  </PropertyGroup>
-
   <ItemGroup>
     <PackageReference Include="Castle.Core" Version="4.1.1" />
     <PackageReference Include="FluentAssertions" Version="4.19.4" />
