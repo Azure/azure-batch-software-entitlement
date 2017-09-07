@@ -2,7 +2,7 @@
 
 Reference documentation for the current version of the REST API supported by the Software Entitlement Service. For historical versions and a list of changes, see the end of this document.
 
- Token Verification
+## Token Verification
 
 Verifies that a provided software entitlement token grants permission to use a specific application.
 
