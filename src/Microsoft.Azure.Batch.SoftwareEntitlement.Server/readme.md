@@ -44,12 +44,14 @@ The following example shows a sample JSON response:
 ``` json
 {
     "id": "entitlement-24223578-1CE8-4168-91E0-126C2D5EAA0B",
+    "expiry": "2017-07-21T01:47:38.4420202Z"
 }
 ```
 
-| Element | Required  | Type   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ------- | --------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| id      | Mandatory | string | A unique identifier for the specific entitlement issued to the application. <br/> Multiple entitlement requests for the same application from the same compute node may (but are not required to) return the same identifier. <br/> Entitlement requests from different compute nodes will not return duplicate identifiers. <br/> Clients should make no assumptions about the structure of the `id` as it may change from release to release. |
+| Element | Required  |   Type   |                                                                                                                                                                                                                   Description                                                                                                                                                                                                                   |
+| ------- | --------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id      | Mandatory | string   | A unique identifier for the specific entitlement issued to the application. <br/> Multiple entitlement requests for the same application from the same compute node may (but are not required to) return the same identifier. <br/> Entitlement requests from different compute nodes will not return duplicate identifiers. <br/> Clients should make no assumptions about the structure of the `id` as it may change from release to release. |
+| expiry  | Mandatory | DateTime | The expiry timestamp of the token; further verification requests after this instant will be declined.                                                                                                                                                                                                                                                                                                                                           |
 
 ### RESPONSE 403 - FORBIDDEN
 
@@ -89,3 +91,5 @@ For prior versions of the REST API, see the following pages:
 Changes in this version of the REST API are:
 
 * Removal of the `vmid` value from the response to a successful entitlement verification request.
+* Addition of the `expiry` value to the response, giving visibility of the scheduled token expiry.
+
