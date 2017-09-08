@@ -1,6 +1,6 @@
 <Project>
  <PropertyGroup>
-    <OutputPath>$(MSBuildProjectDirectory)\..\..\out\$(MSBuildProjectName)\$(Configuration)\</OutputPath>
+    <OutputPath>$(MSBuildProjectDirectory)\..\..\out\$(MSBuildProjectName)\$(Configuration)\$(Platform)</OutputPath>
     <DebugType>full</DebugType>
     <DebugSymbols>True</DebugSymbols>
     <Company>Microsoft</Company>
