@@ -4,11 +4,11 @@
 
 properties {
     $baseDir = resolve-path ..\
-    $buildDir = "$baseDir\build"
+    $buildDir = join-path $baseDir build
     $srcDir = resolve-path $baseDir\src
     $testsDir = resolve-path $baseDir\tests
-    $outDir = "$baseDir\out"
-    $publishDir = "$baseDir\publish"
+    $outDir = join-path $baseDir out
+    $publishDir = join-path $baseDir publish
 }
 
 Task Clean -Depends Clean.SourceFolder, Clean.OutFolder, Clean.PublishFolder
@@ -182,9 +182,7 @@ formatTaskName {
     return "`r`n$divider`r`n  $taskName`r`n$divider`r`n"
 } 
 
-function Write-SubtaskName {
-    param($subtaskName)
-
+function Write-SubtaskName($subtaskName) {
     $divider = "-" * ($subtaskName.Length + 4)
     Write-Host "`r`n$divider`r`n  $subtaskName`r`n$divider"
 }
