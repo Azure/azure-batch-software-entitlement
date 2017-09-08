@@ -7,8 +7,11 @@ properties {
     $buildDir = "$baseDir\build"
     $srcDir = resolve-path $baseDir\src
     $testsDir = resolve-path $baseDir\tests
+    $outDir = "$baseDir\out"
     $publishDir = "$baseDir\publish"
 }
+
+Task Clean -Depends Clean.SourceFolder, Clean.OutFolder, Clean.PublishFolder
 
 Task Build.Xplat -Depends Build.SesTest, Unit.Tests
 
@@ -27,7 +30,16 @@ Task Restore.NuGetPackages -Depends Requires.DotNetExe {
     }
 }
 
-Task Clean.Publish {
+Task Clean.SourceFolder {
+    remove-item $srcDir\*\obj\* -recurse -ErrorAction SilentlyContinue
+    remove-item $testsDir\*\obj\* -recurse -ErrorAction SilentlyContinue
+}
+
+Task Clean.OutFolder {
+    remove-item $outDir\* -recurse -ErrorAction SilentlyContinue     
+}
+
+Task Clean.PublishFolder {
     remove-item $publishDir -Force -Recurse
 }
 
