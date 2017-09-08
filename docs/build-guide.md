@@ -10,6 +10,8 @@ The `sestest` command line utility and associated libraries are written in C#7 a
 
 The C++ source for the client library requires [libcurl](https://curl.haxx.se/libcurl/) and [OpenSSL](https://www.openssl.org/) libraries as installed by [vcpkg](https://blogs.msdn.microsoft.com/vcblog/2016/09/19/vcpkg-a-tool-to-acquire-and-build-c-open-source-libraries-on-windows/). The library was also written with Visual Studio 2017; it will compile with any modern C++ compiler. For more information (including details of configuration and use of `vcpkg`) see the [Software entitlement service native client library](../src/Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native)
 
+Build scripts and other tooling are written in PowerShell using the [Psake](https://github.com/psake/psake) make tool. Preinstallation of Psake is optional; if it isn't already available, the build scripts will attempt to use a local version downloaded via NuGet. (See `scripts/bootstrap.ps1` for details.)
+
 ## Building `sestest`
 
 *The console application `sestest` is a utility for generating and verifying software entitlement tokens during development and test.*
