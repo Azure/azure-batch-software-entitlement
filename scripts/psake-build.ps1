@@ -48,9 +48,27 @@ Task Clean.PublishFolder {
 ## --------------------------------------------------------------------------------
 ## Tasks used to perform steps of the actual build
 
-Task Build.SesTest -Depends Requires.DotNetExe, Restore.NuGetPackages {
+Task Generate.Version {
+    
+    $script:version = get-content $baseDir\version.txt -ErrorAction SilentlyContinue
+    if ($version -eq $null) {
+        throw "Unable to load .\version.txt"
+    }
+    Write-Host "Version          $script:version"
+
+    $versionLastUpdated = git rev-list -1 HEAD $baseDir\version.txt
+    $script:patchVersion = git rev-list "$versionLastUpdated..HEAD" --count
+    Write-Host "Patch            $patchVersion"
+
+    $script:semanticVersion = "$version.$patchVersion"
+    Write-Host "Semantic version $semanticVersion"
+}
+
+Task Build.SesTest -Depends Requires.MsBuild, Restore.NuGetPackages, Generate.Version {
+    $project = resolve-path $srcDir\sestest\sestest.csproj
+    Write-Host "Building $project"
     exec {
-        & $dotnetExe build $srcDir\sestest
+        & $msbuildExe $project /p:Version=$semanticVersion /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$buildDir\sestest.msbuild.log 
     }
 }
 
