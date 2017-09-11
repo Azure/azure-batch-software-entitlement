@@ -15,7 +15,7 @@ Task Clean -Depends Clean.SourceFolder, Clean.OutFolder, Clean.PublishFolder
 
 Task Build.Xplat -Depends Build.SesTest, Unit.Tests
 
-Task Publish.Xplat -Depends Clean.Publish, Publish.SesTest.Win64, Publish.SesTest.Linux64
+Task Publish.Xplat -Depends Clean.PublishFolder, Publish.SesTest.Win64, Publish.SesTest.Linux64
 
 Task Build.Windows -Depends Build.SesLibrary, Build.SesClient
 
