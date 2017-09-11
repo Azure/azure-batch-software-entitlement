@@ -40,7 +40,7 @@ Task Clean.OutFolder {
 }
 
 Task Clean.PublishFolder {
-    remove-item $publishDir -Force -Recurse
+    remove-item $publishDir -Force -Recurse -ErrorAction SilentlyContinue
 }
 
 ## --------------------------------------------------------------------------------
@@ -74,13 +74,13 @@ Task Build.SesTest -Depends Requires.MsBuild, Restore.NuGetPackages, Generate.Ve
 
 Task Build.SesLibrary -Depends Requires.MsBuild, Requires.Configuration, Requires.Platform {
     exec {
-        & $msbuildExe $srcDir\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native\ /property:Configuration=$configuration /property:Platform=$targetPlatform
+        & $msbuildExe $srcDir\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native\ /property:Configuration=$configuration /property:Platform=$targetPlatform /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$buildDir\seslibrary.msbuild.log
     }
 }
 
 Task Build.SesClient -Depends Requires.MsBuild, Requires.Configuration, Requires.Platform {
     exec {
-        & $msbuildExe $srcDir\sesclient.native\ /property:Configuration=$configuration /property:Platform=$targetPlatform
+        & $msbuildExe $srcDir\sesclient.native\ /property:Configuration=$configuration /property:Platform=$targetPlatform /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$buildDir\sesclient.msbuild.log
     }
 }
 
@@ -95,7 +95,7 @@ Task Unit.Tests -Depends Requires.DotNetExe, Build.SesTest {
 
 Task Publish.SesTest.Win64 -Depends Requires.DotNetExe, Restore.NuGetPackages {
     exec {
-        & $dotnetExe publish $srcDir\sestest\sestest.csproj --self-contained --output $publishDir\sestest\win10-x64 --runtime win10-x64
+        & $dotnetExe publish $srcDir\sestest\sestest.csproj --self-contained --output $publishDir\sestest\win10-x64 --runtime win10-x64 /p:Version=$semanticVersion
     }
 
     exec {
@@ -105,7 +105,7 @@ Task Publish.SesTest.Win64 -Depends Requires.DotNetExe, Restore.NuGetPackages {
 
 Task Publish.SesTest.Linux64 -Depends Requires.DotNetExe, Restore.NuGetPackages {
     exec {
-        & $dotnetExe publish $srcDir\sestest\sestest.csproj --self-contained --output $publishDir\sestest\linux-x64 --runtime linux-x64
+        & $dotnetExe publish $srcDir\sestest\sestest.csproj --self-contained --output $publishDir\sestest\linux-x64 --runtime linux-x64 /p:Version=$semanticVersion
     }
 
     exec {
