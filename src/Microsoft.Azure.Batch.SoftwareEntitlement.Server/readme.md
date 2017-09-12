@@ -14,10 +14,10 @@ Verifies that a provided software entitlement token grants permission to use a s
 
 Sample: `https://samples.westus.batch.azure.com/softwareEntitlements/?api-version=2017-99-99-9.9`
 
-| Placeholder | Type   | Description                                                                                                                                                                                     |
-| ----------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| endpoint    | string | The Batch account URL endpoint supplied by Azure Batch via environment variable.                                                                                                                |
-| version     | string | The API version of the request. <br/> Must be `2017-99-99.9.9`. <br/>API versions are listed @ https://docs.microsoft.com/en-us/rest/api/batchservice/batch-service-rest-api-versioning |
+| Placeholder |  Type  |                                                                                                                                   Description                                                                                                                                    |
+| ----------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| endpoint    | string | The Batch account URL endpoint supplied by Azure Batch via environment variable.                                                                                                                                                                                                 |
+| version     | string | The API version of the request. <br/> Specify version `2017-99-99.9.9` or higher. <br/> For older API versions, see the end of this document. <br/> All Batch API versions are listed @ https://docs.microsoft.com/en-us/rest/api/batchservice/batch-service-rest-api-versioning |
 
 The following shows a sample JSON payload for the request:
 
