@@ -1,19 +1,20 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26403.7
+VisualStudioVersion = 15.0.26730.12
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Azure.Batch.SoftwareEntitlement.Common", "src\Microsoft.Azure.Batch.SoftwareEntitlement.Common\Microsoft.Azure.Batch.SoftwareEntitlement.Common.csproj", "{25F52B32-4B11-428B-8191-0539280AE99F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.Batch.SoftwareEntitlement.Common", "src\Microsoft.Azure.Batch.SoftwareEntitlement.Common\Microsoft.Azure.Batch.SoftwareEntitlement.Common.csproj", "{25F52B32-4B11-428B-8191-0539280AE99F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests", "tests\Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests\Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests.csproj", "{839CDB41-9FA1-4CA4-B421-7464EAFBA68F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests", "tests\Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests\Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests.csproj", "{839CDB41-9FA1-4CA4-B421-7464EAFBA68F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Azure.Batch.SoftwareEntitlement.Server", "src\Microsoft.Azure.Batch.SoftwareEntitlement.Server\Microsoft.Azure.Batch.SoftwareEntitlement.Server.csproj", "{515AB583-E42F-4CB0-A0C2-DD4064FE6C55}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.Batch.SoftwareEntitlement.Server", "src\Microsoft.Azure.Batch.SoftwareEntitlement.Server\Microsoft.Azure.Batch.SoftwareEntitlement.Server.csproj", "{515AB583-E42F-4CB0-A0C2-DD4064FE6C55}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Azure.Batch.SoftwareEntitlement", "src\Microsoft.Azure.Batch.SoftwareEntitlement\Microsoft.Azure.Batch.SoftwareEntitlement.csproj", "{69A48518-7C10-4523-9B40-A43E329CA24F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.Batch.SoftwareEntitlement", "src\Microsoft.Azure.Batch.SoftwareEntitlement\Microsoft.Azure.Batch.SoftwareEntitlement.csproj", "{69A48518-7C10-4523-9B40-A43E329CA24F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Azure.Batch.SoftwareEntitlement.Tests", "tests\Microsoft.Azure.Batch.SoftwareEntitlement.Tests\Microsoft.Azure.Batch.SoftwareEntitlement.Tests.csproj", "{BD817C57-CF5A-4706-B6C9-F419A366EE61}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Azure.Batch.SoftwareEntitlement.Tests", "tests\Microsoft.Azure.Batch.SoftwareEntitlement.Tests\Microsoft.Azure.Batch.SoftwareEntitlement.Tests.csproj", "{BD817C57-CF5A-4706-B6C9-F419A366EE61}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{911185B0-089A-4FBA-BC82-3161918307A5}"
 	ProjectSection(SolutionItems) = preProject
+		Directory.build.props = Directory.build.props
 		sestest.cmd = sestest.cmd
 	EndProjectSection
 EndProject
@@ -133,5 +134,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {508FF0BD-AA08-44D5-8F8C-3B00FCBE319F}
 	EndGlobalSection
 EndGlobal
