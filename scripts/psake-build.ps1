@@ -4,7 +4,6 @@
 
 properties {
     $baseDir = resolve-path ..\
-    $buildDir = join-path $baseDir build
     $srcDir = resolve-path $baseDir\src
     $testsDir = resolve-path $baseDir\tests
     $outDir = join-path $baseDir out
@@ -15,7 +14,7 @@ Task Clean -Depends Clean.SourceFolder, Clean.OutFolder, Clean.PublishFolder
 
 Task Build.Xplat -Depends Build.SesTest, Unit.Tests
 
-Task Publish.Xplat -Depends Clean.PublishFolder, Publish.SesTest.Win64, Publish.SesTest.Linux64
+Task Publish.Archives -Depends Clean.PublishFolder, Publish.SesTest.Win64, Publish.SesTest.Linux64, Publish.SesClient
 
 Task Build.Windows -Depends Build.SesLibrary, Build.SesClient
 
@@ -58,7 +57,7 @@ Task Generate.Version {
     $script:patchVersion = git rev-list "$versionLastUpdated..HEAD" --count
 
     $script:version = "$versionBase.$patchVersion"
-    Write-Host "Version          $semanticVersion"
+    Write-Host "Version          $version"
 
     $script:semanticVersion = $version
     Write-Host "Semantic version $semanticVersion"
@@ -68,19 +67,19 @@ Task Build.SesTest -Depends Requires.MsBuild, Restore.NuGetPackages, Generate.Ve
     $project = resolve-path $srcDir\sestest\sestest.csproj
     Write-Host "Building $project"
     exec {
-        & $msbuildExe $project /p:Version=$semanticVersion /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$buildDir\sestest.msbuild.log 
+        & $msbuildExe $project /p:Version=$semanticVersion /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$outDir\sestest.msbuild.log 
     }
 }
 
 Task Build.SesLibrary -Depends Requires.MsBuild, Requires.Configuration, Requires.Platform, Generate.Version {
     exec {
-        & $msbuildExe $srcDir\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native\ /p:Version=$version /property:Configuration=$configuration /property:Platform=$targetPlatform /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$buildDir\seslibrary.msbuild.log
+        & $msbuildExe $srcDir\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native\ /p:Version=$version /property:Configuration=$configuration /property:Platform=$targetPlatform /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$outDir\seslibrary.msbuild.log
     }
 }
 
 Task Build.SesClient -Depends Requires.MsBuild, Requires.Configuration, Requires.Platform, Generate.Version {
     exec {
-        & $msbuildExe $srcDir\sesclient.native\ /property:Configuration=$configuration /p:Version=$version /property:Platform=$targetPlatform /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$buildDir\sesclient.msbuild.log
+        & $msbuildExe $srcDir\sesclient.native\ /property:Configuration=$configuration /p:Version=$version /property:Platform=$targetPlatform /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$outDir\sesclient.msbuild.log
     }
 }
 
@@ -110,6 +109,13 @@ Task Publish.SesTest.Linux64 -Depends Requires.DotNetExe, Restore.NuGetPackages 
 
     exec {
         compress-archive $publishDir\sestest\linux-x64\* $publishDir\sestest-$version-linux-x64.zip
+    }
+}
+
+Task Publish.SesClient -Depends Build.SesLibrary, Build.SesClient {
+    $clientDir = resolve-path $srcDir\sesclient.native\x64\*
+    exec {
+        compress-archive $clientDir\*.exe, $clientDir\*.dll $publishDir\sesclient-$version-x64.zip
     }
 }
 
