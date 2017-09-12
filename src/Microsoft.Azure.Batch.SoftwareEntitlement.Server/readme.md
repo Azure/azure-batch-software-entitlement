@@ -17,7 +17,7 @@ Sample: `https://samples.westus.batch.azure.com/softwareEntitlements/?api-versio
 | Placeholder | Type   | Description                                                                                                                                                                                     |
 | ----------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | endpoint    | string | The Batch account URL endpoint supplied by Azure Batch via environment variable.                                                                                                                |
-| version     | string | The API version of the request. <br/> Must be `2017-99-99.9.9` or higher. <br/>API versions are listed @ https://docs.microsoft.com/en-us/rest/api/batchservice/batch-service-rest-api-versioning |
+| version     | string | The API version of the request. <br/> Must be `2017-99-99.9.9`. <br/>API versions are listed @ https://docs.microsoft.com/en-us/rest/api/batchservice/batch-service-rest-api-versioning |
 
 The following shows a sample JSON payload for the request:
 
@@ -51,11 +51,17 @@ The following example shows a sample JSON response:
 | Element | Required  |   Type   |                                                                                                                                                                                                                   Description                                                                                                                                                                                                                   |
 | ------- | --------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | id      | Mandatory | string   | A unique identifier for the specific entitlement issued to the application. <br/> Multiple entitlement requests for the same application from the same compute node may (but are not required to) return the same identifier. <br/> Entitlement requests from different compute nodes will not return duplicate identifiers. <br/> Clients should make no assumptions about the structure of the `id` as it may change from release to release. |
-| expiry  | Mandatory | DateTime | The expiry timestamp of the token; further verification requests after this instant will be declined.                                                                                                                                                                                                                                                                                                                                           |
+| expiry  | Mandatory | DateTime | The timestamp when the token expires. Once the token has expired, further verification requests will be declined.                                                                                                                                                                                                                                                                                                                               |
 
 ### RESPONSE 403 - FORBIDDEN
 
 If the token does not grant permission to use the requested application, the service will return HTTP status 403 and the response body will contain extended error information.
+
+An entitlement request may be denied if:
+
+* The token has already expired;
+* The requested application is not included in the token; or
+* The token was issued to a different compute node.
 
 The following example shows a sample JSON response:
 
