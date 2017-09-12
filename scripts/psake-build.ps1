@@ -36,7 +36,7 @@ Task Clean.SourceFolder {
 }
 
 Task Clean.OutFolder {
-    remove-item $outDir\* -recurse -ErrorAction SilentlyContinue     
+    remove-item $outDir\* -recurse -ErrorAction SilentlyContinue
 }
 
 Task Clean.PublishFolder {
@@ -99,7 +99,7 @@ Task Publish.SesTest.Win64 -Depends Requires.DotNetExe, Restore.NuGetPackages {
     }
 
     exec {
-        compress-archive $publishDir\sestest\win10-x64\* $publishDir\sestest-win10-x64.zip
+        compress-archive $publishDir\sestest\win10-x64\* $publishDir\sestest-$version-win10-x64.zip 
     }
 }
 
@@ -109,7 +109,7 @@ Task Publish.SesTest.Linux64 -Depends Requires.DotNetExe, Restore.NuGetPackages 
     }
 
     exec {
-        compress-archive $publishDir\sestest\linux-x64\* $publishDir\sestest-linux-x64.zip
+        compress-archive $publishDir\sestest\linux-x64\* $publishDir\sestest-$version-linux-x64.zip
     }
 }
 
