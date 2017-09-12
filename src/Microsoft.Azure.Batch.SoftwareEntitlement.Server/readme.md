@@ -1,5 +1,7 @@
 # REST API for the Software Entitlement Service
 
+Reference documentation for the current version of the REST API supported by the Software Entitlement Service. For historical versions and a list of changes, see the end of this document.
+
 ## Token Verification
 
 Verifies that a provided software entitlement token grants permission to use a specific application.
@@ -10,12 +12,12 @@ Verifies that a provided software entitlement token grants permission to use a s
 | ------ | ------------------------------------------------------ |
 | POST   | {endpoint}/softwareEntitlements/?api-version={version} |
 
-Sample: `https://samples.westus.batch.azure.com/softwareEntitlements/?api-version=2017-05-01.5.0`
+Sample: `https://samples.westus.batch.azure.com/softwareEntitlements/?api-version=2017-99-99-9.9`
 
-| Placeholder | Type   | Description                                                                                                                                                                                                                                                                                                          |
-|-------------|--------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Placeholder |  Type  |                                                                                                                                   Description                                                                                                                                    |
+| ----------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | endpoint    | string | The Batch account URL endpoint supplied by Azure Batch via the environment variable `AZ_BATCH_ACCOUNT_URL`.<br/>This may have a trailing `/` (e.g. `https://demo.westus.batch.azure.com/`) or it might not (e.g. `https://demo.westus.batch.azure.com`); clients should be prepared to handle either case correctly. |
-| version     | string | The API version of the request. <br/> Must be `2017-05-01.5.0` or higher. <br/>API versions are listed @ https://docs.microsoft.com/en-us/rest/api/batchservice/batch-service-rest-api-versioning |
+| version     | string | The API version of the request. <br/> Specify version `2017-99-99.9.9` or higher. <br/> For older API versions, see the end of this document. <br/> All Batch API versions are listed @ https://docs.microsoft.com/en-us/rest/api/batchservice/batch-service-rest-api-versioning |
 
 The following shows a sample JSON payload for the request:
 
@@ -42,18 +44,24 @@ The following example shows a sample JSON response:
 ``` json
 {
     "id": "entitlement-24223578-1CE8-4168-91E0-126C2D5EAA0B",
-    "vmid": "..."
+    "expiry": "2017-07-21T01:47:38.4420202Z"
 }
 ```
 
-| Element | Required  | Type   | Description                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| ------- | --------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| id      | Mandatory | string | A unique identifier for the specific entitlement issued to the application. <br/> Multiple entitlement requests for the same application from the same compute node may (but are not required to) return the same identifier. <br/> Entitlement requests from different compute nodes will not return duplicate identifiers. <br/> Clients should make no assumptions about the structure of the `id` as it may change from release to release. |
-| vmid    | Mandatory | string | The unique [virtual machine identifier](https://azure.microsoft.com/blog/accessing-and-using-azure-vm-unique-id/) of the entitled Azure virtual machine. <br/> Clients may optionally check this matches the actual virtual machine identifier for the host machine.                                                                                                                                                                          |
+| Element | Required  |   Type   |                                                                                                                                                                                                                   Description                                                                                                                                                                                                                   |
+| ------- | --------- | -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| id      | Mandatory | string   | A unique identifier for the specific entitlement issued to the application. <br/> Multiple entitlement requests for the same application from the same compute node may (but are not required to) return the same identifier. <br/> Entitlement requests from different compute nodes will not return duplicate identifiers. <br/> Clients should make no assumptions about the structure of the `id` as it may change from release to release. |
+| expiry  | Mandatory | DateTime | The timestamp when the token expires. Once the token has expired, further verification requests will be declined.                                                                                                                                                                                                                                                                                                                               |
 
 ### RESPONSE 403 - FORBIDDEN
 
 If the token does not grant permission to use the requested application, the service will return HTTP status 403 and the response body will contain extended error information.
+
+An entitlement request may be denied if:
+
+* The token has already expired;
+* The requested application is not included in the token; or
+* The token was issued to a different compute node.
 
 The following example shows a sample JSON response:
 
@@ -85,3 +93,17 @@ The service will return HTTP status 404 if the URL is malformed.
 The most common cause for this is code that always adds a separating `/` to the end of the URL provided in `AZ_BATCH_ACCOUNT_URL` without checking to see if a trailing `/` is already present.
 
 E.g. if `AZ_BATCH_ACCOUNT_URL` is set to `https://demo.westus.batch.azure.com/` and the client appends `/softwareEntitlements/?api-version=2017-99-99-9.9` then the resulting URL of `https://demo.westus.batch.azure.com//softwareEntitlements/?api-version=2017-99-99-9.9` (containing a double `//`) will be invalid.
+
+## Historical Versions
+
+For prior versions of the REST API, see the following pages:
+
+* Initial release, July 2017: [API Version 2017-05-01.5.0](rest-api-2017-05-01.5.0.md)
+
+### Changes in this version
+
+Changes in this version of the REST API are:
+
+* Removal of the `vmid` value from the response to a successful entitlement verification request.
+* Addition of the `expiry` value to the response, giving visibility of the scheduled token expiry.
+
