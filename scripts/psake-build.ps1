@@ -50,17 +50,17 @@ Task Clean.PublishFolder {
 
 Task Generate.Version {
     
-    $script:version = get-content $baseDir\version.txt -ErrorAction SilentlyContinue
+    $script:versionBase = get-content $baseDir\version.txt -ErrorAction SilentlyContinue
     if ($version -eq $null) {
         throw "Unable to load .\version.txt"
     }
-    Write-Host "Version          $script:version"
-
     $versionLastUpdated = git rev-list -1 HEAD $baseDir\version.txt
     $script:patchVersion = git rev-list "$versionLastUpdated..HEAD" --count
-    Write-Host "Patch            $patchVersion"
 
-    $script:semanticVersion = "$version.$patchVersion"
+    $script:version = "$versionBase.$patchVersion"
+    Write-Host "Version          $semanticVersion"
+
+    $script:semanticVersion = $version
     Write-Host "Semantic version $semanticVersion"
 }
 
@@ -72,15 +72,15 @@ Task Build.SesTest -Depends Requires.MsBuild, Restore.NuGetPackages, Generate.Ve
     }
 }
 
-Task Build.SesLibrary -Depends Requires.MsBuild, Requires.Configuration, Requires.Platform {
+Task Build.SesLibrary -Depends Requires.MsBuild, Requires.Configuration, Requires.Platform, Generate.Version {
     exec {
-        & $msbuildExe $srcDir\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native\ /property:Configuration=$configuration /property:Platform=$targetPlatform /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$buildDir\seslibrary.msbuild.log
+        & $msbuildExe $srcDir\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native\ /p:Version=$version /property:Configuration=$configuration /property:Platform=$targetPlatform /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$buildDir\seslibrary.msbuild.log
     }
 }
 
-Task Build.SesClient -Depends Requires.MsBuild, Requires.Configuration, Requires.Platform {
+Task Build.SesClient -Depends Requires.MsBuild, Requires.Configuration, Requires.Platform, Generate.Version {
     exec {
-        & $msbuildExe $srcDir\sesclient.native\ /property:Configuration=$configuration /property:Platform=$targetPlatform /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$buildDir\sesclient.msbuild.log
+        & $msbuildExe $srcDir\sesclient.native\ /property:Configuration=$configuration /p:Version=$version /property:Platform=$targetPlatform /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$buildDir\sesclient.msbuild.log
     }
 }
 
