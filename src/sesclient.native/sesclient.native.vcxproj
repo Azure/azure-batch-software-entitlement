@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -51,6 +51,11 @@
     <PlatformToolset>v141</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Versioning definitions: -->
+    <Version Condition="'$(Version)' == ''">0.0.0.1</Version>
+    <VersionWithCommas>$(Version.Replace(".", ","))</VersionWithCommas>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -150,6 +155,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="resource.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
   </ItemGroup>
@@ -161,6 +167,17 @@
     <ProjectReference Include="..\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native.vcxproj">
       <Project>{6accad67-c207-4370-b39a-63651223a21c}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="sesclient.native.rc">
+      <PreprocessorDefinitions>
+        SES_COMPANY_NAME=$(Company);
+        SES_PRODUCT=$(Product);
+        SES_VERSION=$(Version);
+        SES_VERSION_COMMAS=$(VersionWithCommas);
+        %(PreprocessorDefinitions)
+      </PreprocessorDefinitions>
+    </ResourceCompile>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
