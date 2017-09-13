@@ -4,7 +4,6 @@
 
 properties {
     $baseDir = resolve-path ..\
-    $buildDir = join-path $baseDir build
     $srcDir = resolve-path $baseDir\src
     $testsDir = resolve-path $baseDir\tests
     $outDir = join-path $baseDir out
@@ -15,7 +14,7 @@ Task Clean -Depends Clean.SourceFolder, Clean.OutFolder, Clean.PublishFolder
 
 Task Build.Xplat -Depends Build.SesTest, Unit.Tests
 
-Task Publish.Xplat -Depends Clean.Publish, Publish.SesTest.Win64, Publish.SesTest.Linux64
+Task Publish.Archives -Depends Clean.PublishFolder, Publish.SesTest.Win64, Publish.SesTest.Linux64, Publish.SesClient
 
 Task Build.Windows -Depends Build.SesLibrary, Build.SesClient
 
@@ -36,11 +35,11 @@ Task Clean.SourceFolder {
 }
 
 Task Clean.OutFolder {
-    remove-item $outDir\* -recurse -ErrorAction SilentlyContinue     
+    remove-item $outDir\* -recurse -ErrorAction SilentlyContinue
 }
 
 Task Clean.PublishFolder {
-    remove-item $publishDir -Force -Recurse
+    remove-item $publishDir -Force -Recurse -ErrorAction SilentlyContinue
 }
 
 ## --------------------------------------------------------------------------------
@@ -48,21 +47,39 @@ Task Clean.PublishFolder {
 ## --------------------------------------------------------------------------------
 ## Tasks used to perform steps of the actual build
 
-Task Build.SesTest -Depends Requires.DotNetExe, Restore.NuGetPackages {
+Task Generate.Version {
+    
+    $script:versionBase = get-content $baseDir\version.txt -ErrorAction SilentlyContinue
+    if ($version -eq $null) {
+        throw "Unable to load .\version.txt"
+    }
+    $versionLastUpdated = git rev-list -1 HEAD $baseDir\version.txt
+    $script:patchVersion = git rev-list "$versionLastUpdated..HEAD" --count
+
+    $script:version = "$versionBase.$patchVersion"
+    Write-Host "Version          $version"
+
+    $script:semanticVersion = $version
+    Write-Host "Semantic version $semanticVersion"
+}
+
+Task Build.SesTest -Depends Requires.MsBuild, Restore.NuGetPackages, Generate.Version {
+    $project = resolve-path $srcDir\sestest\sestest.csproj
+    Write-Host "Building $project"
     exec {
-        & $dotnetExe build $srcDir\sestest
+        & $msbuildExe $project /p:Version=$semanticVersion /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$outDir\sestest.msbuild.log 
     }
 }
 
-Task Build.SesLibrary -Depends Requires.MsBuild, Requires.Configuration, Requires.Platform {
+Task Build.SesLibrary -Depends Requires.MsBuild, Requires.Configuration, Requires.Platform, Generate.Version {
     exec {
-        & $msbuildExe $srcDir\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native\ /property:Configuration=$configuration /property:Platform=$targetPlatform
+        & $msbuildExe $srcDir\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native\ /p:Version=$version /property:Configuration=$configuration /property:Platform=$targetPlatform /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$outDir\seslibrary.msbuild.log
     }
 }
 
-Task Build.SesClient -Depends Requires.MsBuild, Requires.Configuration, Requires.Platform {
+Task Build.SesClient -Depends Requires.MsBuild, Requires.Configuration, Requires.Platform, Generate.Version {
     exec {
-        & $msbuildExe $srcDir\sesclient.native\ /property:Configuration=$configuration /property:Platform=$targetPlatform
+        & $msbuildExe $srcDir\sesclient.native\ /property:Configuration=$configuration /p:Version=$version /property:Platform=$targetPlatform /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$outDir\sesclient.msbuild.log
     }
 }
 
@@ -77,21 +94,28 @@ Task Unit.Tests -Depends Requires.DotNetExe, Build.SesTest {
 
 Task Publish.SesTest.Win64 -Depends Requires.DotNetExe, Restore.NuGetPackages {
     exec {
-        & $dotnetExe publish $srcDir\sestest\sestest.csproj --self-contained --output $publishDir\sestest\win10-x64 --runtime win10-x64
+        & $dotnetExe publish $srcDir\sestest\sestest.csproj --self-contained --output $publishDir\sestest\win10-x64 --runtime win10-x64 /p:Version=$semanticVersion
     }
 
     exec {
-        compress-archive $publishDir\sestest\win10-x64\* $publishDir\sestest-win10-x64.zip
+        compress-archive $publishDir\sestest\win10-x64\* $publishDir\sestest-$version-win10-x64.zip 
     }
 }
 
 Task Publish.SesTest.Linux64 -Depends Requires.DotNetExe, Restore.NuGetPackages {
     exec {
-        & $dotnetExe publish $srcDir\sestest\sestest.csproj --self-contained --output $publishDir\sestest\linux-x64 --runtime linux-x64
+        & $dotnetExe publish $srcDir\sestest\sestest.csproj --self-contained --output $publishDir\sestest\linux-x64 --runtime linux-x64 /p:Version=$semanticVersion
     }
 
     exec {
-        compress-archive $publishDir\sestest\linux-x64\* $publishDir\sestest-linux-x64.zip
+        compress-archive $publishDir\sestest\linux-x64\* $publishDir\sestest-$version-linux-x64.zip
+    }
+}
+
+Task Publish.SesClient -Depends Build.SesLibrary, Build.SesClient {
+    $clientDir = resolve-path $srcDir\sesclient.native\x64\*
+    exec {
+        compress-archive $clientDir\*.exe, $clientDir\*.dll $publishDir\sesclient-$version-x64.zip
     }
 }
 
