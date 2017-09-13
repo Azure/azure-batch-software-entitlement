@@ -2,6 +2,8 @@
 
 Reference documentation for the current version of the REST API supported by the Software Entitlement Service. For historical versions and a list of changes, see the end of this document.
 
+:warning: **This is draft documentation for the next version of the SES REST API** - see the [previous version](rest-api-2017-05-01.5.0.md) for the current release.
+
 ## Token Verification
 
 Verifies that a provided software entitlement token grants permission to use a specific application.
