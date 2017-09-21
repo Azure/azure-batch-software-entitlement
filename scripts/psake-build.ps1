@@ -50,8 +50,8 @@ Task Clean.PublishFolder {
 Task Generate.Version {
     
     $script:versionBase = get-content $baseDir\version.txt -ErrorAction SilentlyContinue
-    if ($version -eq $null) {
-        throw "Unable to load .\version.txt"
+    if ($versionBase -eq $null) {
+        throw "Unable to load $baseDir\version.txt"
     }
     $versionLastUpdated = git rev-list -1 HEAD $baseDir\version.txt
     $script:patchVersion = git rev-list "$versionLastUpdated..HEAD" --count
