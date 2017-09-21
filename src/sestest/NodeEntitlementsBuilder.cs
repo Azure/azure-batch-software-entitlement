@@ -1,4 +1,4 @@
-﻿using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
+using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -55,30 +55,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var entitlement = new NodeEntitlements();
             var errors = new List<string>();
 
-            // readConfiguration - function to read the configuration value
-            // applyConfiguration - function to modify our configuration with the value read
-            void Configure<V>(Func<Errorable<V>> readConfiguration, Func<V, NodeEntitlements> applyConfiguration)
-            {
-                readConfiguration().Match(
-                    whenSuccessful: value => entitlement = applyConfiguration(value),
-                    whenFailure: e => errors.AddRange(e));
-            }
-
-            // readConfiguration - function to read all the configuration values
-            // applyConfiguration - function to modify our configuration with each value read
-            void ConfigureAll<V>(
-                Func<IEnumerable<Errorable<V>>> readConfiguration,
-                Func<V, NodeEntitlements> applyConfiguration)
-            {
-                foreach (var configuration in readConfiguration())
-                {
-                    configuration.Match(
-                            whenSuccessful: value => entitlement = applyConfiguration(value),
-                            whenFailure: e => errors.AddRange(e));
-                }
-            }
-
-            Configure(VirtualMachineId, url => entitlement.WithVirtualMachineId(url));
+            ConfigureOptional(VirtualMachineId, url => entitlement.WithVirtualMachineId(url));
             Configure(NotBefore, notBefore => entitlement.FromInstant(notBefore));
             Configure(NotAfter, notAfter => entitlement.UntilInstant(notAfter));
             Configure(Audience, audience => entitlement.WithAudience(audience));
@@ -92,13 +69,53 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             return Errorable.Success(entitlement);
+
+            // <param name="readConfiguration">function to read the configuration value.</param>
+            // <param name="applyConfiguration">function to modify our configuration with the value read.</param>
+            void Configure<V>(Func<Errorable<V>> readConfiguration, Func<V, NodeEntitlements> applyConfiguration)
+            {
+                readConfiguration().Match(
+                    whenSuccessful: value => entitlement = applyConfiguration(value),
+                    whenFailure: e => errors.AddRange(e));
+            }
+
+            // <param name="readConfiguration">function to read the configuration value.</param>
+            // <param name="applyConfiguration">function to modify our configuration with the value read.</param>
+            void ConfigureOptional<V>(Func<Errorable<V>> readConfiguration, Func<V, NodeEntitlements> applyConfiguration)
+                where V : class
+            {
+                readConfiguration().Match(
+                    whenSuccessful: value =>
+                    {
+                        if (value != null)
+                        {
+                            entitlement = applyConfiguration(value);
+                        }
+                    },
+                    whenFailure: e => errors.AddRange(e));
+            }
+
+            // <param name="readConfiguration">function to read the configuration value.</param>
+            // <param name="applyConfiguration">function to modify our configuration with the value read.</param>
+            void ConfigureAll<V>(
+                Func<IEnumerable<Errorable<V>>> readConfiguration,
+                Func<V, NodeEntitlements> applyConfiguration)
+            {
+                foreach (var configuration in readConfiguration())
+                {
+                    configuration.Match(
+                        whenSuccessful: value => entitlement = applyConfiguration(value),
+                        whenFailure: e => errors.AddRange(e));
+                }
+            }
         }
 
         private Errorable<string> VirtualMachineId()
         {
             if (string.IsNullOrEmpty(_commandLine.VirtualMachineId))
             {
-                return Errorable.Failure<string>("No virtual machine identifier specified.");
+                // If user doesn't specify a virtual machine identifier, we default to null (not empty string)
+                return Errorable.Success<string>(null);
             }
 
             return Errorable.Success(_commandLine.VirtualMachineId);
@@ -130,6 +147,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (string.IsNullOrEmpty(_commandLine.Audience))
             {
+                // if the audience does not specify an audience, we use a default value to "self-sign"
                 return Errorable.Success(Claims.DefaultAudience);
             }
 
@@ -140,6 +158,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (string.IsNullOrEmpty(_commandLine.Issuer))
             {
+                // if the audience does not specify an issuer, we use a default value to "self-sign"
                 return Errorable.Success(Claims.DefaultIssuer);
             }
 
@@ -152,19 +171,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             {
                 foreach (var address in _commandLine.Addresses)
                 {
-                    if (IPAddress.TryParse(address, out var ip))
-                    {
-                        yield return Errorable.Success(ip);
-                    }
-                    else
-                    {
-                        yield return Errorable.Failure<IPAddress>($"IP address '{address}' not in expected format (IPv4 and IPv6 supported).");
-                    }
+                    yield return TryParseIPAddress(address);
                 }
 
                 yield break;
             }
 
+            // No IP addresses specified by the user, default to using all from the current machine
             foreach (var i in NetworkInterface.GetAllNetworkInterfaces())
             {
                 var properties = i.GetIPProperties();
@@ -182,6 +195,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     }
                 }
             }
+        }
+
+        private static Errorable<IPAddress> TryParseIPAddress(string address)
+        {
+            if (IPAddress.TryParse(address, out var ip))
+            {
+                return Errorable.Success(ip);
+            }
+
+            return Errorable.Failure<IPAddress>($"IP address '{address}' not in expected format (IPv4 and IPv6 supported).");
         }
 
         private IEnumerable<Errorable<string>> Applications()
