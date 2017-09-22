@@ -9,7 +9,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option("application-id", HelpText = "Unique identifier(s) for the applications(s) to include in the entitlement (comma separated).", Separator = ',')]
         public IList<string> ApplicationIds { get; set; } = new List<string>();
 
-        [Option("vmid", HelpText = "Unique identifier for the Azure virtual machine.")]
+        [Option("vmid", HelpText = "[Deprecated] Unique identifier for the Azure virtual machine.")]
         public string VirtualMachineId { get; set; }
 
         [Option(

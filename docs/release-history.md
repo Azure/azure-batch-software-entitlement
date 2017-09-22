@@ -1,5 +1,9 @@
 # Release History
 
+## TBC
+
+* **Change**: Virtual machine identifier is now optional
+
 ## July 2017
 
 Critical (but small) fixes to the SDK.

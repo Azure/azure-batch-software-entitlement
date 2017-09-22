@@ -67,16 +67,16 @@ The additional parameters `--audience` and `--issuer`  are provided for use by t
 
 The `generate` mode allows you to generate a software entitlement token with the details required for your test scenario.
 
-| Parameter     | Required  | Definition                                                                                                                                                                           |
-| ------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| --application | Mandatory | Unique identifier(s) for the application(s) to include (comma separated).                                                                                                            |
-| --vmid        | Mandatory | Unique identifier for the Azure virtual machine. If you are testing outside of Azure, we suggest you use the name of the machine (e.g. `%COMPUTERNAME%`).                            |
-| --not-before  | Optional  | The moment at which the token becomes active and the application is entitled to execute <br/> Format: 'yyyy-mm-ddThh-mm'; 24 hour clock; local time; defaults to now.                |
-| --not-after   | Optional  | The moment at which the token expires and the application is no longer entitled to execute <br/> Format: 'yyyy-mm-ddThh-mm'; 24 hour clock; local time; defaults to 7 days from now. |
-| --address     | Optional  | The IP addresses of the machine entitled to execute the application(s). <br/> Defaults to all the IP addresses of the current machine.                                               |
-| --sign        | Optional  | Thumbprint of the certificate to use for signing the token                                                                                                                           |
-| --encrypt     | Optional  | Thumbprint of the certificate to use for encryption of the token.                                                                                                                    |
-| --token-file  | Optional  | The name of a file into which the token will be written <br/> If not specified, the token will be shown in the log.                                                                  |
+|   Parameter   | Required  |                                                                                                                Definition                                                                                                                 |
+| ------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| --application | Mandatory | Unique identifier(s) for the application(s) to include (comma separated).                                                                                                                                                                 |
+| --not-before  | Optional  | The moment at which the token becomes active and the application is entitled to execute <br/> Format: 'yyyy-mm-ddThh-mm'; 24 hour clock; local time; defaults to now.                                                                     |
+| --not-after   | Optional  | The moment at which the token expires and the application is no longer entitled to execute <br/> Format: 'yyyy-mm-ddThh-mm'; 24 hour clock; local time; defaults to 7 days from now.                                                      |
+| --address     | Optional  | The IP addresses of the machine entitled to execute the application(s). <br/> Defaults to all the IP addresses of the current machine.                                                                                                    |
+| --sign        | Optional  | Thumbprint of the certificate to use for signing the token                                                                                                                                                                                |
+| --encrypt     | Optional  | Thumbprint of the certificate to use for encryption of the token.                                                                                                                                                                         |
+| --token-file  | Optional  | The name of a file into which the token will be written <br/> If not specified, the token will be shown in the log.                                                                                                                       |
+| --vmid        | Optional  | **Deprecated** Unique identifier for the Azure virtual machine (only available on IaaS VMs). <br/> If you are testing outside of Azure, we suggest you either omit this parameter or use the name of the machine (e.g. `%COMPUTERNAME%`). |
 
 You can see this documentation for yourself by running `sestest generate --help` in your console.
 
