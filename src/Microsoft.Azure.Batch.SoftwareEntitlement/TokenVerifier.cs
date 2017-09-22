@@ -1,11 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
-using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
@@ -122,19 +120,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     return IdentifierNotPresentError();
                 }
 
-                var virtualMachineIdClaim = principal.FindFirst(Claims.VirtualMachineId);
-                if (virtualMachineIdClaim == null)
-                {
-                    return VirtualMachineIdentifierNotPresentError();
-                }
-
                 var result = new NodeEntitlements()
-                    .WithVirtualMachineId(virtualMachineIdClaim.Value)
                     .FromInstant(new DateTimeOffset(token.ValidFrom))
                     .UntilInstant(new DateTimeOffset(token.ValidTo))
                     .AddApplication(application)
                     .WithIdentifier(entitlementIdClaim.Value)
                     .AddIpAddress(ipAddress);
+
+                var virtualMachineIdClaim = principal.FindFirst(Claims.VirtualMachineId);
+                if (virtualMachineIdClaim != null)
+                {
+                    result = result.WithVirtualMachineId(virtualMachineIdClaim.Value);
+                }
 
                 return Errorable.Success(result);
             }
@@ -245,12 +242,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             return Errorable.Failure<NodeEntitlements>(
                 "Entitlement identifier missing from entitlement token.");
-        }
-
-        private Errorable<NodeEntitlements> VirtualMachineIdentifierNotPresentError()
-        {
-            return Errorable.Failure<NodeEntitlements>(
-                "Virtual machine identifier missing from entitlement token.");
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -203,13 +203,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
 
             [Fact]
-            public void WhenIdentifierOmitted_ReturnsError()
+            public void WhenIdentifierOmitted_EntitlementHasNoVirtualMachineIdentifier()
             {
                 var entitlements = CreateEntitlements(EntitlementCreationOptions.OmitMachineId);
                 var token = _generator.Generate(entitlements);
                 var result = _verifier.Verify(token, _audience, _issuer, _contosoFinanceApp, _approvedAddress);
-                result.HasValue.Should().BeFalse();
-                result.Errors.Should().Contain(e => e.Contains("machine identifier"));
+                result.HasValue.Should().BeTrue();
+                result.Value.VirtualMachineId.Should().BeNullOrEmpty();
             }
         }
 
