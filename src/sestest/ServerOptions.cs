@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Security.Cryptography.X509Certificates;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
@@ -39,6 +39,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// The issuer we expect to see on tokens presented to us for verification
         /// </summary>
         public string Issuer { get; }
+
+        /// <summary>
+        /// The server will automatically shut down after processing one request
+        /// </summary>
+        public bool ExitAfterRequest { get; }
 
         /// <summary>
         /// Initialize a blank set of server options
@@ -138,6 +143,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
+        /// Indicate whether the server should automatically shut down after processing one request
+        /// </summary>
+        /// <returns>New instance of <see cref="ServerOptions"/>.</returns>
+        public ServerOptions WithAutomaticExitAfterOneRequest()
+        {
+            return new ServerOptions(this, exitAfterRequest: true);
+        }
+
+        /// <summary>
         /// Mutating constructor used to create variations of an existing set of options
         /// </summary>
         /// <param name="original">Original server options to copy.</param>
@@ -147,6 +161,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="serverUrl">Server host URL (optional).</param>
         /// <param name="audience">Audience we expect to find in each token.</param>
         /// <param name="issuer">Issuer we expect to find in each token.</param>
+        /// <param name="exitAfterRequest">Specify whether to automatically shut down after one request.</param>
         private ServerOptions(
             ServerOptions original,
             X509Certificate2 signingCertificate = null,
@@ -154,7 +169,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             X509Certificate2 connectionCertificate = null,
             Uri serverUrl = null,
             string audience = null,
-            string issuer = null)
+            string issuer = null,
+            bool? exitAfterRequest = null)
         {
             if (original == null)
             {
@@ -167,6 +183,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             ServerUrl = serverUrl ?? original.ServerUrl;
             Audience = audience ?? original.Audience;
             Issuer = issuer ?? original.Issuer;
+            ExitAfterRequest = exitAfterRequest ?? original.ExitAfterRequest;
         }
     }
 }
