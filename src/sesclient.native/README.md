@@ -28,6 +28,8 @@ To run in production:
 sesclient.native --url %AZ_BATCH_ACCOUNT_URL% --token %AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN% --application contosoapp
 ```
 
+Substitute the name of your own application (or the one you are testing with) for `contosoapp`.
+
 The environment variables `AZ_BATCH_ACCOUNT_URL` and `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN` are published by Azure Batch as a part of the environment on compute nodes.
 
 In this scenario, `sesclient.native` will verify that the connection is made to a genuine Azure Batch server by checking the certificate used to secure the HTTPS connection. If the certificate used for the connection does not trace back to one of the well known Microsoft intermediate certificate authorities built into the [native-code library](../Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native), the software entitlement check will fail.
