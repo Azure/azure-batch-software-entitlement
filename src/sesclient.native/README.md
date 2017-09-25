@@ -30,7 +30,7 @@ sesclient.native --url %AZ_BATCH_ACCOUNT_URL% --token %AZ_BATCH_SOFTWARE_ENTITLE
 
 Substitute the name of your own application (or the one you are testing with) for `contosoapp`.
 
-Note that the environment variables `AZ_BATCH_ACCOUNT_URL` and `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN` are published by Azure Batch for use by a specific Task; they are part of the environment available if/when you remote into a compute node.
+Note that the environment variables `AZ_BATCH_ACCOUNT_URL` and `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN` are published by Azure Batch for use by a specific Task; they are **not** part of the environment available if/when you remote into a compute node.
 
 In this scenario, `sesclient.native` will verify that the connection is made to a genuine Azure Batch server by checking the certificate used to secure the HTTPS connection. If the certificate used for the connection does not trace back to one of the well known Microsoft intermediate certificate authorities built into the [native-code library](../Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native), the software entitlement check will fail.
 
@@ -40,7 +40,7 @@ In a local (non-Batch) test environment, you won't have access to a certificate 
 
 You'll need to specify the same certificate for `sesclient.native` as you already do for `sestest server` so the two components can handshake the connection properly.
 
-Assuming the appropriate thumbprint is available in the environment variable `%CONNECTION_THUMBPRINT%`, and the common name of that certificate is available in `%COMMON_NAME%`, run `sestest` as a server:
+Assuming the appropriate thumbprint is available in the environment variable `%CONNECTION_THUMBPRINT%`, and the common name of that certificate is available in `%COMMON_NAME%`, run `sestest` as a server in a different console window:
 
 ``` cmd
 sestest server --connection %CONNECTION_THUMBPRINT% --common-name ...
