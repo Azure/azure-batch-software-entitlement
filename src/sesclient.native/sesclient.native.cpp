@@ -13,7 +13,7 @@ namespace
             << "    --token <software entitlement token to pass to the server>" << std::endl
             << "    --application <name of the license ID being requested>" << std::endl
             << std::endl
-            << "Mandatory parameters:" << std::endl
+            << "Optional parameters:" << std::endl
             << "    --thumbprint <thumbprint of a certificate expected in the server's SSL certificate chain>" << std::endl
             << "    --common-name <common name of the certificate with the specified thumbprint>" << std::endl;
     }

@@ -8,6 +8,8 @@ The SDK includes the following:
 
 * A command line utility ([sestest](src/sestest)) is provided to assist with testing of the integration. This utility supports token generation and can emulate a software entitlement server for testing outside of the Batch environment.
 
+* A command line client ([sesclient](src/sesclient.native)) to demonstrate use of the software entitlement token and the [library code](src/Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native).
+
 * Reference documentation on the [REST API](src/Microsoft.Azure.Batch.SoftwareEntitlement.Server), detailing the interaction between the library code used by the software application and the software entitlement server.
 
 * A [guide to compilation](docs/build-guide.md) for getting the supplied source ready for use.
