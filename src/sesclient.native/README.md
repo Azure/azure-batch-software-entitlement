@@ -38,16 +38,18 @@ In a test environment, you won't have access to a certificate signed by any one 
 
 You'll need to specify the same certificate for `sesclient.native` as you already do for `sestest server` so the two components can handshake the connection properly.
 
-Assuming the appropriate thumbprint is available in the environment variable `%%CONNECTION_THUMBPRINT%%`, run `sestest` as a server:
+Assuming the appropriate thumbprint is available in the environment variable `%CONNECTION_THUMBPRINT%`, and the common name of that certificate is available in `%COMMON_NAME%`, run `sestest` as a server:
 
 ``` cmd
-sestest server --connection %CONNECTION_THUMBPRINT% ...
+sestest server --connection %CONNECTION_THUMBPRINT% --common-name ...
 ```
+
+(Note that )
 
 You can now use `sesclient.native` to verify a token locally:
 
 ```
-sesclient.native --url ... --token ... --application ... --thumbprint %CONNECTION_THUMBPRINT% --common-name
+sesclient.native --url ... --token ... --application ... --thumbprint %CONNECTION_THUMBPRINT% --common-name %COMMON_NAME%
 ```
 
 The `--thumbprint` and `--common-name` parameters identify your local certificate and configure the [native-code library](../Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native) to treat a server using that certificate as a genuine Azure Batch server.
