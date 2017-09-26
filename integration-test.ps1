@@ -2,18 +2,19 @@
 ##   Complete end to end integration test of the SDK
 ## ---------------------------------------------------
 
-## How to configure this script
-## ----------------------------
+param(
+    # A certificate that can be used to secure the token and our communication
+    [Parameter(Mandatory=$true, HelpMessage="Thumbprint of the certificate to use for HTTP/TLS, for encryption, and for signing.")]
+    [string]$thumbprint = $null,
 
-## 1. Select a certificate to use and put its thumbprint into $thumbprint:
-$thumbprint = "<thumbprint>"
+    # common name of the certificate specified by $thumbprint
+    [string]$commonName = "localhost",
 
-## 2. Update $url to be a valid name for this machine (must be https on port 4443):
-$url = "https://localhost:4443"
+    # URL of the local sestest server 
+    [string]$url = "https://localhost:4443"
+)
 
-## 3. Find the common name from the certificate and update $commonName
-$commonName = "localhost"
-
+#
 ## NOTE: the server name from $url MUST MATCH (allowing for wildcards) the common name of the certificate
 ## So if the URL is for "localhost" the certificate common name must also specify "localhost"
 
