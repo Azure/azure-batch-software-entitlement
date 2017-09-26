@@ -57,8 +57,8 @@ Write-Host $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN
 
 Write-TaskName "Start Software Entitlement Server"
 
-start-process powershell -argument ".\sestest.ps1 server --connection $thumbprint --sign $thumbprint --encrypt $thumbprint --exit-after-request"
-
+$command = ".\sestest.ps1 server --connection $thumbprint --sign $thumbprint --encrypt $thumbprint --exit-after-request --log-file server.log --log-file-level debug"
+start-process powershell -argument $command
 
 # ----------------------------------------------------------------------
 
