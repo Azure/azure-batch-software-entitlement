@@ -167,16 +167,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         private IEnumerable<Errorable<IPAddress>> Addresses()
         {
-            if (_commandLine.Addresses != null && _commandLine.Addresses.Any())
+            var result = new List<Errorable<IPAddress>>();
+            if (_commandLine.Addresses != null)
             {
                 foreach (var address in _commandLine.Addresses)
                 {
-                    yield return TryParseIPAddress(address);
+                    result.Add(TryParseIPAddress(address));
                 }
-
-                yield break;
             }
 
+            if (!result.Any())
+            {
+                result.AddRange(ListMachineIpAddresses());
+            }
+
+            return result;
+        }
+
+        private static IEnumerable<Errorable<IPAddress>> ListMachineIpAddresses()
+        {
             // No IP addresses specified by the user, default to using all from the current machine
             foreach (var i in NetworkInterface.GetAllNetworkInterfaces())
             {
@@ -204,7 +213,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 return Errorable.Success(ip);
             }
 
-            return Errorable.Failure<IPAddress>($"IP address '{address}' not in expected format (IPv4 and IPv6 supported).");
+            return Errorable.Failure<IPAddress>($"IP address '{address}' is not in an expected format (IPv4 and IPv6 supported).");
         }
 
         private IEnumerable<Errorable<string>> Applications()
