@@ -34,6 +34,11 @@ Write-TaskName "Generating Token"
 
 .\sestest.ps1 generate --vmid "fu" --application-id contosoapp --sign $thumbprint --encrypt $thumbprint --token-file token.txt
 
+if ($LASTEXITCODE -ne 0) {
+    Write-Output "Failed to generate token (Error code $LASTEXITCODE)"
+    exit
+}
+
 # ----------------------------------------------------------------------
 
 Write-TaskName "Display Token"
@@ -60,3 +65,8 @@ Write-TaskName "Verify Token"
 
 .\sesclient --url $url --thumbprint $thumbprint --common-name $commonName --token $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN --application contosoapp
 
+if ($LASTEXITCODE -ne 0) {
+    Write-Output "Token did not verify (Error code $LASTEXITCODE)"
+} else {
+    Write-Output "Token verified ok"
+}
