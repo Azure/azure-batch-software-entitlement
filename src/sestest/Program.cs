@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -150,13 +150,22 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>Exit code for process.</returns>
         private static int ListCertificates(ListCertificatesCommandLine commandLine)
         {
+            var now = DateTime.Now;
+
+            if (commandLine.ShowExpired)
+            {
+                _logger.LogInformation("Including expired certificates.");
+            }
+
             var certificateStore = new CertificateStore();
             var allCertificates = certificateStore.FindAll();
-            var withPrivateKey = allCertificates.Where(c => c.HasPrivateKey).ToList();
-            _logger.LogInformation("Found {Count} certificates with private keys", withPrivateKey.Count);
+            var query = allCertificates.Where(c => c.HasPrivateKey)
+                .Where(c => now < c.NotAfter  || commandLine.ShowExpired)
+                .ToList();
+            _logger.LogInformation("Found {Count} certificates with private keys", query.Count);
 
-            var rows = withPrivateKey.Select(DescribeCertificate).ToList();
-            rows.Insert(0, new List<string> { "Name", "Friendly Name", "Thumbprint" });
+            var rows = query.Select(DescribeCertificate).ToList();
+            rows.Insert(0, new List<string> { "Name", "Friendly Name", "Thumbprint", "Not Before", "Not After" });
 
             _logger.LogTable(
                 LogLevel.Information,
@@ -177,11 +186,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 status = "(not yet active)";
             }
 
+            const string format = "HH:mm dd/mmm/yyyy";
+
             return new List<string>
             {
                 cert.SubjectName.Name,
                 cert.FriendlyName,
                 cert.Thumbprint,
+                cert.NotBefore.ToString(format),
+                cert.NotAfter.ToString(format),
                 status
             };
         }
