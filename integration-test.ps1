@@ -64,7 +64,7 @@ start-process powershell -argument $command
 
 Write-TaskName "Wait 5s for server to be up"
 
-start-sleep 5
+start-sleep -seconds 5
 
 # ----------------------------------------------------------------------
 
