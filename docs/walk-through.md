@@ -47,7 +47,7 @@ In production, Azure Batch will generate a software entitlement token and make i
 Run the following command to generate a minimal token and store it in `token.txt`:
 
 ``` PowerShell
-PS> .\sestest generate --vmid $env:COMPUTERNAME --application-id contosoapp --token-file token.txt
+PS> .\sestest generate --application-id contosoapp --token-file token.txt
 10:18:27.531 [Information] ---------------------------------------------
 10:18:27.548 [Information]   Software Entitlement Service Test Utility
 10:18:27.548 [Information] ---------------------------------------------
@@ -96,7 +96,7 @@ Defining these variables makes it easier to type the commands and reducing the o
 Add the options `--sign` and `--encrypt` to the command line used above to generate a fully secured token:
 
 ``` PowerShell
-PS> .\sestest generate --vmid $env:COMPUTERNAME --application-id contosoapp --sign $signingThumbprint --encrypt $encryptingThumbprint --token-file token.txt
+PS> .\sestest generate --application-id contosoapp --sign $signingThumbprint --encrypt $encryptingThumbprint --token-file token.txt
 14:06:43.861 [Information] ---------------------------------------------
 14:06:43.861 [Information]   Software Entitlement Service Test Utility
 14:06:43.861 [Information] ---------------------------------------------
@@ -111,7 +111,7 @@ As we did above, set the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOK
 PS> $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN = (get-content token.txt)
 ```
 
-Testing with an encrypted token is useful because these are significantly longer, in part due to information about the required key that's included within. Note that your application doesn't need to do anything different with encrypted vs unencrypted tokens.
+Testing with an encrypted token is useful because these are significantly longer, in part due to information about the required key that's included within. (This may reveal issues, such as buffer sizes that are too small, that an unencrypted token would not.) Note that your application doesn't need to do anything different with encrypted vs unencrypted tokens. 
 
 ## Starting the test server
 

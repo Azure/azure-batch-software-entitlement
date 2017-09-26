@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Net;
 using FluentAssertions;
@@ -45,19 +45,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         public class VirtualMachineIdProperty : NodeEntitlementsBuilderTests
         {
             [Fact]
-            public void WhenMissing_BuildDoesNotReturnValue()
+            public void WhenMissing_BuildReturnsValue()
             {
                 _commandLine.VirtualMachineId = null;
                 var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
-                entitlement.HasValue.Should().BeFalse();
+                entitlement.HasValue.Should().BeTrue();
             }
 
             [Fact]
-            public void WhenMissing_BuildReturnsErrorForVirtualMachineId()
+            public void WhenMissing_BuildReturnsEntitlementWithNoVirtualMachineId()
             {
                 _commandLine.VirtualMachineId = null;
                 var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
-                entitlement.Errors.Should().Contain(e => e.Contains("virtual machine identifier"));
+                entitlement.Value.VirtualMachineId.Should().BeNullOrEmpty();
             }
 
             [Fact]

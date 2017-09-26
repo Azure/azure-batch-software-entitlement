@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
@@ -56,6 +56,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         public class Generate : TokenGeneratorTests
         {
             private readonly TokenGenerator _generator;
+
 
             public Generate()
             {
