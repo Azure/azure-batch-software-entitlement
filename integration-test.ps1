@@ -26,13 +26,13 @@ param(
 ## So if the URL is for "localhost" the certificate common name must also specify "localhost"
 
 if ($thumbprint -eq $null) {
-    Write-Host "Please define $thumbprint to identify which certificate to use for the test."
+    Write-Output "Please define $thumbprint to identify which certificate to use for the test."
     exit -1;
 }
 
 function Write-TaskName($subtaskName) {
     $divider = "-" * ($subtaskName.Length + 4)
-    Write-Host "`r`n$divider`r`n  $subtaskName`r`n$divider"
+    Write-Output "`r`n$divider`r`n  $subtaskName`r`n$divider"
 }
 
 # ----------------------------------------------------------------------
@@ -51,7 +51,7 @@ if ($LASTEXITCODE -ne 0) {
 Write-TaskName "Display Token"
 
 $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN = (get-content token.txt)
-Write-Host $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN
+Write-Output $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN
 
 # ----------------------------------------------------------------------
 
