@@ -111,7 +111,7 @@ As we did above, set the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOK
 PS> $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN = (get-content token.txt)
 ```
 
-Testing with an encrypted token is useful because these are significantly longer, in part due to information about the required key that's included within. This may reveal issues (such as buffer sizes that are too small) that an unencrypted token would not. Note that your application doesn't need to do anything different with encrypted vs unencrypted tokens.
+Testing with an encrypted token is useful because these are significantly longer, in part due to information about the required key that's included within. (This may reveal issues, such as buffer sizes that are too small, that an unencrypted token would not.) Note that your application doesn't need to do anything different with encrypted vs unencrypted tokens. 
 
 ## Starting the test server
 
