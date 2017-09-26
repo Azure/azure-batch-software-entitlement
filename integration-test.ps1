@@ -2,6 +2,13 @@
 ##   Complete end to end integration test of the SDK
 ## ---------------------------------------------------
 
+#
+# Sample command line:
+#
+# PowerShell:
+# PS> .\integration-test.ps1 -thumbprint B1478FCA1B2C9E6DDDE288A676B5395F67BCDF36 -commonName "localhost" -url https://localhost:4443
+#
+
 param(
     # A certificate that can be used to secure the token and our communication
     [Parameter(Mandatory=$true, HelpMessage="Thumbprint of the certificate to use for HTTP/TLS, for encryption, and for signing.")]
