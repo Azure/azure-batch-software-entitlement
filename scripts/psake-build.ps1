@@ -72,13 +72,13 @@ Task Generate.Version {
     $script:patchVersion = git rev-list "$versionLastUpdated..HEAD" --count
 
     $branch = git name-rev --name-only HEAD
-    Write-Host "Branch   $branch"
+    Write-Output "Branch   $branch"
 
     $commit = git rev-parse --short head
-    Write-Host "Commit   $commit"
+    Write-Output "Commit   $commit"
 
     $script:version = "$versionBase.$patchVersion"
-    Write-Host "Version: $version"
+    Write-Output "Version: $version"
 
     if ($branch -eq "master") {
         $script:semanticVersion = $version
@@ -88,12 +88,12 @@ Task Generate.Version {
         $script:semanticVersion = "$version-beta.$semverBranch.$commit"
     }
 
-    Write-Host "Semver:  $semanticVersion"
+    Write-Output "Semver:  $semanticVersion"
 }
 
 Task Build.SesTest -Depends Requires.DotNetExe, Restore.NuGetPackages, Generate.Version {
     $project = resolve-path $srcDir\sestest\sestest.csproj
-    Write-Host "Building $project"
+    Write-Output "Building $project"
     exec {
         & $dotnetExe build $project /property:Version=$semanticVersion /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$outDir\sestest.msbuild.log --no-restore
     }
@@ -207,7 +207,7 @@ Task Requires.Configuration {
         $script:configuration = "Debug"
     }
 
-    Write-Host "Build configuration is $configuration"
+    Write-Output "Build configuration is $configuration"
 }
 
 Task Requires.DotNetExe {
@@ -221,7 +221,7 @@ Task Requires.DotNetExe {
         throw "Failed to find dotnet.exe"
     }
 
-    Write-Host "Dotnet executable: $dotnetExe"
+    Write-Output "Dotnet executable: $dotnetExe"
 }
 
 Task Requires.MsBuild {
@@ -236,7 +236,7 @@ Task Requires.MsBuild {
         throw "Failed to find msbuild.exe"
     }
 
-    Write-Host "MSBuild executable: $msbuildExe"
+    Write-Output "MSBuild executable: $msbuildExe"
 }
 
 Task Requires.OpenCover {
@@ -259,7 +259,7 @@ Task Requires.OutDir {
         throw "Output folder does not exist"
     }
 
-    Write-Host "Output folder is $outDir"
+    Write-Output "Output folder is $outDir"
 }
 
 Task Requires.Platform {
@@ -268,7 +268,7 @@ Task Requires.Platform {
         $script:targetPlatform = "Debug"
     }
 
-    Write-Host "Target platform is $targetPlatform"
+    Write-Output "Target platform is $targetPlatform"
 }
 
 Task Requires.ReportGenerator {
@@ -297,5 +297,5 @@ formatTaskName {
 
 function Write-SubtaskName($subtaskName) {
     $divider = "-" * ($subtaskName.Length + 4)
-    Write-Host "`r`n$divider`r`n  $subtaskName`r`n$divider"
+    Write-Output "`r`n$divider`r`n  $subtaskName`r`n$divider"
 }
