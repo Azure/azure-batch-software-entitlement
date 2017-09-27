@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using CommandLine;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
@@ -26,5 +26,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         [Option("issuer", HelpText = "[Internal] Issuer by which all tokens must have been created (optional).")]
         public string Issuer { get; set; }
+
+        [Option("exit-after-request", HelpText = "Server will automatically exit after processing one request.")]
+        public bool ExitAfterRequest { get; set; }
     }
 }

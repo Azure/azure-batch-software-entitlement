@@ -1,5 +1,5 @@
-﻿using System;
-using System.Text;
+using System;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
@@ -11,11 +11,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
     public class SoftwareEntitlementsController : Controller
     {
         // Configuration options
-        private readonly Options _options;
+        private readonly ServerOptions _serverOptions;
 
         // A reference to our logger
 
         private readonly ILogger _logger;
+        private readonly IApplicationLifetime _lifetime;
 
         // Verifier used to check tokens
         private readonly TokenVerifier _verifier;
@@ -23,28 +24,30 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         /// <summary>
         /// Initializes a new instance of the <see cref="SoftwareEntitlementsController"/> class
         /// </summary>
-        /// <param name="options">Options to use when handling requests.</param>
+        /// <param name="serverOptions">Options to use when handling requests.</param>
         /// <param name="logger">Reference to our logger for diagnostics.</param>
-        public SoftwareEntitlementsController(Options options, ILogger logger)
+        /// <param name="lifetime">Lifetime instance to allow us to automatically shut down if requested.</param>
+        public SoftwareEntitlementsController(ServerOptions serverOptions, ILogger logger, IApplicationLifetime lifetime)
         {
-            _options = options;
+            _serverOptions = serverOptions;
             _logger = logger;
+            _lifetime = lifetime;
 
-            if (_options.SigningKey != null)
+            if (_serverOptions.SigningKey != null)
             {
                 _logger.LogDebug(
                     "Tokens must be signed with {Credentials}",
-                    _options.SigningKey.KeyId);
+                    _serverOptions.SigningKey.KeyId);
             }
 
-            if (_options.EncryptionKey != null)
+            if (_serverOptions.EncryptionKey != null)
             {
                 _logger.LogDebug(
                     "Tokens must be encrypted with {Credentials}",
-                    _options.EncryptionKey.KeyId);
+                    _serverOptions.EncryptionKey.KeyId);
             }
 
-            _verifier = new TokenVerifier(_options.SigningKey, _options.EncryptionKey);
+            _verifier = new TokenVerifier(_serverOptions.SigningKey, _serverOptions.EncryptionKey);
         }
 
         [HttpPost]
@@ -53,63 +56,73 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             [FromBody] SoftwareEntitlementRequest entitlementRequest,
             [FromQuery(Name = "api-version")] string apiVersion)
         {
-            if (!IsValidApiVersion(apiVersion))
+            try
             {
-                _logger.LogError(
-                    "Selected api-version of {ApiVersion} is not supported; denying entitlement request.",
-                    apiVersion);
-
-                var error = new SoftwareEntitlementFailureResponse
+                if (!IsValidApiVersion(apiVersion))
                 {
-                    Code = "EntitlementDenied",
-                    Message = new ErrorMessage($"Entitlement for {entitlementRequest.ApplicationId} was denied.")
-                };
+                    _logger.LogError(
+                        "Selected api-version of {ApiVersion} is not supported; denying entitlement request.",
+                        apiVersion);
 
-                return StatusCode(400, error);
-            }
+                    var error = new SoftwareEntitlementFailureResponse
+                    {
+                        Code = "EntitlementDenied",
+                        Message = new ErrorMessage($"Entitlement for {entitlementRequest.ApplicationId} was denied.")
+                    };
 
-            _logger.LogInformation(
-                "Selected api-version is {ApiVersion}",
-                apiVersion);
-
-            _logger.LogInformation(
-                "Requesting entitlement for {Application}",
-                entitlementRequest.ApplicationId);
-            _logger.LogDebug("Request token: {Token}", entitlementRequest.Token);
-
-            var remoteAddress = HttpContext.Connection.RemoteIpAddress;
-            _logger.LogDebug("Remote Address: {Address}", remoteAddress);
-
-            var verificationResult = _verifier.Verify(
-                entitlementRequest.Token,
-                _options.Audience,
-                _options.Issuer,
-                entitlementRequest.ApplicationId,
-                remoteAddress);
-            if (!verificationResult.HasValue)
-            {
-                foreach (var e in verificationResult.Errors)
-                {
-                    _logger.LogError(e);
+                    return StatusCode(400, error);
                 }
 
-                var error = new SoftwareEntitlementFailureResponse
+                _logger.LogInformation(
+                    "Selected api-version is {ApiVersion}",
+                    apiVersion);
+
+                _logger.LogInformation(
+                    "Requesting entitlement for {Application}",
+                    entitlementRequest.ApplicationId);
+                _logger.LogDebug("Request token: {Token}", entitlementRequest.Token);
+
+                var remoteAddress = HttpContext.Connection.RemoteIpAddress;
+                _logger.LogDebug("Remote Address: {Address}", remoteAddress);
+
+                var verificationResult = _verifier.Verify(
+                    entitlementRequest.Token,
+                    _serverOptions.Audience,
+                    _serverOptions.Issuer,
+                    entitlementRequest.ApplicationId,
+                    remoteAddress);
+                if (!verificationResult.HasValue)
                 {
-                    Code = "EntitlementDenied",
-                    Message = new ErrorMessage($"Entitlement for {entitlementRequest.ApplicationId} was denied.")
+                    foreach (var e in verificationResult.Errors)
+                    {
+                        _logger.LogError(e);
+                    }
+
+                    var error = new SoftwareEntitlementFailureResponse
+                    {
+                        Code = "EntitlementDenied",
+                        Message = new ErrorMessage($"Entitlement for {entitlementRequest.ApplicationId} was denied.")
+                    };
+
+                    return StatusCode(403, error);
+                }
+
+                var entitlement = verificationResult.Value;
+                var response = new SoftwareEntitlementSuccessfulResponse
+                {
+                    EntitlementId = entitlement.Identifier,
+                    VirtualMachineId = entitlement.VirtualMachineId
                 };
 
-                return StatusCode(403, error);
+                return Ok(response);
             }
-
-            var entitlement = verificationResult.Value;
-            var response = new SoftwareEntitlementSuccessfulResponse
+            finally
             {
-                EntitlementId = entitlement.Identifier,
-                VirtualMachineId = entitlement.VirtualMachineId
-            };
-
-            return Ok(response);
+                if (_serverOptions.Flags.HasFlag(ServerFlags.ExitAfterRequest))
+                {
+                    _lifetime.StopApplication();
+                }
+            }
         }
 
         /// <summary>
@@ -125,7 +138,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
                    || apiVersion.Equals("2017-06-01.5.1", StringComparison.Ordinal);
         }
 
-        public class Options
+        public class ServerOptions
         {
             /// <summary>
             /// Gets the key to use when checking the signature on a token
@@ -148,19 +161,33 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             public string Issuer { get; }
 
             /// <summary>
-            /// Initializes a new instance of the <see cref="Options"/> class
+            /// Gets additional flags used to control the server
+            /// </summary>
+            public ServerFlags Flags { get; }
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="ServerOptions"/> class
             /// </summary>
             /// <param name="signingKey">Key to use when checking token signatures.</param>
             /// <param name="encryptionKey">Key to use when decrypting tokens.</param>
             /// <param name="audience">Audience to which tokens should be addressed.</param>
             /// <param name="issuer">Issuer by which tokens should have been created.</param>
-            public Options(SecurityKey signingKey, SecurityKey encryptionKey, string audience, string issuer)
+            /// <param name="flags">Additional flags for controlling behaviour.</param>
+            public ServerOptions(SecurityKey signingKey, SecurityKey encryptionKey, string audience, string issuer, ServerFlags flags)
             {
                 SigningKey = signingKey;
                 EncryptionKey = encryptionKey;
                 Audience = audience;
                 Issuer = issuer;
+                Flags = flags;
             }
+        }
+
+        [Flags]
+        public enum ServerFlags
+        {
+            None = 0,
+            ExitAfterRequest = 1
         }
     }
 }
