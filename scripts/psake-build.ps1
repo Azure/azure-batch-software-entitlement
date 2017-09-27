@@ -83,11 +83,22 @@ Task Build.SesClient -Depends Requires.MsBuild, Requires.Configuration, Requires
     }
 }
 
-Task Unit.Tests -Depends Requires.DotNetExe, Build.SesTest {
+Task Build.UnitTests -Depends Requires.DotNetExe {
     foreach ($project in (resolve-path $testsDir\*\*.csproj)){
-        Write-SubtaskName (split-path $project -Leaf)
+        $projectName = split-path $project -Leaf
+        Write-SubtaskName "Building $projectName"
         exec {
-            & $dotnetExe test $project
+            & $dotnetExe build $project /property:Version=$semanticVersion /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$outDir\$projectName.msbuild.log --no-restore
+        }
+    }
+}
+
+Task Unit.Tests -Depends Requires.DotNetExe, Build.UnitTests {
+    foreach ($project in (resolve-path $testsDir\*\*.csproj)){
+        $projectName = split-path $project -Leaf
+        Write-SubtaskName "Running unit tests from $projectName"
+        exec {
+            & $dotnetExe test $project --no-build
         }
     }
 }
