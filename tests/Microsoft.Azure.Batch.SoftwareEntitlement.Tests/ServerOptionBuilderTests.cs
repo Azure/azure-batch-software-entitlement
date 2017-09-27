@@ -1,4 +1,4 @@
-﻿using FluentAssertions;
+using FluentAssertions;
 using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
@@ -100,6 +100,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 _commandLine.Issuer = string.Empty;
                 var options = ServerOptionBuilder.Build(_commandLine, _permissiveOptions);
                 options.Value.Issuer.Should().NotBeNullOrEmpty();
+            }
+        }
+
+        public class ExitAfterRequest : ServerOptionBuilderTests
+        {
+            [Fact]
+            public void Build_WithoutExitAfterRequest_ShouldHaveDefault()
+            {
+                _commandLine.ExitAfterRequest = false;
+                var options = ServerOptionBuilder.Build(_commandLine, _permissiveOptions);
+                options.Value.ExitAfterRequest.Should().BeFalse();
+            }
+
+            [Fact]
+            public void Build_WithExitAfterRequest_ConfiguresValue()
+            {
+                _commandLine.ExitAfterRequest = true;
+                var options = ServerOptionBuilder.Build(_commandLine, _permissiveOptions);
+                options.Value.ExitAfterRequest.Should().BeTrue();
             }
         }
     }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
@@ -82,12 +82,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     whenFailure: e => errors.AddRange(e));
             }
 
+            void ConfigureSwitch(Func<bool> readConfiguration, Func<ServerOptions> applySwitch)
+            {
+                if (readConfiguration())
+                {
+                    options = applySwitch();
+                }
+            }
+
             Configure(ServerUrl, url => options.WithServerUrl(url));
             ConfigureOptional(ConnectionCertificate, cert => options.WithConnectionCertificate(cert));
             ConfigureOptional(SigningCertificate, cert => options.WithSigningCertificate(cert));
             ConfigureOptional(EncryptingCertificate, cert => options.WithEncryptionCertificate(cert));
             ConfigureOptional(Audience, audience => options.WithAudience(audience));
             ConfigureOptional(Issuer, issuer => options.WithIssuer(issuer));
+            ConfigureSwitch(ExitAfterRequest, () => options.WithAutomaticExitAfterOneRequest());
 
             if (errors.Any())
             {
@@ -205,6 +214,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             return Errorable.Success(_commandLine.Issuer);
+        }
+
+        /// <summary>
+        /// Return whether the server should shut down after processing one request
+        /// </summary>
+        /// <returns></returns>
+        private bool ExitAfterRequest()
+        {
+            return _commandLine.ExitAfterRequest;
         }
 
         /// <summary>

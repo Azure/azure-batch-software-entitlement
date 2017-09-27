@@ -67,8 +67,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 "Expected audience for all tokens {Audience}",
                 _options.Audience);
 
-            var controllerOptions = new SoftwareEntitlementsController.Options(
-                signingKey, encryptingKey, _options.Audience, _options.Issuer);
+            var flags = SoftwareEntitlementsController.ServerFlags.None;
+            if (_options.ExitAfterRequest)
+            {
+                flags |= SoftwareEntitlementsController.ServerFlags.ExitAfterRequest;
+            }
+
+            var controllerOptions = new SoftwareEntitlementsController.ServerOptions(
+                signingKey, encryptingKey, _options.Audience, _options.Issuer, flags);
             services.AddSingleton(controllerOptions);
             services.AddSingleton(_logger);
             services.AddSingleton(_provider);
