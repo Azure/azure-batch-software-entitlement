@@ -154,9 +154,12 @@ Task Publish.SesTest.Win64 -Depends Requires.DotNetExe, Restore.NuGetPackages {
         & $dotnetExe publish $srcDir\sestest\sestest.csproj --self-contained --output $publishDir\sestest\win10-x64 --runtime win10-x64 /p:Version=$semanticVersion
     }
 
+    $archive = "$publishDir\sestest-$semanticVersion-win10-x64.zip"
     exec {
-        compress-archive $publishDir\sestest\win10-x64\* $publishDir\sestest-$version-win10-x64.zip 
+        compress-archive $publishDir\sestest\win10-x64\* $archive
     }
+
+    Write-Output "Created archive $archive"
 }
 
 Task Publish.SesTest.Linux64 -Depends Requires.DotNetExe, Restore.NuGetPackages {
@@ -164,16 +167,22 @@ Task Publish.SesTest.Linux64 -Depends Requires.DotNetExe, Restore.NuGetPackages 
         & $dotnetExe publish $srcDir\sestest\sestest.csproj --self-contained --output $publishDir\sestest\linux-x64 --runtime linux-x64 /p:Version=$semanticVersion
     }
 
+    $archive = "$publishDir\sestest-$semanticVersion-linux-x64.zip"
     exec {
-        compress-archive $publishDir\sestest\linux-x64\* $publishDir\sestest-$version-linux-x64.zip
+        compress-archive $publishDir\sestest\linux-x64\* $archive
     }
+
+    Write-Output "Created archive $archive"
 }
 
 Task Publish.SesClient -Depends Build.SesLibrary, Build.SesClient {
     $clientDir = resolve-path $srcDir\sesclient.native\x64\*
+    $archive = "$publishDir\sesclient-$semanticVersion-x64.zip"
     exec {
-        compress-archive $clientDir\*.exe, $clientDir\*.dll $publishDir\sesclient-$version-x64.zip
+        compress-archive $clientDir\*.exe, $clientDir\*.dll $archive
     }
+
+    Write-Output "Created archive $archive"
 }
 
 ## --------------------------------------------------------------------------------
