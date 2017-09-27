@@ -67,14 +67,28 @@ Task Generate.Version {
     if ($versionBase -eq $null) {
         throw "Unable to load $baseDir\version.txt"
     }
+
     $versionLastUpdated = git rev-list -1 HEAD $baseDir\version.txt
     $script:patchVersion = git rev-list "$versionLastUpdated..HEAD" --count
 
-    $script:version = "$versionBase.$patchVersion"
-    Write-Host "Version          $version"
+    $branch = git name-rev --name-only HEAD
+    Write-Host "Branch   $branch"
 
-    $script:semanticVersion = $version
-    Write-Host "Semantic version $semanticVersion"
+    $commit = git rev-parse --short head
+    Write-Host "Commit   $commit"
+
+    $script:version = "$versionBase.$patchVersion"
+    Write-Host "Version: $version"
+
+    if ($branch -eq "master") {
+        $script:semanticVersion = $version
+    }
+    else {
+        $semverBranch = $branch -replace "[^A-Za-z0-9-]+", "."
+        $script:semanticVersion = "$version-beta.$semverBranch.$commit"
+    }
+
+    Write-Host "Semver:  $semanticVersion"
 }
 
 Task Build.SesTest -Depends Requires.DotNetExe, Restore.NuGetPackages, Generate.Version {
