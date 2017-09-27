@@ -63,11 +63,11 @@ Task Generate.Version {
     Write-Host "Semantic version $semanticVersion"
 }
 
-Task Build.SesTest -Depends Requires.MsBuild, Restore.NuGetPackages, Generate.Version {
+Task Build.SesTest -Depends Requires.DotNetExe, Restore.NuGetPackages, Generate.Version {
     $project = resolve-path $srcDir\sestest\sestest.csproj
     Write-Host "Building $project"
     exec {
-        & $msbuildExe $project /p:Version=$semanticVersion /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$outDir\sestest.msbuild.log 
+        & $dotnetExe build $project /property:Version=$semanticVersion /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$outDir\sestest.msbuild.log --no-restore
     }
 }
 
