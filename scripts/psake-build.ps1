@@ -28,8 +28,13 @@ Task Build.Windows -Depends Clean, Build.SesLibrary, Build.SesClient, Build.SesT
 ## Tasks used to prepare for the actual build
 
 Task Restore.NuGetPackages -Depends Requires.DotNetExe {
-    exec {
-        & $dotnetExe restore $baseDir\src\sestest
+    # Restore for each C# project to avoid the errors that happen when we try to restore for a C++ project
+    foreach ($project in (resolve-path $srcDir\*\*.csproj, $testsDir\*\*.csproj)){
+        $projectName = split-path $project -Leaf
+        Write-SubtaskName "Restoring packages for $projectName"
+        exec {
+            & $dotnetExe restore $project --verbosity minimal
+        }
     }
 }
 
