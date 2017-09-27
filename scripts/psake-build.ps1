@@ -50,8 +50,8 @@ Task Clean.PublishFolder {
 Task Generate.Version {
     
     $script:versionBase = get-content $baseDir\version.txt -ErrorAction SilentlyContinue
-    if ($version -eq $null) {
-        throw "Unable to load .\version.txt"
+    if ($versionBase -eq $null) {
+        throw "Unable to load $baseDir\version.txt"
     }
     $versionLastUpdated = git rev-list -1 HEAD $baseDir\version.txt
     $script:patchVersion = git rev-list "$versionLastUpdated..HEAD" --count
@@ -90,6 +90,24 @@ Task Unit.Tests -Depends Requires.DotNetExe, Build.SesTest {
             & $dotnetExe test $project
         }
     }
+}
+
+Task Cover.Tests -Depends Requires.Opencover, Requires.ReportGenerator, Requires.OutDir, Build.SesTest {
+    $filter = "+[*]* -[xunit.*]* -[Fluent*]* -[*.Tests]*"
+    $logLevel = "info"
+
+    foreach ($project in (resolve-path $testsDir\*\*.csproj)){
+        $projectName = split-path $project -Leaf
+        Write-SubtaskName $projectName
+
+        exec {
+            & $openCoverExe -oldStyle "-target:$dotnetExe" "-targetargs:test $project" -register:user "-filter:$filter" -log:$loglevel -output:$outDir\$projectName.cover.xml
+        }
+    }
+
+    Write-SubtaskName "Generating Coverage Report"
+
+    & $reportGeneratorExe "-reports:$outDir\*.cover.xml" "-targetdir:$outDir\cover\"
 }
 
 Task Publish.SesTest.Win64 -Depends Requires.DotNetExe, Restore.NuGetPackages {
@@ -156,13 +174,11 @@ Task Requires.Configuration {
 Task Requires.DotNetExe {
     $script:dotnetExe = (get-command dotnet).Path
 
-    if ($dotnetExe -eq $null)
-    {
+    if ($dotnetExe -eq $null) {
         $script:dotnetExe = resolve-path $env:ProgramFiles\dotnet\dotnet.exe -ErrorAction SilentlyContinue
     }
     
-    if ($dotnetExe -eq $null)
-    {
+    if ($dotnetExe -eq $null) {
         throw "Failed to find dotnet.exe"
     }
 
@@ -173,17 +189,38 @@ Task Requires.MsBuild {
     # prefer MSBuild from VS2017 if its there
     $script:msbuildExe = resolve-path "${env:ProgramFiles(x86)}\Microsoft Visual Studio\2017\*\MSBuild\*\Bin\MSBuild.exe" -ErrorAction SilentlyContinue
 
-    if ($msbuildExe -eq $null)
-    {
+    if ($msbuildExe -eq $null) {
         $script:msbuildExe = (get-command msbuild).Path
     }
 
-    if ($msbuildExe -eq $null)
-    {
+    if ($msbuildExe -eq $null) {
         throw "Failed to find msbuild.exe"
     }
 
     Write-Host "MSBuild executable: $msbuildExe"
+}
+
+Task Requires.OpenCover {
+
+    $script:openCoverExe = resolve-path $env:userprofile\.nuget\packages\OpenCover\*\tools\OpenCover.Console.exe -ErrorAction SilentlyContinue
+
+    if ($openCoverExe -eq $null) {
+        throw "Failed to find OpenCover.Console.exe"
+    }
+
+    Write-Output "Opencover executable: $openCoverExe"
+}
+
+Task Requires.OutDir {
+    if (!(test-path $outDir)) {
+        mkdir $outDir -ErrorAction SilentlyContinue | Out-Null
+    }
+
+    if (!(test-path $outDir)) {
+        throw "Output folder does not exist"
+    }
+
+    Write-Host "Output folder is $outDir"
 }
 
 Task Requires.Platform {
@@ -194,6 +231,19 @@ Task Requires.Platform {
 
     Write-Host "Target platform is $targetPlatform"
 }
+
+Task Requires.ReportGenerator {
+    
+        $script:reportGeneratorExe = resolve-path $env:userprofile\.nuget\packages\reportgenerator\*\tools\ReportGenerator.exe -ErrorAction SilentlyContinue | 
+            Sort-Object -Property "Name" | 
+            select-object -last 1
+    
+        if ($reportGeneratorExe -eq $null) {
+            throw "Failed to find ReportGenerator.exe"
+        }
+    
+        Write-Output "Report Generator executable: $reportGeneratorExe"
+    }
 
 ## --------------------------------------------------------------------------------
 ##   Support Functions
