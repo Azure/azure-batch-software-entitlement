@@ -10,13 +10,17 @@ properties {
     $publishDir = join-path $baseDir publish
 }
 
+# Clean up build artifacts
 Task Clean -Depends Clean.SourceFolder, Clean.OutFolder, Clean.PublishFolder
 
-Task Build.Xplat -Depends Build.SesTest, Unit.Tests
+# Build just the cross platform pieces
+Task Build.Xplat -Depends Clean, Build.SesTest, Unit.Tests
 
-Task Publish.Archives -Depends Clean.PublishFolder, Publish.SesTest.Win64, Publish.SesTest.Linux64, Publish.SesClient
+# Publish distributable zip files for the each tool and platform
+Task Publish.Archives -Depends Clean, Publish.SesTest.Win64, Publish.SesTest.Linux64, Publish.SesClient
 
-Task Build.Windows -Depends Build.SesLibrary, Build.SesClient
+# Build all the components for use on Windows
+Task Build.Windows -Depends Clean, Build.SesLibrary, Build.SesClient, Build.SesTest
 
 ## --------------------------------------------------------------------------------
 ##   Preparation Targets
@@ -30,8 +34,13 @@ Task Restore.NuGetPackages -Depends Requires.DotNetExe {
 }
 
 Task Clean.SourceFolder {
+    remove-item $srcDir\*\bin\* -recurse -ErrorAction SilentlyContinue
     remove-item $srcDir\*\obj\* -recurse -ErrorAction SilentlyContinue
+    remove-item $srcDir\*\publish\* -recurse -ErrorAction SilentlyContinue
+
+    remove-item $testsDir\*\bin\* -recurse -ErrorAction SilentlyContinue
     remove-item $testsDir\*\obj\* -recurse -ErrorAction SilentlyContinue
+    remove-item $testsDir\*\publish\* -recurse -ErrorAction SilentlyContinue
 }
 
 Task Clean.OutFolder {
