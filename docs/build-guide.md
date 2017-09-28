@@ -18,9 +18,9 @@ Preinstallation of Psake is optional; if it isn't already available, the build s
 
 ### Psake on Linux
 
-Support for running psake on Linux using PowerShell Core hasn't yet (as of September 2017) been released - the current release (v4.6.0, from March 2016) only runs on Windows.
+Support for running **psake** on Linux using PowerShell Core hasn't yet (as of September 2017) been released - the current release (v4.6.0, from March 2016) only runs on Windows.
 
-For builds to run on Linux, you'll need to [download](https://github.com/psake/psake/archive/master.zip) the current `master` branch from GitHub. 
+For builds of the software entitlement SDK to run on Linux, you'll need to [download](https://github.com/psake/psake/archive/master.zip) the current `master` branch of psake from GitHub. 
 
 Once downloaded, extract the zip file into the root of the repository as `./lib/psake` so that `bootstrap.ps1` will find the psake PowerShell module as `./lib/psake/psake.psm1`.
 
@@ -141,3 +141,10 @@ Command line warning D9002: ignoring unknown option '/std:c++latest'
 
 May indicate that you have Visual Studio 2015 Update 2 or earlier; **vcpkg** needs at least [Update 3](https://www.visualstudio.com/vs/older-downloads/). 
 
+### Assert: No .NET Framework installation directory found at \Microsoft.NET\Framework64\v4.0.30319\.
+
+This error occurs when attempting to build on Linux using Psake 4.6.0 (the current release as of September 2017).
+
+Release 4.6.0 of Psake doesn't support Linux - but the current `master` branch does.
+
+[Download](https://github.com/psake/psake/archive/master.zip) the current `master` branch of psake and extract the archive into the root of the repository as `./lib/psake` so that `bootstrap.ps1` will find the psake PowerShell module as `./lib/psake/psake.psm1`.
