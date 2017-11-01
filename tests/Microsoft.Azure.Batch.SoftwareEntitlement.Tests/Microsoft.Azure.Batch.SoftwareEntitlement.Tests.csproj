@@ -13,7 +13,7 @@
     <PackageReference Include="NSubstitute" Version="3.1.0" />
     <PackageReference Include="OpenCover" Version="4.6.519" />
     <PackageReference Include="ReportGenerator" Version="2.5.11" />
-    <PackageReference Include="Roslynator.Analyzers" Version="1.4.0" />
+    <PackageReference Include="Roslynator.Analyzers" Version="1.5.0" />
     <PackageReference Include="System.Runtime.Analyzers" Version="1.1.0" />
     <PackageReference Include="xunit" Version="2.3.1" />
     <PackageReference Include="xunit.runner.visualstudio" Version="2.3.1" />
