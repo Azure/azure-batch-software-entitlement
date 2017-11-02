@@ -1,5 +1,4 @@
 ﻿using CommandLine;
-using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {

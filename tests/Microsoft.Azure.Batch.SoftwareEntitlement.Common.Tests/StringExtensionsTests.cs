@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using FluentAssertions;
 using Xunit;
 
@@ -31,8 +29,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             public void GivenString_NoLinesEndWithEolnCharacters(string content)
             {
                 var lines = content.AsLines().ToList();
-                lines.Should().NotContain(l => l.EndsWith("\r"));
-                lines.Should().NotContain(l => l.EndsWith("\n"));
+                lines.Should().NotContain(l => l.EndsWith("\r", StringComparison.Ordinal));
+                lines.Should().NotContain(l => l.EndsWith("\n", StringComparison.Ordinal));
             }
         }
     }
