@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Extensions.Logging;
@@ -114,11 +115,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <returns>Certificate, if found; null otherwise.</returns>
         private static X509Certificate2 FindByThumbprint(CertificateThumbprint thumbprint, StoreName storeName, StoreLocation storeLocation)
         {
-            using (var store = new X509Store(storeName, storeLocation))
+            try
             {
-                store.Open(OpenFlags.ReadOnly);
-                var found = store.Certificates.Find(thumbprint);
-                return found.SingleOrDefault();
+                using (var store = new X509Store(storeName, storeLocation))
+                {
+                    store.Open(OpenFlags.ReadOnly);
+                    var found = store.Certificates.Find(thumbprint);
+                    return found.SingleOrDefault();
+                }
+
+            }
+            catch (PlatformNotSupportedException)
+            {
+                // Some store locations not supported on Linux, just return null
+                return null;
             }
         }
     }

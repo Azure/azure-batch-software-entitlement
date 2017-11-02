@@ -10,13 +10,17 @@ properties {
     $publishDir = join-path $baseDir publish
 }
 
+# Clean up build artifacts
 Task Clean -Depends Clean.SourceFolder, Clean.OutFolder, Clean.PublishFolder
 
-Task Build.Xplat -Depends Build.SesTest, Unit.Tests
+# Build just the cross platform pieces
+Task Build.Xplat -Depends Clean, Build.SesTest, Unit.Tests
 
-Task Publish.Archives -Depends Clean.PublishFolder, Publish.SesTest.Win64, Publish.SesTest.Linux64, Publish.SesClient
+# Publish distributable zip files for the each tool and platform
+Task Publish.Archives -Depends Clean, Publish.SesTest.Win64, Publish.SesTest.Linux64, Publish.SesClient
 
-Task Build.Windows -Depends Build.SesLibrary, Build.SesClient
+# Build all the components for use on Windows
+Task Build.Windows -Depends Clean, Build.SesLibrary, Build.SesClient, Build.SesTest
 
 ## --------------------------------------------------------------------------------
 ##   Preparation Targets
@@ -24,14 +28,24 @@ Task Build.Windows -Depends Build.SesLibrary, Build.SesClient
 ## Tasks used to prepare for the actual build
 
 Task Restore.NuGetPackages -Depends Requires.DotNetExe {
-    exec {
-        & $dotnetExe restore $baseDir\src\sestest
+    # Restore for each C# project to avoid the errors that happen when we try to restore for a C++ project
+    foreach ($project in (resolve-path $srcDir\*\*.csproj, $testsDir\*\*.csproj)){
+        $projectName = split-path $project -Leaf
+        Write-SubtaskName "Restoring packages for $projectName"
+        exec {
+            & $dotnetExe restore $project --verbosity minimal
+        }
     }
 }
 
 Task Clean.SourceFolder {
+    remove-item $srcDir\*\bin\* -recurse -ErrorAction SilentlyContinue
     remove-item $srcDir\*\obj\* -recurse -ErrorAction SilentlyContinue
+    remove-item $srcDir\*\publish\* -recurse -ErrorAction SilentlyContinue
+
+    remove-item $testsDir\*\bin\* -recurse -ErrorAction SilentlyContinue
     remove-item $testsDir\*\obj\* -recurse -ErrorAction SilentlyContinue
+    remove-item $testsDir\*\publish\* -recurse -ErrorAction SilentlyContinue
 }
 
 Task Clean.OutFolder {
@@ -53,21 +67,35 @@ Task Generate.Version {
     if ($versionBase -eq $null) {
         throw "Unable to load $baseDir\version.txt"
     }
+
     $versionLastUpdated = git rev-list -1 HEAD $baseDir\version.txt
     $script:patchVersion = git rev-list "$versionLastUpdated..HEAD" --count
 
-    $script:version = "$versionBase.$patchVersion"
-    Write-Host "Version          $version"
+    $branch = git name-rev --name-only HEAD
+    Write-Output "Branch   $branch"
 
-    $script:semanticVersion = $version
-    Write-Host "Semantic version $semanticVersion"
+    $commit = git rev-parse --short head
+    Write-Output "Commit   $commit"
+
+    $script:version = "$versionBase.$patchVersion"
+    Write-Output "Version: $version"
+
+    if ($branch -eq "master") {
+        $script:semanticVersion = $version
+    }
+    else {
+        $semverBranch = $branch -replace "[^A-Za-z0-9-]+", "."
+        $script:semanticVersion = "$version-beta.$semverBranch.$commit"
+    }
+
+    Write-Output "Semver:  $semanticVersion"
 }
 
-Task Build.SesTest -Depends Requires.MsBuild, Restore.NuGetPackages, Generate.Version {
+Task Build.SesTest -Depends Requires.DotNetExe, Restore.NuGetPackages, Generate.Version {
     $project = resolve-path $srcDir\sestest\sestest.csproj
-    Write-Host "Building $project"
+    Write-Output "Building $project"
     exec {
-        & $msbuildExe $project /p:Version=$semanticVersion /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$outDir\sestest.msbuild.log 
+        & $dotnetExe build $project /property:Version=$semanticVersion /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$outDir\sestest.msbuild.log --no-restore
     }
 }
 
@@ -83,11 +111,22 @@ Task Build.SesClient -Depends Requires.MsBuild, Requires.Configuration, Requires
     }
 }
 
-Task Unit.Tests -Depends Requires.DotNetExe, Build.SesTest {
+Task Build.UnitTests -Depends Requires.DotNetExe {
     foreach ($project in (resolve-path $testsDir\*\*.csproj)){
-        Write-SubtaskName (split-path $project -Leaf)
+        $projectName = split-path $project -Leaf
+        Write-SubtaskName "Building $projectName"
         exec {
-            & $dotnetExe test $project
+            & $dotnetExe build $project /property:Version=$semanticVersion /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$outDir\$projectName.msbuild.log --no-restore
+        }
+    }
+}
+
+Task Unit.Tests -Depends Requires.DotNetExe, Build.UnitTests {
+    foreach ($project in (resolve-path $testsDir\*\*.csproj)){
+        $projectName = split-path $project -Leaf
+        Write-SubtaskName "Running unit tests from $projectName"
+        exec {
+            & $dotnetExe test $project --no-build
         }
     }
 }
@@ -115,9 +154,12 @@ Task Publish.SesTest.Win64 -Depends Requires.DotNetExe, Restore.NuGetPackages {
         & $dotnetExe publish $srcDir\sestest\sestest.csproj --self-contained --output $publishDir\sestest\win10-x64 --runtime win10-x64 /p:Version=$semanticVersion
     }
 
+    $archive = "$publishDir\sestest-$semanticVersion-win10-x64.zip"
     exec {
-        compress-archive $publishDir\sestest\win10-x64\* $publishDir\sestest-$version-win10-x64.zip 
+        compress-archive $publishDir\sestest\win10-x64\* $archive
     }
+
+    Write-Output "Created archive $archive"
 }
 
 Task Publish.SesTest.Linux64 -Depends Requires.DotNetExe, Restore.NuGetPackages {
@@ -125,16 +167,22 @@ Task Publish.SesTest.Linux64 -Depends Requires.DotNetExe, Restore.NuGetPackages 
         & $dotnetExe publish $srcDir\sestest\sestest.csproj --self-contained --output $publishDir\sestest\linux-x64 --runtime linux-x64 /p:Version=$semanticVersion
     }
 
+    $archive = "$publishDir\sestest-$semanticVersion-linux-x64.zip"
     exec {
-        compress-archive $publishDir\sestest\linux-x64\* $publishDir\sestest-$version-linux-x64.zip
+        compress-archive $publishDir\sestest\linux-x64\* $archive
     }
+
+    Write-Output "Created archive $archive"
 }
 
 Task Publish.SesClient -Depends Build.SesLibrary, Build.SesClient {
     $clientDir = resolve-path $srcDir\sesclient.native\x64\*
+    $archive = "$publishDir\sesclient-$semanticVersion-x64.zip"
     exec {
-        compress-archive $clientDir\*.exe, $clientDir\*.dll $publishDir\sesclient-$version-x64.zip
+        compress-archive $clientDir\*.exe, $clientDir\*.dll $archive
     }
+
+    Write-Output "Created archive $archive"
 }
 
 ## --------------------------------------------------------------------------------
@@ -168,7 +216,7 @@ Task Requires.Configuration {
         $script:configuration = "Debug"
     }
 
-    Write-Host "Build configuration is $configuration"
+    Write-Output "Build configuration is $configuration"
 }
 
 Task Requires.DotNetExe {
@@ -182,7 +230,7 @@ Task Requires.DotNetExe {
         throw "Failed to find dotnet.exe"
     }
 
-    Write-Host "Dotnet executable: $dotnetExe"
+    Write-Output "Dotnet executable: $dotnetExe"
 }
 
 Task Requires.MsBuild {
@@ -197,7 +245,7 @@ Task Requires.MsBuild {
         throw "Failed to find msbuild.exe"
     }
 
-    Write-Host "MSBuild executable: $msbuildExe"
+    Write-Output "MSBuild executable: $msbuildExe"
 }
 
 Task Requires.OpenCover {
@@ -220,7 +268,7 @@ Task Requires.OutDir {
         throw "Output folder does not exist"
     }
 
-    Write-Host "Output folder is $outDir"
+    Write-Output "Output folder is $outDir"
 }
 
 Task Requires.Platform {
@@ -229,7 +277,7 @@ Task Requires.Platform {
         $script:targetPlatform = "Debug"
     }
 
-    Write-Host "Target platform is $targetPlatform"
+    Write-Output "Target platform is $targetPlatform"
 }
 
 Task Requires.ReportGenerator {
@@ -258,5 +306,5 @@ formatTaskName {
 
 function Write-SubtaskName($subtaskName) {
     $divider = "-" * ($subtaskName.Length + 4)
-    Write-Host "`r`n$divider`r`n  $subtaskName`r`n$divider"
+    Write-Output "`r`n$divider`r`n  $subtaskName`r`n$divider"
 }
