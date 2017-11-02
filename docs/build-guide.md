@@ -6,11 +6,25 @@ This *build guide* describes how to build the tools provided as a part of the *S
 
 You will need certain prerequisites installed on your system:
 
-The `sestest` command line utility and associated libraries are written in C#7 and require version 1.1 or higher of [.NET Core](https://www.microsoft.com/net/core#windowsvs2017) to be installed. The tool was written with Visual Studio 2017; it will compile with just the .NET Core SDK installation. For more information see the [Sestest command line utility](../src/sestest/).
+The `sestest` command line utility and associated libraries are written in C# 7 and require version 2.0 or higher of [.NET Core](https://www.microsoft.com/net/core#windowsvs2017) to be installed. The tool was written with Visual Studio 2017; it will compile with just the .NET Core SDK installation. For more information see the [Sestest command line utility](../src/sestest/).
 
 The C++ source for the client library requires [libcurl](https://curl.haxx.se/libcurl/) and [OpenSSL](https://www.openssl.org/) libraries as installed by [vcpkg](https://blogs.msdn.microsoft.com/vcblog/2016/09/19/vcpkg-a-tool-to-acquire-and-build-c-open-source-libraries-on-windows/). The library was also written with Visual Studio 2017; it will compile with any modern C++ compiler. For more information (including details of configuration and use of `vcpkg`) see the [Software entitlement service native client library](../src/Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native)
 
-Build scripts and other tooling are written in PowerShell using the [Psake](https://github.com/psake/psake) make tool. Preinstallation of Psake is optional; if it isn't already available, the build scripts will attempt to use a local version downloaded via NuGet. (See `scripts/bootstrap.ps1` for details.)
+Build scripts and other tooling are written in PowerShell using the [Psake](https://github.com/psake/psake) make tool. These build scripts work on both Windows and Linux, though initial setup differs.
+
+### Psake On Windows
+
+Preinstallation of Psake is optional; if it isn't already available, the build scripts will attempt to use a local version downloaded via NuGet. (See `scripts/bootstrap.ps1` for details.)
+
+### Psake on Linux
+
+Support for running **psake** on Linux using PowerShell Core hasn't yet (as of September 2017) been released - the current release (v4.6.0, from March 2016) only runs on Windows.
+
+For builds of the software entitlement SDK to run on Linux, you'll need to [download](https://github.com/psake/psake/archive/master.zip) the current `master` branch of psake from GitHub. 
+
+Once downloaded, extract the zip file into the root of the repository as `./lib/psake` so that `bootstrap.ps1` will find the psake PowerShell module as `./lib/psake/psake.psm1`.
+
+This manual installation won't be necessary once a new release of Psake with official Linux support has been made.
 
 ## Building `sestest`
 
@@ -127,3 +141,10 @@ Command line warning D9002: ignoring unknown option '/std:c++latest'
 
 May indicate that you have Visual Studio 2015 Update 2 or earlier; **vcpkg** needs at least [Update 3](https://www.visualstudio.com/vs/older-downloads/). 
 
+### Assert: No .NET Framework installation directory found at \Microsoft.NET\Framework64\v4.0.30319\.
+
+This error occurs when attempting to build on Linux using Psake 4.6.0 (the current release as of September 2017).
+
+Release 4.6.0 of Psake doesn't support Linux - but the current `master` branch does.
+
+[Download](https://github.com/psake/psake/archive/master.zip) the current `master` branch of psake and extract the archive into the root of the repository as `./lib/psake` so that `bootstrap.ps1` will find the psake PowerShell module as `./lib/psake/psake.psm1`.
