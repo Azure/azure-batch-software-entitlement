@@ -243,7 +243,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
     }
 
-
     [Flags]
     public enum ServerOptionBuilderOptions
     {

@@ -12,6 +12,16 @@ using System.Diagnostics.CodeAnalysis;
     Justification = "This project prefers the clarity of Any().")]
 
 [assembly: SuppressMessage(
+    "Performance",
+    "RCS1096:Use bitwise operation instead of calling 'HasFlag'.",
+    Justification = "This project prefers the clarity of HasFlag().")]
+
+[assembly: SuppressMessage(
+    "Simplification",
+    "RCS1112:Combine 'Enumerable.Where' method chain.",
+    Justification = "This project prefers the clarity of separate filter tests")]
+
+[assembly: SuppressMessage(
     "Language Usage Opportunities",
     "RECS0002:Convert anonymous method to method group",
     Justification = "Specifying parameter names helps with code clarity",

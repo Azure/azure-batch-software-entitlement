@@ -20,7 +20,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         private static ILoggerProvider _provider;
 
         // Store used to scan for and obtain certificates
-        private static readonly CertificateStore _certificateStore = new CertificateStore();
+        private static readonly CertificateStore CertificateStore = new CertificateStore();
 
         public static int Main(string[] args)
         {
@@ -31,7 +31,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             parseResult.WithParsed((CommandLineBase options) => ConfigureLogging(options));
 
-            int exitCode = -1;
+            var exitCode = -1;
             if (_logger != null)
             {
                 // Logging is ready for use, can try other things
@@ -303,7 +303,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             var t = new CertificateThumbprint(thumbprint);
-            return _certificateStore.FindByThumbprint(purpose, t);
+            return CertificateStore.FindByThumbprint(purpose, t);
         }
 
         private static int LogErrors(IEnumerable<string> errors)

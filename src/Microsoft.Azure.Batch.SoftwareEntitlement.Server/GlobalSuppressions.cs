@@ -6,12 +6,7 @@
 
 using System.Diagnostics.CodeAnalysis;
 
-[assembly:SuppressMessage(
-    "Design",
-    "CA1052",
-    Justification = "Grouping tests in nested private classes for structure.")]
-
 [assembly: SuppressMessage(
-    "Redundancy",
-    "RCS1163:Unused parameter.",
-    Justification = "Empty implementations used for testing.")]
+    "Performance",
+    "RCS1096:Use bitwise operation instead of calling 'HasFlag'.",
+    Justification = "This project prefers the clarity of HasFlag().")]
