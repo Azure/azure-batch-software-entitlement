@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
     /// </summary>
     public sealed class CertificateStore
     {
-        // A list of placenames where we should look when finding certificates
+        // A list of StoreNames where we should look when finding certificates
         private readonly List<StoreName> _storeNames;
 
         // A list of places within each store we should look for certificates
@@ -113,7 +113,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="storeName">Name of the store to search within.</param>
         /// <param name="storeLocation">Location within the store to check.</param>
         /// <returns>Certificate, if found; null otherwise.</returns>
-        private X509Certificate2 FindByThumbprint(CertificateThumbprint thumbprint, StoreName storeName, StoreLocation storeLocation)
+        private static X509Certificate2 FindByThumbprint(CertificateThumbprint thumbprint, StoreName storeName, StoreLocation storeLocation)
         {
             try
             {
