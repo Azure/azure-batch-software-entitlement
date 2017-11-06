@@ -62,9 +62,31 @@ start-process powershell -argument $command
 
 # ----------------------------------------------------------------------
 
-Write-TaskName "Wait 5s for server to be up"
+Write-TaskName "Wait for server to be up"
 
-start-sleep -seconds 5
+function check-serverActive {
+    $address = [System.Net.IPAddress]('127.0.0.1')
+    $port = 4443
+    $client = New-Object System.Net.Sockets.TcpClient
+    try {
+        $client.Connect($address, $port);
+        return $true
+    }
+    catch {
+        return $false
+    }
+    finally {
+        $client.Dispose();
+    }
+}
+
+$ready = check-serverActive
+while (!$ready) {
+    Write-Output "Waiting ..."
+    $ready = check-serverActive
+} 
+
+Write-Output "Server now active"
 
 # ----------------------------------------------------------------------
 
