@@ -12,14 +12,13 @@ diff --git a/ports/curl/portfile.cmake b/ports/curl/portfile.cmake
 index 35bfbd59..0191abb2 100644
 --- a/ports/curl/portfile.cmake
 +++ b/ports/curl/portfile.cmake
-@@ -43,6 +43,9 @@ else()
-             -DBUILD_TESTING=OFF
+@@ -44,6 +44,9 @@ else()
              -DBUILD_CURL_EXE=OFF
              -DENABLE_MANUAL=OFF
+             -DCURL_STATICLIB=${CURL_STATICLIB}
 +            -DCMAKE_USE_OPENSSL=ON
 +            -DCURL_ZLIB=OFF
 +            -DCMAKE_USE_LIBSSH2=OFF
-             -DCURL_STATICLIB=${CURL_STATICLIB}
          OPTIONS_DEBUG
              -DENABLE_DEBUG=ON
-			 
+)
