@@ -32,7 +32,7 @@ if ($thumbprint -eq $null) {
 
 function Write-TaskName($subtaskName) {
     $divider = "-" * ($subtaskName.Length + 4)
-    Write-Output "`r`n$divider`r`n  $subtaskName`r`n$divider"
+    Write-Output "`r`n$divider`r`n  $subtaskName`r`n$divider`r`n"
 }
 
 # ----------------------------------------------------------------------
@@ -59,6 +59,8 @@ Write-TaskName "Start Software Entitlement Server"
 
 $command = ".\sestest.ps1 server --connection $thumbprint --sign $thumbprint --encrypt $thumbprint --exit-after-request --log-file server.log --log-file-level debug"
 start-process powershell -argument $command
+
+Write-Output "Server started successfully."
 
 # ----------------------------------------------------------------------
 
@@ -96,6 +98,7 @@ Write-TaskName "Verify Token"
 
 if ($LASTEXITCODE -ne 0) {
     Write-Output "Token did not verify (Error code $LASTEXITCODE)"
+    Write-Output "(You'll need to manually stop the server.)"
 } else {
     Write-Output "Token verified ok"
 }
