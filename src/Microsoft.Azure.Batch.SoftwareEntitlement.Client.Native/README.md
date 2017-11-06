@@ -47,34 +47,10 @@ Again, both versions can be installed side-by-side if required.
 ## Configuring libcurl to use OpenSSL
 In order to validate an intermediate certificate in the server's certificate chain (not just the server's certificate), configure libcurl to use OpenSSL as the SSL library.  Note that for our usage of libcurl, we do not require ZLIB or LIBSSH2, so we remove those dependencies too.
 
-In your vcpkg git repository clone, apply the following patch:
+In your vcpkg git repository clone, apply one of the following patches to make the required changes:
 
-```
-diff --git a/ports/curl/CONTROL b/ports/curl/CONTROL
-index 9ae7e7e5..e6fe237d 100644
---- a/ports/curl/CONTROL
-+++ b/ports/curl/CONTROL
-@@ -1,4 +1,4 @@
- Source: curl
- Version: 7.51.0-3
--Build-Depends: zlib, openssl, libssh2
-+Build-Depends: openssl
- Description: A library for transferring data with URLs
-diff --git a/ports/curl/portfile.cmake b/ports/curl/portfile.cmake
-index 35bfbd59..0191abb2 100644
---- a/ports/curl/portfile.cmake
-+++ b/ports/curl/portfile.cmake
-@@ -43,6 +43,9 @@ else()
-             -DBUILD_TESTING=OFF
-             -DBUILD_CURL_EXE=OFF
-             -DENABLE_MANUAL=OFF
-+            -DCMAKE_USE_OPENSSL=ON
-+            -DCURL_ZLIB=OFF
-+            -DCMAKE_USE_LIBSSH2=OFF
-             -DCURL_STATICLIB=${CURL_STATICLIB}
-         OPTIONS_DEBUG
-             -DENABLE_DEBUG=ON
-```
+* For [curl 7.51.0-3](./curl-7.51.0-3.patch)
+* For [curl 7.55.1-1](./curl-7.55.1-1.patch)
 
 Now build and reinstall:
 
