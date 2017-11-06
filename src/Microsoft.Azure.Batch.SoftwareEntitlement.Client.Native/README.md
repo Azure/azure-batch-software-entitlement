@@ -4,7 +4,7 @@ This static library implements the client-side logic for verifying a software en
 
 **This is draft documentation subject to change.**
 
-This project depends on two open-source packages: [OpenSSL](https://www.openssl.org/) and [libcurl](https://curl.haxx.se/libcurl/c/libcurl.html).
+This project depends on two open-source packages: [OpenSSL](https://www.openssl.org/) and [libcurl](https://curl.haxx.se/libcurl/c/libcurl.html). (See below for details.)
 
 ## Windows build
 The included project for Visual Studio 2017 depends libcurl and OpenSSL being available.  The simplest mechanism to achieve this is to use [vcpkg](https://github.com/Microsoft/vcpkg), following the Quick Start instructions, including user-wide integration.
@@ -29,6 +29,8 @@ For 64-bit builds:
 > vcpkg install openssl --triplet x64-windows
 ```
 
+Both versions can be installed side-by-side if required.
+
 ## Installing libcurl
 For 32-bit builds:
 ```
@@ -39,6 +41,8 @@ For 64-bit builds:
 ```
 > vcpkg install curl --triplet x64-windows
 ```
+
+Again, both versions can be installed side-by-side if required.
 
 ## Configuring libcurl to use OpenSSL
 In order to validate an intermediate certificate in the server's certificate chain (not just the server's certificate), configure libcurl to use OpenSSL as the SSL library.  Note that for our usage of libcurl, we do not require ZLIB or LIBSSH2, so we remove those dependencies too.
