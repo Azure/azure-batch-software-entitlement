@@ -1,4 +1,4 @@
-diff --git a/ports/curl/CONTROL b/ports/curl/CONTROL
+﻿diff --git a/ports/curl/CONTROL b/ports/curl/CONTROL
 index 9ae7e7e5..e6fe237d 100644
 --- a/ports/curl/CONTROL
 +++ b/ports/curl/CONTROL
