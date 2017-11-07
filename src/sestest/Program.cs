@@ -19,9 +19,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         // Provider used for ASP.NET logging
         private static ILoggerProvider _provider;
 
-        // Store used to scan for and obtain certificates
-        private static readonly CertificateStore CertificateStore = new CertificateStore();
-
         public static int Main(string[] args)
         {
             var parser = new Parser(ConfigureParser);
@@ -60,73 +57,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>Exit code to return from this process.</returns>
         public static int Generate(GenerateCommandLine commandLine)
         {
-            var entitlement = NodeEntitlementsBuilder.Build(commandLine);
-            var signingCert = FindCertificate("signing", commandLine.SignatureThumbprint);
-            var encryptionCert = FindCertificate("encryption", commandLine.EncryptionThumbprint);
-
-            var result =
-                entitlement.And(signingCert).And(encryptionCert)
-                    .Map(GenerateToken);
-
-            if (!result.HasValue)
-            {
-                return LogErrors(result.Errors);
-            }
-
-            var token = result.Value;
-            if (string.IsNullOrEmpty(commandLine.TokenFile))
-            {
-                _logger.LogInformation("Token: {JWT}", token);
-                return 0;
-            }
-
-            var fileInfo = new FileInfo(commandLine.TokenFile);
-            _logger.LogInformation("Token file: {FileName}", fileInfo.FullName);
-            try
-            {
-                File.WriteAllText(fileInfo.FullName, token);
-                return 0;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(0, ex, ex.Message);
-                return -1;
-            }
+            var command = new GenerateCommand(_logger);
+            return command.Execute(commandLine);
         }
-
-        /// <summary>
-        /// Generate a token
-        /// </summary>
-        /// <param name="entitlements">Details of the entitlements to encode into the token.</param>
-        /// <param name="signingCert">Certificate to use when signing the token (optional).</param>
-        /// <param name="encryptionCert">Certificate to use when encrypting the token (optional).</param>
-        /// <returns>Generated token, if any; otherwise all related errors.</returns>
-        private static string GenerateToken(
-            NodeEntitlements entitlements,
-            X509Certificate2 signingCert = null,
-            X509Certificate2 encryptionCert = null)
-        {
-            SigningCredentials signingCredentials = null;
-            if (signingCert != null)
-            {
-                var signingKey = new X509SecurityKey(signingCert);
-                signingCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.RsaSha512Signature);
-            }
-
-            EncryptingCredentials encryptingCredentials = null;
-            if (encryptionCert != null)
-            {
-                var encryptionKey = new X509SecurityKey(encryptionCert);
-                encryptingCredentials = new EncryptingCredentials(
-                    encryptionKey, SecurityAlgorithms.RsaOAEP, SecurityAlgorithms.Aes256CbcHmacSha512);
-            }
-
-            var entitlementWithIdentifier = entitlements.WithIdentifier($"entitlement-{Guid.NewGuid():D}");
-
-            var generator = new TokenGenerator(_logger, signingCredentials, encryptingCredentials);
-            return generator.Generate(entitlementWithIdentifier);
-        }
-
+        
         /// <summary>
         /// Serve mode - run as a standalone web server
         /// </summary>
@@ -237,18 +171,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 _logger.LogError(0, ex, ex.Message);
                 return -1;
             }
-        }
-
-        private static Errorable<X509Certificate2> FindCertificate(string purpose, string thumbprint)
-        {
-            if (string.IsNullOrEmpty(thumbprint))
-            {
-                // No certificate requested, so we successfully return null
-                return Errorable.Success<X509Certificate2>(null);
-            }
-
-            var t = new CertificateThumbprint(thumbprint);
-            return CertificateStore.FindByThumbprint(purpose, t);
         }
 
         private static int LogErrors(IEnumerable<string> errors)
