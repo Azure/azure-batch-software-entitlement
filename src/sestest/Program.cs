@@ -2,12 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using CommandLine;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -60,7 +57,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var command = new GenerateCommand(_logger);
             return command.Execute(commandLine);
         }
-        
+
         /// <summary>
         /// Serve mode - run as a standalone web server
         /// </summary>
@@ -109,12 +106,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             var logSetup = new LoggerSetup();
 
-            var consoleLevel = TryParse(commandLine.LogLevel, "console", LogLevel.Information);
+            var consoleLevel = TryParseLogLevel(commandLine.LogLevel, "console", LogLevel.Information);
             var actualLevel = consoleLevel.HasValue ? consoleLevel.Value : LogLevel.Information;
 
             logSetup.SendToConsole(actualLevel);
 
-            var fileLevel = TryParse(commandLine.LogFileLevel, "file", actualLevel);
+            var fileLevel = TryParseLogLevel(commandLine.LogFileLevel, "file", actualLevel);
             if (!string.IsNullOrEmpty(commandLine.LogFile))
             {
                 if (fileLevel.HasValue)
@@ -179,7 +176,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return -1;
         }
 
-        private static Errorable<LogLevel> TryParse(string level, string purpose, LogLevel defaultLevel)
+        private static Errorable<LogLevel> TryParseLogLevel(string level, string purpose, LogLevel defaultLevel)
         {
             if (string.IsNullOrEmpty(level))
             {
