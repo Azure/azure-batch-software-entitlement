@@ -152,53 +152,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>Exit code for process.</returns>
         private static int ListCertificates(ListCertificatesCommandLine commandLine)
         {
-            var now = DateTime.Now;
-
-            if (commandLine.ShowExpired)
-            {
-                _logger.LogInformation("Including expired certificates.");
-            }
-
-            var certificateStore = new CertificateStore();
-            var allCertificates = certificateStore.FindAll();
-            var query = allCertificates.Where(c => c.HasPrivateKey)
-                .Where(c => now < c.NotAfter  || commandLine.ShowExpired)
-                .ToList();
-            _logger.LogInformation("Found {Count} certificates with private keys", query.Count);
-
-            var rows = query.Select(DescribeCertificate).ToList();
-            rows.Insert(0, new List<string> { "Name", "Friendly Name", "Thumbprint", "Not Before", "Not After" });
-
-            _logger.LogTable(
-                LogLevel.Information,
-                rows);
-
-            return 0;
-        }
-
-        private static IList<string> DescribeCertificate(X509Certificate2 cert)
-        {
-            var status = string.Empty;
-            if (cert.NotAfter < DateTime.Now)
-            {
-                status = "(expired)";
-            }
-            else if (DateTime.Now < cert.NotBefore)
-            {
-                status = "(not yet active)";
-            }
-
-            const string format = "HH:mm dd/mmm/yyyy";
-
-            return new List<string>
-            {
-                cert.SubjectName.Name,
-                cert.FriendlyName,
-                cert.Thumbprint,
-                cert.NotBefore.ToString(format),
-                cert.NotAfter.ToString(format),
-                status
-            };
+            var command = new ListCertificatesCommand(_logger);
+            return command.Execute(commandLine);
         }
 
         /// <summary>
