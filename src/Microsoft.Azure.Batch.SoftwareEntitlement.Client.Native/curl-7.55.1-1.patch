@@ -1,0 +1,24 @@
+diff --git a/ports/curl/CONTROL b/ports/curl/CONTROL
+index 1193e114..423b59de 100644
+--- a/ports/curl/CONTROL
++++ b/ports/curl/CONTROL
+@@ -1,4 +1,4 @@
+ Source: curl
+ Version: 7.55.1-1
+-Build-Depends: zlib, openssl, libssh2
++Build-Depends: openssl
+ Description: A library for transferring data with URLs
+diff --git a/ports/curl/portfile.cmake b/ports/curl/portfile.cmake
+index c770d3f2..032b2de0 100644
+--- a/ports/curl/portfile.cmake
++++ b/ports/curl/portfile.cmake
+@@ -44,6 +44,8 @@ vcpkg_configure_cmake(
+         -DENABLE_MANUAL=OFF
+         -DCURL_STATICLIB=${CURL_STATICLIB}
+         -DCMAKE_USE_OPENSSL=ON
++        -DCURL_ZLIB=OFF
++        -DCMAKE_USE_LIBSSH2=OFF
+     OPTIONS_DEBUG
+         -DENABLE_DEBUG=ON
+ )
+ 
