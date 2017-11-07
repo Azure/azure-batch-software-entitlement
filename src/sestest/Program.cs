@@ -163,20 +163,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>Exit code for process.</returns>
         private static int FindCertificate(FindCertificateCommandLine commandLine)
         {
-            var thumbprint = new CertificateThumbprint(commandLine.Thumbprint);
-            var certificateStore = new CertificateStore();
-            var certificate = certificateStore.FindByThumbprint("required", thumbprint);
-            return certificate.Match(ShowCertificate, LogErrors);
-        }
-
-        private static int ShowCertificate(X509Certificate2 certificate)
-        {
-            foreach (var line in certificate.ToString().AsLines())
-            {
-                _logger.LogInformation(line);
-            }
-
-            return 0;
+            var command = new FindCertificateCommand(_logger);
+            return command.Execute(commandLine);
         }
 
         /// <summary>
