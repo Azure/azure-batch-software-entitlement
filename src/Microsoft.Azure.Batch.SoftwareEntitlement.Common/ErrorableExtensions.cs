@@ -277,5 +277,28 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             errorable.Match(t => whenSuccessful(t.Item1, t.Item2), whenFailure);
         }
 
+        public static void Do<A, B, C>(
+            this Errorable<(A, B, C)> errorable,
+            Action<A, B, C> whenSuccessful,
+            Action<IEnumerable<string>> whenFailure)
+        {
+            if (errorable == null)
+            {
+                throw new ArgumentNullException(nameof(errorable));
+            }
+
+            if (whenSuccessful == null)
+            {
+                throw new ArgumentNullException(nameof(whenSuccessful));
+            }
+
+            if (whenFailure == null)
+            {
+                throw new ArgumentNullException(nameof(whenFailure));
+            }
+
+            errorable.Match(t => whenSuccessful(t.Item1, t.Item2, t.Item3), whenFailure);
+        }
+
     }
 }
