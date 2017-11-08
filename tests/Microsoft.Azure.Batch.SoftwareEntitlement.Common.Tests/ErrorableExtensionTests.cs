@@ -11,11 +11,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
     public abstract class ErrorableExtensionTests
     {
         // Known errorable values for testing
-        private readonly Errorable<int> _missing = null;
+        private readonly Errorable<int> _missingInt = null;
+        private readonly Errorable<string> _missingString = null;
         private readonly Errorable<int> _success = Errorable.Success(4);
         private readonly Errorable<int> _failure = Errorable.Failure<int>("failure");
-        private readonly Errorable<int> _otherSuccess = Errorable.Success(2);
-        private readonly Errorable<int> _otherFailure = Errorable.Failure<int>("other failure");
+        private readonly Errorable<string> _otherSuccess = Errorable.Success("two");
+        private readonly Errorable<string> _otherFailure = Errorable.Failure<string>("other failure");
         private readonly Errorable<int> _yetAnotherSuccess = Errorable.Success(8);
         private readonly Errorable<int> _yetAnotherFailure = Errorable.Failure<int>("yet another failure");
 
