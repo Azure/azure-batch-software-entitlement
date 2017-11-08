@@ -612,5 +612,51 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             }
         }
 
+        public class MapOfTuple
+        {
+            private readonly Errorable<(int, string)> _success = Errorable.Success((42, "hello"));
+
+            private readonly Errorable<(int, string)> _failure = Errorable.Failure<(int, string)>("Goodbye cruel world.");
+
+            [Fact]
+            public void GivenTransformationOfSuccess_ReturnsExpectedValue()
+            {
+                var result =_success.Map(Transform);
+                result.Value.Should().Be(42);
+            }
+
+            [Fact]
+            public void GivenTransformationOfFailure_HasExpectedErrors()
+            {
+                var result = _failure.Map(Transform);
+                result.Errors.Should().Contain(_failure.Errors);
+            }
+
+            [Fact]
+            public void GivenNullErrorable_ThrowsExpectedException()
+            {
+                Errorable<(int, string)> errorable = null;
+                var exception =
+                    Assert.Throws<ArgumentNullException>(
+                        () => errorable.Map(Transform));
+                exception.ParamName.Should().Be("errorable");
+            }
+
+            [Fact]
+            public void GivenNullSuccessfulFunc_ThrowsExpectedException()
+            {
+                Func<int, string, int> func = null;
+                var exception =
+                    Assert.Throws<ArgumentNullException>(
+                        () => _success.Map(func));
+                exception.ParamName.Should().Be("transform");
+            }
+
+            private int Transform(int i, string s)
+            {
+                return 42;
+            }
+        }
+
     }
 }

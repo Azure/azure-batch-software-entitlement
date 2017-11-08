@@ -253,7 +253,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                     whenFailure: errors => Errorable.Failure<(A, B, C)>(leftErrors).AddErrors(errors)));
         }
 
-
         public static void Do<A, B>(
             this Errorable<(A, B)> errorable,
             Action<A, B> whenSuccessful,
@@ -298,6 +297,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             }
 
             errorable.Match(t => whenSuccessful(t.Item1, t.Item2, t.Item3), whenFailure);
+        }
+
+        public static Errorable<R> Map<A, B, R>(
+            this Errorable<(A, B)> errorable,
+            Func<A, B, R> transform)
+        {
+            if (errorable == null)
+            {
+                throw new ArgumentNullException(nameof(errorable));
+            }
+
+            if (transform == null)
+            {
+                throw new ArgumentNullException(nameof(transform));
+            }
+
+            return errorable.Match(
+                t => Errorable.Success(transform(t.Item1, t.Item2)),
+                e => Errorable.Failure<R>(e));
         }
 
     }
