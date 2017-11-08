@@ -216,5 +216,42 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                     whenSuccessful: rightValue => Errorable.Failure<(A, B, C)>(leftErrors),
                     whenFailure: errors => Errorable.Failure<(A, B, C)>(leftErrors).AddErrors(errors)));
         }
+
+        /// <summary>
+        /// Combine two <see cref="Errorable{T}"/> values into a single value containing a tuple 
+        /// of three values
+        /// </summary>
+        /// <remarks>
+        /// Works as a logical <c>AND</c> - if both inputs are successful, the output is successful; 
+        /// if either input is a failure, the output is a failure. All error messages are preserved.
+        /// </remarks>
+        /// <typeparam name="A">Type of the value held by <paramref name="left"/>.</typeparam>
+        /// <typeparam name="B">Type of the first value held by <paramref name="right"/>.</typeparam>
+        /// <typeparam name="C">Type of the second value held by <paramref name="right"/>.</typeparam>
+        /// <param name="left">First <see cref="Errorable{T}"/> to combine.</param>
+        /// <param name="right">Second <see cref="Errorable{T}"/> to combine.</param>
+        /// <returns>An <see cref="Errorable{T}"/> containing either all three values or a 
+        /// combined set of error messages.</returns>
+        public static Errorable<(A, B, C)> And<A, B, C>(this Errorable<A> left, Errorable<(B, C)> right)
+        {
+            if (left == null)
+            {
+                throw new ArgumentNullException(nameof(left));
+            }
+
+            if (right == null)
+            {
+                throw new ArgumentNullException(nameof(right));
+            }
+
+            return left.Match(
+                whenSuccessful: leftValue => right.Match(
+                    whenSuccessful: rightValue => Errorable.Success((leftValue, rightValue.Item1, rightValue.Item2)),
+                    whenFailure: errors => Errorable.Failure<(A, B, C)>(errors)),
+                whenFailure: leftErrors => right.Match(
+                    whenSuccessful: rightValue => Errorable.Failure<(A, B, C)>(leftErrors),
+                    whenFailure: errors => Errorable.Failure<(A, B, C)>(leftErrors).AddErrors(errors)));
+        }
+
     }
 }
