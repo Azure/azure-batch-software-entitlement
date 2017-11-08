@@ -475,5 +475,71 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                 result.Errors.Should().Contain(_yetAnotherFailure.Errors);
             }
         }
+
+        public class DoWithTuple
+        {
+            private int _integer;
+            private string _string;
+            private List<string> _errors;
+
+            private readonly Errorable<(int, string)> _success = Errorable.Success((42, "hello"));
+
+            private readonly Errorable<(int, string)> _failure = Errorable.Failure<(int, string)>("Goodbye cruel world.");
+
+            [Fact]
+            public void WhenSuccess_CallsCorrectAction()
+            {
+                _success.Do(WhenSuccessful, WhenFailure);
+                _integer.Should().Be(42);
+                _string.Should().Be("hello");
+            }
+
+            [Fact]
+            public void WhenFailure_CallsCorrectAction()
+            {
+                _failure.Do(WhenSuccessful, WhenFailure);
+                _errors.Should().Contain("Goodbye cruel world.");
+            }
+
+            [Fact]
+            public void WhenNullErrorable_ThrowsExpectedException()
+            {
+                Errorable<(int, string)> errorable = null;
+                var exception =
+                    Assert.Throws<ArgumentNullException>(
+                        () => errorable.Do(WhenSuccessful, WhenFailure));
+                exception.ParamName.Should().Be("errorable");
+            }
+
+            [Fact]
+            public void WhenNullSuccessAction_ThrowsExpectedException()
+            {
+                var exception =
+                    Assert.Throws<ArgumentNullException>(
+                        () => _success.Do(null, WhenFailure));
+                exception.ParamName.Should().Be("whenSuccessful");
+            }
+
+            [Fact]
+            public void WhenNullFailureAction_ThrowsExpectedException()
+            {
+                var exception =
+                    Assert.Throws<ArgumentNullException>(
+                        () => _success.Do(WhenSuccessful, null));
+                exception.ParamName.Should().Be("whenFailure");
+            }
+
+            private void WhenSuccessful(int i, string s)
+            {
+                _integer = i;
+                _string = s;
+            }
+
+            private void WhenFailure(IEnumerable<string> errors)
+            {
+                _errors = errors.ToList();
+            }
+        }
+
     }
 }
