@@ -318,5 +318,23 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 e => Errorable.Failure<R>(e));
         }
 
+        public static Errorable<R> Map<A, B, C, R>(
+            this Errorable<(A, B, C)> errorable,
+            Func<A, B, C, R> transform)
+        {
+            if (errorable == null)
+            {
+                throw new ArgumentNullException(nameof(errorable));
+            }
+
+            if (transform == null)
+            {
+                throw new ArgumentNullException(nameof(transform));
+            }
+
+            return errorable.Match(
+                t => Errorable.Success(transform(t.Item1, t.Item2, t.Item3)),
+                e => Errorable.Failure<R>(e));
+        }
     }
 }
