@@ -422,5 +422,32 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
         }
 
 
+        public class AndWithTupleOnLeftReturningTriple : ErrorableExtensionTests
+        {
+            [Fact]
+            public void GivenSuccessOnBothSides_ReturnsExpectedTuple()
+            {
+                var left = _success.And(_otherSuccess);
+                var result = left.And(_yetAnotherSuccess);
+                result.Value.Should().Be((_success.Value, _otherSuccess.Value, _yetAnotherSuccess.Value));
+            }
+
+            [Fact]
+            public void WhenFailureOnLeft_ReturnsExpectedErrors()
+            {
+                var left = _failure.And(_otherSuccess);
+                var result = left.And(_yetAnotherSuccess);
+                result.Errors.Should().Contain(_failure.Errors);
+            }
+
+            [Fact]
+            public void WhenFailureOnRight_ReturnsExpectedErrors()
+            {
+                var left = _success.And(_otherSuccess);
+                var result = left.And(_yetAnotherFailure);
+                result.Errors.Should().Contain(_yetAnotherFailure.Errors);
+            }
+        }
+
     }
 }
