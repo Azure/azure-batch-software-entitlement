@@ -368,5 +368,59 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                 throw new InvalidOperationException();
             }
         }
+
+        public class AndReturningTuple : ErrorableExtensionTests
+        {
+            [Fact]
+            public void GivenNullOnLeft_ThrowsExpectedException()
+            {
+                var exception =
+                    Assert.Throws<ArgumentNullException>(
+                        () => _missingInt.And(_success));
+                exception.Should().NotBeNull();
+                exception.ParamName.Should().Be("left");
+            }
+
+            [Fact]
+            public void GivenNullOnRight_ThrowsExpectedException()
+            {
+                var exception =
+                    Assert.Throws<ArgumentNullException>(
+                        () => _success.And(_missingInt));
+                exception.Should().NotBeNull();
+                exception.ParamName.Should().Be("right");
+            }
+
+            [Fact]
+            public void GivenFailureOnLeft_ReturnsFailureWithSameErrors()
+            {
+                var result = _failure.And(_success);
+                result.Errors.Should().Contain(_failure.Errors);
+            }
+
+            [Fact]
+            public void GivenFailureOnRight_ReturnsFailureWithSameErrors()
+            {
+                var result = _success.And(_failure);
+                result.Errors.Should().Contain(_failure.Errors);
+            }
+
+            [Fact]
+            public void GivenFailureOnBothSides_ReturnsFailureWithAllErrors()
+            {
+                var result = _failure.And(_otherFailure);
+                result.Errors.Should().Contain(_failure.Errors);
+                result.Errors.Should().Contain(_otherFailure.Errors);
+            }
+
+            [Fact]
+            public void GivenSuccessOnBothSides_ReturnsExpectedTuple()
+            {
+                var result = _success.And(_otherSuccess);
+                result.Value.Should().Be((_success.Value, _otherSuccess.Value));
+            }
+        }
+
+
     }
 }
