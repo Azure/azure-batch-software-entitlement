@@ -38,7 +38,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                     whenSuccessful: rightValue => Errorable.Success((leftValue, rightValue)),
                     whenFailure: errors => Errorable.Failure<(A, B)>(errors)),
                 whenFailure: leftErrors => right.Match(
-                    whenSuccessful: rightValue => Errorable.Failure<(A, B)>(leftErrors),
+                    whenSuccessful: _ => Errorable.Failure<(A, B)>(leftErrors),
                     whenFailure: errors => Errorable.Failure<(A, B)>(leftErrors).AddErrors(errors)));
         }
 
@@ -74,7 +74,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                     whenSuccessful: rightValue => Errorable.Success((leftValue.Item1, leftValue.Item2, rightValue)),
                     whenFailure: errors => Errorable.Failure<(A, B, C)>(errors)),
                 whenFailure: leftErrors => right.Match(
-                    whenSuccessful: rightValue => Errorable.Failure<(A, B, C)>(leftErrors),
+                    whenSuccessful: _ => Errorable.Failure<(A, B, C)>(leftErrors),
                     whenFailure: errors => Errorable.Failure<(A, B, C)>(leftErrors).AddErrors(errors)));
         }
 
@@ -110,7 +110,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                     whenSuccessful: rightValue => Errorable.Success((leftValue, rightValue.Item1, rightValue.Item2)),
                     whenFailure: errors => Errorable.Failure<(A, B, C)>(errors)),
                 whenFailure: leftErrors => right.Match(
-                    whenSuccessful: rightValue => Errorable.Failure<(A, B, C)>(leftErrors),
+                    whenSuccessful: _ => Errorable.Failure<(A, B, C)>(leftErrors),
                     whenFailure: errors => Errorable.Failure<(A, B, C)>(leftErrors).AddErrors(errors)));
         }
 
