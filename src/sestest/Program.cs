@@ -22,7 +22,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var parser = new Parser(ConfigureParser);
 
             var parseResult = parser
-                .ParseArguments<GenerateCommandLine, ServerCommandLine, ListCertificatesCommandLine, FindCertificateCommandLine>(args);
+                .ParseArguments<GenerateCommandLine, ServerCommandLine, ListCertificatesCommandLine, FindCertificateCommandLine, VerifyCommandLine>(args);
 
             parseResult.WithParsed((CommandLineBase options) => ConfigureLogging(options));
 
@@ -36,7 +36,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     (ServerCommandLine commandLine) => RunCommand(Serve, commandLine),
                     (ListCertificatesCommandLine commandLine) => RunCommand(ListCertificates, commandLine),
                     (FindCertificateCommandLine commandLine) => RunCommand(FindCertificate, commandLine),
-                    errors => 1);
+                    (VerifyCommandLine commandLine) => RunCommand(Submit, commandLine),
+                    errors => Task.FromResult(-1));
 
                 if (Debugger.IsAttached)
                 {
@@ -96,6 +97,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         private static async Task<int> FindCertificate(FindCertificateCommandLine commandLine)
         {
             var command = new FindCertificateCommand(_logger);
+            return await command.Execute(commandLine).ConfigureAwait(false);
+        }
+
+        private static async Task<int> Submit(VerifyCommandLine commandLine)
+        {
+            var command = new VerifyCommand(_logger);
             return await command.Execute(commandLine).ConfigureAwait(false);
         }
 
