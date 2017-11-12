@@ -77,6 +77,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
                     "Selected api-version is {ApiVersion}",
                     apiVersion);
 
+                if (entitlementRequest == null)
+                {
+                    _logger.LogError("No software entitlement request made");
+
+                    var error = new SoftwareEntitlementFailureResponse
+                    {
+                        Code = "EntitlementDenied",
+                        Message = new ErrorMessage("No software entitlement request made.")
+                    };
+
+                    return StatusCode(400, error);
+                }
+
                 _logger.LogInformation(
                     "Requesting entitlement for {Application}",
                     entitlementRequest.ApplicationId);
@@ -132,6 +145,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         /// <returns>True if it is valid, false otherwise.</returns>
         private bool IsValidApiVersion(string apiVersion)
         {
+            if (string.IsNullOrEmpty(apiVersion))
+            {
+                _logger.LogDebug("No api-version specified");
+                return false;
+            }
+
             // Check all the valid apiVersions
             // TODO: Once this list passes three or four items, use a HashSet<string> to do the check more efficiently
             return apiVersion.Equals("2017-05-01.5.0", StringComparison.Ordinal)
