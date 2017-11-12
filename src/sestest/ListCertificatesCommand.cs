@@ -44,9 +44,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var rows = query.Select(DescribeCertificate).ToList();
             rows.Insert(0, new List<string> { "Name", "Friendly Name", "Thumbprint", "Not Before", "Not After" });
 
-            Logger.LogTable(
-                LogLevel.Information,
-                rows);
+            Logger.LogInformationTable(rows);
 
             return 0;
         }
