@@ -21,6 +21,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         // Verifier used to check tokens
         private readonly TokenVerifier _verifier;
 
+        private const string ApiVersion201705 =  "2017-05-01.5.0";
+        private const string ApiVersion201709 =  "2017-09-01.6.0";
+
         /// <summary>
         /// Initializes a new instance of the <see cref="SoftwareEntitlementsController"/> class
         /// </summary>
@@ -124,8 +127,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
                 var response = new SoftwareEntitlementSuccessfulResponse
                 {
                     EntitlementId = entitlement.Identifier,
-                    VirtualMachineId = entitlement.VirtualMachineId
+                    
                 };
+
+                if (ApiSupportsVirtualMachineId(apiVersion))
+                {
+                    response.VirtualMachineId = entitlement.VirtualMachineId;
+                }
+
+                if (ApiSupportsExpiryTimestamp(apiVersion))
+                {
+                    response.Expiry = entitlement.NotAfter;
+                }
 
                 return Ok(response);
             }
@@ -153,8 +166,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
 
             // Check all the valid apiVersions
             // TODO: Once this list passes three or four items, use a HashSet<string> to do the check more efficiently
-            return apiVersion.Equals("2017-05-01.5.0", StringComparison.Ordinal)
-                   || apiVersion.Equals("2017-06-01.5.1", StringComparison.Ordinal);
+            
+            return apiVersion.Equals(ApiVersion201705, StringComparison.Ordinal)
+                   || apiVersion.Equals(ApiVersion201709, StringComparison.Ordinal);
+        }
+
+        private bool ApiSupportsVirtualMachineId(string apiVersion)
+        {
+            return string.Equals(apiVersion, ApiVersion201705, StringComparison.Ordinal);
+        }
+
+        private bool ApiSupportsExpiryTimestamp(string apiVersion)
+        {
+            return string.Equals(apiVersion, ApiVersion201709, StringComparison.Ordinal);
         }
 
         public class ServerOptions

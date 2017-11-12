@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+using System;
+using Newtonsoft.Json;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
@@ -14,12 +15,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         public string EntitlementId { get; set; }
 
         /// <summary>
-        /// The virtual machine identifier for the Azure VM entitled to run the software
+        /// [Deprecated] The virtual machine identifier for the Azure VM entitled to run the software
+        /// </summary>
+        [JsonProperty(PropertyName = "vmid", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public string VirtualMachineId { get; set; }
+
+        /// <summary>
+        /// Time-stamp of the token's expiry
         /// </summary>
         /// <remarks>
-        /// This may be verified by the calling software package as an (optional) additional check.
+        /// This allows consuming software packages (e.g. schedulers) to make decisions based on 
+        /// how long the token has yet to live
         /// </remarks>
-        [JsonProperty(PropertyName = "vmid")]
-        public string VirtualMachineId { get; set; }
+        [JsonProperty(PropertyName = "expiry", DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public DateTimeOffset Expiry { get; set; }
     }
 }
