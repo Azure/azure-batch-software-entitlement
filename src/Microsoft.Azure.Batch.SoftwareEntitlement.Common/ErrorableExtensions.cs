@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
@@ -196,6 +197,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             return errorable.Match(
                 t => Errorable.Success(transform(t.Item1, t.Item2, t.Item3)),
                 e => Errorable.Failure<R>(e));
+        }
+
+        public static Task<Errorable<R>> MapAsync<A, B, C, R>(
+            this Errorable<(A, B, C)> errorable,
+            Func<A, B, C, Task<R>> transform)
+        {
+            if (errorable == null)
+            {
+                throw new ArgumentNullException(nameof(errorable));
+            }
+
+            if (transform == null)
+            {
+                throw new ArgumentNullException(nameof(transform));
+            }
+
+            return errorable.Match(
+                async t => Errorable.Success(await transform(t.Item1, t.Item2, t.Item3)),
+                e => Task.FromResult(Errorable.Failure<R>(e)));
         }
     }
 }

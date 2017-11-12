@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Threading.Tasks;
 using CommandLine;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
@@ -16,7 +17,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         // Provider used for ASP.NET logging
         private static ILoggerProvider _provider;
 
-        public static int Main(string[] args)
+        public static async Task<int> Main(string[] args)
         {
             var parser = new Parser(ConfigureParser);
 
@@ -30,7 +31,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             {
                 // Logging is ready for use, can try other things
 
-                exitCode = parseResult.MapResult(
+                exitCode = await parseResult.MapResult(
                     (GenerateCommandLine commandLine) => RunCommand(Generate, commandLine),
                     (ServerCommandLine commandLine) => RunCommand(Serve, commandLine),
                     (ListCertificatesCommandLine commandLine) => RunCommand(ListCertificates, commandLine),
@@ -52,10 +53,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="commandLine">Options from the command line.</param>
         /// <returns>Exit code to return from this process.</returns>
-        public static int Generate(GenerateCommandLine commandLine)
+        public static Task<int> Generate(GenerateCommandLine commandLine)
         {
             var command = new GenerateCommand(_logger);
-            return command.Execute(commandLine);
+            return Task.FromResult(command.Execute(commandLine));
         }
 
         /// <summary>
@@ -63,13 +64,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="commandLine">Options from the command-line.</param>
         /// <returns>Exit code to return from this process.</returns>
-        public static int Serve(ServerCommandLine commandLine)
+        public static async Task<int> Serve(ServerCommandLine commandLine)
         {
             var options = ServerOptionBuilder.Build(commandLine);
-            return options.Match(RunServer, LogErrors);
+            return await options.Match(RunServer, LogErrorsAsync);
         }
 
-        private static int RunServer(ServerOptions options)
+        private static async Task<int> RunServer(ServerOptions options)
         {
             var server = new SoftwareEntitlementServer(options, _provider);
             server.Run();
@@ -81,10 +82,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="commandLine">Options from the command line.</param>
         /// <returns>Exit code for process.</returns>
-        private static int ListCertificates(ListCertificatesCommandLine commandLine)
+        private static async Task<int> ListCertificates(ListCertificatesCommandLine commandLine)
         {
             var command = new ListCertificatesCommand(_logger);
-            return command.Execute(commandLine);
+            return await command.Execute(commandLine).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -92,10 +93,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="commandLine">Options from the command line.</param>
         /// <returns>Exit code for process.</returns>
-        private static int FindCertificate(FindCertificateCommandLine commandLine)
+        private static async Task<int> FindCertificate(FindCertificateCommandLine commandLine)
         {
             var command = new FindCertificateCommand(_logger);
-            return command.Execute(commandLine);
+            return await command.Execute(commandLine).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -156,12 +157,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="command">Actual command to run.</param>
         /// <param name="commandLine">Parameters provided on the command line.</param>
         /// <returns>Exit code for this command.</returns>
-        private static int RunCommand<T>(Func<T, int> command, T commandLine)
+        private static async Task<int> RunCommand<T>(Func<T, Task<int>> command, T commandLine)
             where T : CommandLineBase
         {
             try
             {
-                return command(commandLine);
+                return await command(commandLine);
             }
             catch (Exception ex)
             {
@@ -174,6 +175,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             _logger.LogErrors(errors);
             return -1;
+        }
+
+        private static Task<int> LogErrorsAsync(IEnumerable<string> errors)
+        {
+            _logger.LogErrors(errors);
+            return Task.FromResult(-1);
         }
 
         private static Errorable<LogLevel> TryParseLogLevel(string level, string purpose, LogLevel defaultLevel)

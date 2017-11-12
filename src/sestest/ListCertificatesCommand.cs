@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
 
@@ -25,7 +26,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="commandLine">Configuration from the command line.</param>
         /// <returns>Results of execution (0 = success).</returns>
-        public int Execute(ListCertificatesCommandLine commandLine)
+        public Task<int> Execute(ListCertificatesCommandLine commandLine)
         {
             var now = DateTime.Now;
 
@@ -46,7 +47,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             Logger.LogInformationTable(rows);
 
-            return 0;
+            return Task.FromResult(0);
         }
 
         private static IList<string> DescribeCertificate(X509Certificate2 cert)

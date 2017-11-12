@@ -1,6 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
 
@@ -24,12 +23,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="commandLine">Configuration from the command line.</param>
         /// <returns>Results of execution (0 = success).</returns>
-        public int Execute(FindCertificateCommandLine commandLine)
+        public Task<int> Execute(FindCertificateCommandLine commandLine)
         {
             var thumbprint = new CertificateThumbprint(commandLine.Thumbprint);
             var certificateStore = new CertificateStore();
             var certificate = certificateStore.FindByThumbprint("required", thumbprint);
-            return certificate.Match(ShowCertificate, LogErrors);
+            var result = certificate.Match(ShowCertificate, LogErrors);
+            return Task.FromResult(result);
         }
 
         private int ShowCertificate(X509Certificate2 certificate)
