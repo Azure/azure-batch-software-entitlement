@@ -63,17 +63,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             {
                 if (!IsValidApiVersion(apiVersion))
                 {
-                    _logger.LogError(
-                        "Selected api-version of {ApiVersion} is not supported; denying entitlement request.",
-                        apiVersion);
-
-                    var error = new SoftwareEntitlementFailureResponse
-                    {
-                        Code = "EntitlementDenied",
-                        Message = new ErrorMessage($"Entitlement for {entitlementRequest.ApplicationId} was denied.")
-                    };
-
-                    return StatusCode(400, error);
+                    return CreateInvalidApiVersionError(entitlementRequest, apiVersion);
                 }
 
                 _logger.LogInformation(
@@ -82,15 +72,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
 
                 if (entitlementRequest == null)
                 {
-                    _logger.LogError("No software entitlement request made");
-
-                    var error = new SoftwareEntitlementFailureResponse
-                    {
-                        Code = "EntitlementDenied",
-                        Message = new ErrorMessage("No software entitlement request made.")
-                    };
-
-                    return StatusCode(400, error);
+                    return CreateMissingRequestError();
                 }
 
                 _logger.LogInformation(
@@ -100,7 +82,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
 
                 var remoteAddress = HttpContext.Connection.RemoteIpAddress;
                 _logger.LogDebug("Remote Address: {Address}", remoteAddress);
-
                 var verificationResult = _verifier.Verify(
                     entitlementRequest.Token,
                     _serverOptions.Audience,
@@ -109,38 +90,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
                     remoteAddress);
                 if (!verificationResult.HasValue)
                 {
-                    foreach (var e in verificationResult.Errors)
-                    {
-                        _logger.LogError(e);
-                    }
-
-                    var error = new SoftwareEntitlementFailureResponse
-                    {
-                        Code = "EntitlementDenied",
-                        Message = new ErrorMessage($"Entitlement for {entitlementRequest.ApplicationId} was denied.")
-                    };
-
-                    return StatusCode(403, error);
+                    return CreateEntitlementDeniedError(entitlementRequest, verificationResult);
                 }
 
-                var entitlement = verificationResult.Value;
-                var response = new SoftwareEntitlementSuccessfulResponse
-                {
-                    EntitlementId = entitlement.Identifier,
-                    
-                };
-
-                if (ApiSupportsVirtualMachineId(apiVersion))
-                {
-                    response.VirtualMachineId = entitlement.VirtualMachineId;
-                }
-
-                if (ApiSupportsExpiryTimestamp(apiVersion))
-                {
-                    response.Expiry = entitlement.NotAfter;
-                }
-
-                return Ok(response);
+                return CreateEntitlementApprovedResponse(apiVersion, verificationResult.Value);
             }
             finally
             {
@@ -149,6 +102,71 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
                     _lifetime.StopApplication();
                 }
             }
+        }
+
+        private ObjectResult CreateEntitlementApprovedResponse(string apiVersion, NodeEntitlements entitlement)
+        {
+            var response = new SoftwareEntitlementSuccessfulResponse
+            {
+                EntitlementId = entitlement.Identifier,
+            };
+
+            if (ApiSupportsVirtualMachineId(apiVersion))
+            {
+                response.VirtualMachineId = entitlement.VirtualMachineId;
+            }
+
+            if (ApiSupportsExpiryTimestamp(apiVersion))
+            {
+                response.Expiry = entitlement.NotAfter;
+            }
+
+            return Ok(response);
+        }
+
+        private ObjectResult CreateEntitlementDeniedError(SoftwareEntitlementRequest entitlementRequest,
+            Errorable<NodeEntitlements> verificationResult)
+        {
+            foreach (var e in verificationResult.Errors)
+            {
+                _logger.LogError(e);
+            }
+
+            var error = new SoftwareEntitlementFailureResponse
+            {
+                Code = "EntitlementDenied",
+                Message = new ErrorMessage($"Entitlement for {entitlementRequest.ApplicationId} was denied.")
+            };
+
+            return StatusCode(403, error);
+        }
+
+        private ObjectResult CreateMissingRequestError()
+        {
+            _logger.LogError("No software entitlement request made");
+
+            var error = new SoftwareEntitlementFailureResponse
+            {
+                Code = "EntitlementDenied",
+                Message = new ErrorMessage("No software entitlement request made.")
+            };
+
+            return StatusCode(400, error);
+        }
+
+        private ObjectResult CreateInvalidApiVersionError(SoftwareEntitlementRequest entitlementRequest, string apiVersion)
+        {
+            _logger.LogError(
+                "Selected api-version of {ApiVersion} is not supported; denying entitlement request.",
+                apiVersion);
+
+            var error = new SoftwareEntitlementFailureResponse
+            {
+                Code = "EntitlementDenied",
+                Message = new ErrorMessage($"Entitlement for {entitlementRequest.ApplicationId} was denied.")
+            };
+
+            return StatusCode(400, error);
         }
 
         /// <summary>
