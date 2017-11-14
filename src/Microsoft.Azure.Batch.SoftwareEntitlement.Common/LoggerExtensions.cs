@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
@@ -56,7 +58,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// </summary>
         /// <param name="logger">Actual logger to use.</param>
         /// <param name="errors">Sequence of errors to log.</param>
-        public  static void LogErrors(this ILogger logger, IEnumerable<string> errors)
+        public static void LogErrors(this ILogger logger, IEnumerable<string> errors)
         {
             foreach (var e in errors)
             {
@@ -74,6 +76,34 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             foreach (var m in messages)
             {
                 logger.LogInformation(m);
+            }
+        }
+
+        public static void LogJson(this ILogger logger, string json)
+        {
+            var pretty = JsonPrettify(json).AsLines();
+            logger.LogInformation(pretty);
+        }
+
+        /// <summary>
+        /// Pretty print a JSON string for logging
+        /// </summary>
+        /// <remarks>
+        /// As found on StackOverflow: https://stackoverflow.com/a/30329731/30280
+        /// </remarks>
+        /// <param name="json">JSON string to reformat.</param>
+        /// <returns>Equivalent JSON with nice formatting.</returns>
+        private static string JsonPrettify(string json)
+        {
+            using (var stringReader = new StringReader(json))
+            {
+                using (var stringWriter = new StringWriter())
+                {
+                    var jsonReader = new JsonTextReader(stringReader);
+                    var jsonWriter = new JsonTextWriter(stringWriter) { Formatting = Formatting.Indented };
+                    jsonWriter.WriteToken(jsonReader);
+                    return stringWriter.ToString();
+                }
             }
         }
     }

@@ -67,13 +67,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
         }
 
-        private int LogResult(string response)
-        {
-            var pretty = JsonPrettify(response).AsLines();
-            Logger.LogInformation(pretty);
-            return 0;
-        }
-
         private Errorable<string> FindToken(VerifyCommandLine commandLine)
         {
             var token = commandLine.Token;
@@ -157,28 +150,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             return query.ToString();
-        }
-
-        /// <summary>
-        /// Pretty print a JSON string for logging
-        /// </summary>
-        /// <remarks>
-        /// As found on StackOverflow: https://stackoverflow.com/a/30329731/30280
-        /// </remarks>
-        /// <param name="json">JSON string to reformat.</param>
-        /// <returns>Equivalent JSON with nice formatting.</returns>
-        private static string JsonPrettify(string json)
-        {
-            using (var stringReader = new StringReader(json))
-            {
-                using (var stringWriter = new StringWriter())
-                {
-                    var jsonReader = new JsonTextReader(stringReader);
-                    var jsonWriter = new JsonTextWriter(stringWriter) { Formatting = Formatting.Indented };
-                    jsonWriter.WriteToken(jsonReader);
-                    return stringWriter.ToString();
-                }
-            }
         }
     }
 }
