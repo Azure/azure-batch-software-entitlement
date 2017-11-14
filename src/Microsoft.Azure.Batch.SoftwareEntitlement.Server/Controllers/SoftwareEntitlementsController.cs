@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
@@ -82,18 +83,17 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
 
                 var remoteAddress = HttpContext.Connection.RemoteIpAddress;
                 _logger.LogDebug("Remote Address: {Address}", remoteAddress);
-                var verificationResult = _verifier.Verify(
+
+                Errorable<NodeEntitlements> verificationResult = _verifier.Verify(
                     entitlementRequest.Token,
                     _serverOptions.Audience,
                     _serverOptions.Issuer,
                     entitlementRequest.ApplicationId,
                     remoteAddress);
-                if (!verificationResult.HasValue)
-                {
-                    return CreateEntitlementDeniedError(entitlementRequest, verificationResult);
-                }
 
-                return CreateEntitlementApprovedResponse(apiVersion, verificationResult.Value);
+                return verificationResult.Match(
+                    whenSuccessful: entitlement => CreateEntitlementApprovedResponse(apiVersion, entitlement),
+                    whenFailure: errors => CreateEntitlementDeniedError(entitlementRequest, errors));
             }
             finally
             {
@@ -125,9 +125,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         }
 
         private ObjectResult CreateEntitlementDeniedError(SoftwareEntitlementRequest entitlementRequest,
-            Errorable<NodeEntitlements> verificationResult)
+            IEnumerable<string> errors)
         {
-            foreach (var e in verificationResult.Errors)
+            foreach (var e in errors)
             {
                 _logger.LogError(e);
             }
