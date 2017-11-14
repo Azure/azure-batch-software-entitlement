@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
@@ -39,14 +40,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             if (!result.HasValue)
             {
-                return LogErrors(result.Errors);
+                Logger.LogErrors(result.Errors);
+                return ResultCodes.Failed;
             }
 
             var token = result.Value;
             if (string.IsNullOrEmpty(commandLine.TokenFile))
             {
                 Logger.LogInformation("Token: {JWT}", token);
-                return 0;
+                return ResultCodes.Success;
             }
 
             var fileInfo = new FileInfo(commandLine.TokenFile);
@@ -54,12 +56,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             try
             {
                 File.WriteAllText(fileInfo.FullName, token);
-                return 0;
+                return ResultCodes.Success;
             }
             catch (Exception ex)
             {
                 Logger.LogError(0, ex, ex.Message);
-                return -1;
+                return ResultCodes.InternalError;
             }
         }
 

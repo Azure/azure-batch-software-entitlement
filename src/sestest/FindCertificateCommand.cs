@@ -39,7 +39,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 Logger.LogInformation(line);
             }
 
-            return 0;
+            return ResultCodes.Success;
         }
     }
 }

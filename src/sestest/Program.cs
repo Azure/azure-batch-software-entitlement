@@ -75,7 +75,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             var server = new SoftwareEntitlementServer(options, _provider);
             server.Run();
-            return 0;
+            return Task.FromResult(ResultCodes.Success);
         }
 
         /// <summary>
