@@ -30,10 +30,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>Results of execution (0 = success).</returns>
         public async Task<int> Execute(VerifyCommandLine commandLine)
         {
-            var server = FindServer(commandLine);
-            var token = FindToken(commandLine);
-            var app = FindApplication(commandLine);
-            var api = FindApiVersion(commandLine);
+            Errorable<Uri> server = FindServer(commandLine);
+            Errorable<string> token = FindToken(commandLine);
+            Errorable<string> app = FindApplication(commandLine);
+            Errorable<string> api = FindApiVersion(commandLine);
 
             Errorable<string> result = await server.With(token).With(app).With(api)
                 .MapAsync(SubmitToken);
