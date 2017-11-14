@@ -21,11 +21,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         public string VirtualMachineId { get; set; }
 
         /// <summary>
-        /// Time-stamp of the token's expiry
+        /// Time-stamp of the token's expiry (UTC)
         /// </summary>
         /// <remarks>
         /// This allows consuming software packages (e.g. schedulers) to make decisions based on 
-        /// how long the token has yet to live
+        /// how long the token has yet to live.
         /// </remarks>
         [JsonProperty(PropertyName = "expiry", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public DateTimeOffset Expiry { get; set; }
