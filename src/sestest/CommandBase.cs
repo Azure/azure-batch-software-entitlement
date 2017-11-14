@@ -18,16 +18,5 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             Logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
-
-        /// <summary>
-        /// Log a sequence of errors 
-        /// </summary>
-        /// <param name="errors"></param>
-        /// <returns></returns>
-        protected int LogErrors(IEnumerable<string> errors)
-        {
-            Logger.LogErrors(errors);
-            return -1;
-        }
     }
 }

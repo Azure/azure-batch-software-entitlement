@@ -68,10 +68,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public static async Task<int> Serve(ServerCommandLine commandLine)
         {
             var options = ServerOptionBuilder.Build(commandLine);
-            return await options.Match(RunServer, LogErrorsAsync);
+            return await options.Match(
+                RunServer,
+                errors =>
+                {
+                    _logger.LogErrors(errors);
+                    return Task.FromResult(ResultCodes.Failed);
+                });
         }
 
-        private static async Task<int> RunServer(ServerOptions options)
+        private static Task<int> RunServer(ServerOptions options)
         {
             var server = new SoftwareEntitlementServer(options, _provider);
             server.Run();
@@ -176,18 +182,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 _logger.LogError(0, ex, ex.Message);
                 return -1;
             }
-        }
-
-        private static int LogErrors(IEnumerable<string> errors)
-        {
-            _logger.LogErrors(errors);
-            return -1;
-        }
-
-        private static Task<int> LogErrorsAsync(IEnumerable<string> errors)
-        {
-            _logger.LogErrors(errors);
-            return Task.FromResult(-1);
         }
 
         private static Errorable<LogLevel> TryParseLogLevel(string level, string purpose, LogLevel defaultLevel)

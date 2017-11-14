@@ -37,7 +37,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             Errorable<string> result = await server.With(token).With(app).With(api)
                 .MapAsync(SubmitToken);
-            return result.Match(LogResult, LogErrors);
+            return result.Match(response =>
+                {
+                    Logger.LogJson(response);
+                    return ResultCodes.Success;
+                },
+                errors =>
+                {
+                    Logger.LogErrors(errors);
+                    return ResultCodes.Failed;
+                });
         }
 
         private async Task<string> SubmitToken(Uri server, string token, string app, string api)

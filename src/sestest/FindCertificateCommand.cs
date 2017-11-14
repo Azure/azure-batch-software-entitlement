@@ -28,7 +28,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var thumbprint = new CertificateThumbprint(commandLine.Thumbprint);
             var certificateStore = new CertificateStore();
             var certificate = certificateStore.FindByThumbprint("required", thumbprint);
-            var result = certificate.Match(ShowCertificate, LogErrors);
+            var result = certificate.Match(
+                ShowCertificate,
+                errors =>
+                {
+                    Logger.LogErrors(errors);
+                    return ResultCodes.Failed;
+                });
             return Task.FromResult(result);
         }
 
