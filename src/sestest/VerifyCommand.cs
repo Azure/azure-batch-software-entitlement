@@ -35,7 +35,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var app = FindApplication(commandLine);
             var api = FindApiVersion(commandLine);
 
-            var result = await server.And(token).And(app).And(api)
+            Errorable<string> result = await server.With(token).With(app).With(api)
                 .MapAsync(SubmitToken);
             return result.Match(LogResult, LogErrors);
         }

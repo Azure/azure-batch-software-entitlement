@@ -34,7 +34,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var signingCert = FindCertificate("signing", commandLine.SignatureThumbprint);
             var encryptionCert = FindCertificate("encryption", commandLine.EncryptionThumbprint);
 
-            var result = entitlement.And(signingCert).And(encryptionCert)
+            Errorable<string> result = entitlement.With(signingCert).With(encryptionCert)
                 .Map(GenerateToken);
 
             if (!result.HasValue)

@@ -22,7 +22,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="right">Second <see cref="Errorable{T}"/> to combine.</param>
         /// <returns>An <see cref="Errorable{T}"/> containing either both values or a combined 
         /// set of error messages.</returns>
-        public static Errorable<(A, B)> And<A, B>(this Errorable<A> left, Errorable<B> right)
+        public static Errorable<(A, B)> With<A, B>(this Errorable<A> left, Errorable<B> right)
         {
             if (left == null)
             {
@@ -58,7 +58,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="right">Second <see cref="Errorable{T}"/> to combine.</param>
         /// <returns>An <see cref="Errorable{T}"/> containing either all three values or a 
         /// combined set of error messages.</returns>
-        public static Errorable<(A, B, C)> And<A, B, C>(this Errorable<(A, B)> left, Errorable<C> right)
+        public static Errorable<(A, B, C)> With<A, B, C>(this Errorable<(A, B)> left, Errorable<C> right)
         {
             if (left == null)
             {
@@ -94,7 +94,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="right">Second <see cref="Errorable{T}"/> to combine.</param>
         /// <returns>An <see cref="Errorable{T}"/> containing either all three values or a 
         /// combined set of error messages.</returns>
-        public static Errorable<(A, B, C)> And<A, B, C>(this Errorable<A> left, Errorable<(B, C)> right)
+        public static Errorable<(A, B, C)> With<A, B, C>(this Errorable<A> left, Errorable<(B, C)> right)
         {
             if (left == null)
             {
@@ -131,7 +131,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="right">Second <see cref="Errorable{T}"/> to combine.</param>
         /// <returns>An <see cref="Errorable{T}"/> containing either all three values or a 
         /// combined set of error messages.</returns>
-        public static Errorable<(A, B, C, D)> And<A, B, C, D>(this Errorable<(A, B, C)> left, Errorable<D> right)
+        public static Errorable<(A, B, C, D)> With<A, B, C, D>(this Errorable<(A, B, C)> left, Errorable<D> right)
         {
             if (left == null)
             {

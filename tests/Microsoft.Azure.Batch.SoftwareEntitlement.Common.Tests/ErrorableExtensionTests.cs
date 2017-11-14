@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
     /// </summary>
     public abstract class ErrorableExtensionTests
     {
-        // Known errorable values for testing
+        // Known Errorable<T> values for testing
         private readonly Errorable<int> _missingInt = null;
         private readonly Errorable<string> _missingString = null;
         private readonly Errorable<int> _success = Errorable.Success(4);
@@ -21,14 +21,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
         private readonly Errorable<int> _yetAnotherSuccess = Errorable.Success(8);
         private readonly Errorable<int> _yetAnotherFailure = Errorable.Failure<int>("yet another failure");
 
-        public class AndReturningTuple : ErrorableExtensionTests
+        public class WithReturningTuple : ErrorableExtensionTests
         {
             [Fact]
             public void GivenNullOnLeft_ThrowsExpectedException()
             {
                 var exception =
                     Assert.Throws<ArgumentNullException>(
-                        () => _missingInt.And(_success));
+                        () => _missingInt.With(_success));
                 exception.Should().NotBeNull();
                 exception.ParamName.Should().Be("left");
             }
@@ -38,7 +38,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             {
                 var exception =
                     Assert.Throws<ArgumentNullException>(
-                        () => _success.And(_missingInt));
+                        () => _success.With(_missingInt));
                 exception.Should().NotBeNull();
                 exception.ParamName.Should().Be("right");
             }
@@ -46,21 +46,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenFailureOnLeft_ReturnsFailureWithSameErrors()
             {
-                var result = _failure.And(_success);
+                var result = _failure.With(_success);
                 result.Errors.Should().Contain(_failure.Errors);
             }
 
             [Fact]
             public void GivenFailureOnRight_ReturnsFailureWithSameErrors()
             {
-                var result = _success.And(_failure);
+                var result = _success.With(_failure);
                 result.Errors.Should().Contain(_failure.Errors);
             }
 
             [Fact]
             public void GivenFailureOnBothSides_ReturnsFailureWithAllErrors()
             {
-                var result = _failure.And(_otherFailure);
+                var result = _failure.With(_otherFailure);
                 result.Errors.Should().Contain(_failure.Errors);
                 result.Errors.Should().Contain(_otherFailure.Errors);
             }
@@ -68,62 +68,62 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenSuccessOnBothSides_ReturnsExpectedTuple()
             {
-                var result = _success.And(_otherSuccess);
+                var result = _success.With(_otherSuccess);
                 result.Value.Should().Be((_success.Value, _otherSuccess.Value));
             }
         }
 
 
-        public class AndWithTupleOnLeftReturningTriple : ErrorableExtensionTests
+        public class WithHavingTupleOnLeftReturningTriple : ErrorableExtensionTests
         {
             [Fact]
             public void GivenSuccessOnBothSides_ReturnsExpectedTuple()
             {
-                var left = _success.And(_otherSuccess);
-                var result = left.And(_yetAnotherSuccess);
+                var left = _success.With(_otherSuccess);
+                var result = left.With(_yetAnotherSuccess);
                 result.Value.Should().Be((_success.Value, _otherSuccess.Value, _yetAnotherSuccess.Value));
             }
 
             [Fact]
             public void WhenFailureOnLeft_ReturnsExpectedErrors()
             {
-                var left = _failure.And(_otherSuccess);
-                var result = left.And(_yetAnotherSuccess);
+                var left = _failure.With(_otherSuccess);
+                var result = left.With(_yetAnotherSuccess);
                 result.Errors.Should().Contain(_failure.Errors);
             }
 
             [Fact]
             public void WhenFailureOnRight_ReturnsExpectedErrors()
             {
-                var left = _success.And(_otherSuccess);
-                var result = left.And(_yetAnotherFailure);
+                var left = _success.With(_otherSuccess);
+                var result = left.With(_yetAnotherFailure);
                 result.Errors.Should().Contain(_yetAnotherFailure.Errors);
             }
         }
 
-        public class AndWithTupleOnRightReturningTriple : ErrorableExtensionTests
+        public class WithHavingTupleOnRightReturningTriple : ErrorableExtensionTests
         {
             [Fact]
             public void GivenTupleOnRight_ReturnsExpectedValue()
             {
-                var right = _otherSuccess.And(_yetAnotherSuccess);
-                var result = _success.And(right);
+                var right = _otherSuccess.With(_yetAnotherSuccess);
+                var result = _success.With(right);
                 result.Value.Should().Be((_success.Value, _otherSuccess.Value, _yetAnotherSuccess.Value));
             }
 
             [Fact]
             public void WhenFailureOnLeft_ReturnsExpectedErrors()
             {
-                var right = _otherSuccess.And(_yetAnotherSuccess);
-                var result = _failure.And(right);
+                var right = _otherSuccess.With(_yetAnotherSuccess);
+                var result = _failure.With(right);
                 result.Errors.Should().Contain(_failure.Errors);
             }
 
             [Fact]
             public void WhenFailureOnRight_ReturnsExpectedErrors()
             {
-                var right = _otherSuccess.And(_yetAnotherFailure);
-                var result = _success.And(right);
+                var right = _otherSuccess.With(_yetAnotherFailure);
+                var result = _success.With(right);
                 result.Errors.Should().Contain(_yetAnotherFailure.Errors);
             }
         }
