@@ -26,7 +26,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             parseResult.WithParsed((CommandLineBase options) => ConfigureLogging(options));
 
-            var exitCode = -1;
+            var exitCode = ResultCodes.Failed;
             if (_logger != null)
             {
                 // Logging is ready for use, can try other things
@@ -37,7 +37,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     (ListCertificatesCommandLine commandLine) => RunCommand(ListCertificates, commandLine),
                     (FindCertificateCommandLine commandLine) => RunCommand(FindCertificate, commandLine),
                     (VerifyCommandLine commandLine) => RunCommand(Submit, commandLine),
-                    errors => Task.FromResult(-1));
+                    errors => Task.FromResult(ResultCodes.Failed));
 
                 if (Debugger.IsAttached)
                 {
@@ -180,7 +180,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             catch (Exception ex)
             {
                 _logger.LogError(0, ex, ex.Message);
-                return -1;
+                return ResultCodes.InternalError;
             }
         }
 
