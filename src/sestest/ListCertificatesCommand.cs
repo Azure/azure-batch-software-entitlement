@@ -62,15 +62,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 status = "(not yet active)";
             }
 
-            const string format = "HH:mm dd/mmm/yyyy";
+            const string dateFormat = "s";
 
             return new List<string>
             {
                 cert.SubjectName.Name,
                 cert.FriendlyName,
                 cert.Thumbprint,
-                cert.NotBefore.ToString(format),
-                cert.NotAfter.ToString(format),
+                cert.NotBefore.ToString(dateFormat),
+                cert.NotAfter.ToString(dateFormat),
                 status
             };
         }
