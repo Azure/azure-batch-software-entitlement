@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
@@ -21,7 +22,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="right">Second <see cref="Errorable{T}"/> to combine.</param>
         /// <returns>An <see cref="Errorable{T}"/> containing either both values or a combined 
         /// set of error messages.</returns>
-        public static Errorable<(A, B)> And<A, B>(this Errorable<A> left, Errorable<B> right)
+        public static Errorable<(A, B)> With<A, B>(this Errorable<A> left, Errorable<B> right)
         {
             if (left == null)
             {
@@ -57,7 +58,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="right">Second <see cref="Errorable{T}"/> to combine.</param>
         /// <returns>An <see cref="Errorable{T}"/> containing either all three values or a 
         /// combined set of error messages.</returns>
-        public static Errorable<(A, B, C)> And<A, B, C>(this Errorable<(A, B)> left, Errorable<C> right)
+        public static Errorable<(A, B, C)> With<A, B, C>(this Errorable<(A, B)> left, Errorable<C> right)
         {
             if (left == null)
             {
@@ -93,7 +94,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="right">Second <see cref="Errorable{T}"/> to combine.</param>
         /// <returns>An <see cref="Errorable{T}"/> containing either all three values or a 
         /// combined set of error messages.</returns>
-        public static Errorable<(A, B, C)> And<A, B, C>(this Errorable<A> left, Errorable<(B, C)> right)
+        public static Errorable<(A, B, C)> With<A, B, C>(this Errorable<A> left, Errorable<(B, C)> right)
         {
             if (left == null)
             {
@@ -112,6 +113,43 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 whenFailure: leftErrors => right.Match(
                     whenSuccessful: _ => Errorable.Failure<(A, B, C)>(leftErrors),
                     whenFailure: errors => Errorable.Failure<(A, B, C)>(leftErrors).AddErrors(errors)));
+        }
+
+        /// <summary>
+        /// Combine two <see cref="Errorable{T}"/> values into a single value containing a tuple 
+        /// of three values
+        /// </summary>
+        /// <remarks>
+        /// Works as a logical <c>AND</c> - if both inputs are successful, the output is successful; 
+        /// if either input is a failure, the output is a failure. All error messages are preserved.
+        /// </remarks>
+        /// <typeparam name="A">Type of the first value held by <paramref name="left"/>.</typeparam>
+        /// <typeparam name="B">Type of the second value held by <paramref name="left"/>.</typeparam>
+        /// <typeparam name="C">Type of the third value held by <paramref name="left"/>.</typeparam>
+        /// <typeparam name="D">Type of value held by <paramref name="right"/>.</typeparam>
+        /// <param name="left">First <see cref="Errorable{T}"/> to combine.</param>
+        /// <param name="right">Second <see cref="Errorable{T}"/> to combine.</param>
+        /// <returns>An <see cref="Errorable{T}"/> containing either all three values or a 
+        /// combined set of error messages.</returns>
+        public static Errorable<(A, B, C, D)> With<A, B, C, D>(this Errorable<(A, B, C)> left, Errorable<D> right)
+        {
+            if (left == null)
+            {
+                throw new ArgumentNullException(nameof(left));
+            }
+
+            if (right == null)
+            {
+                throw new ArgumentNullException(nameof(right));
+            }
+
+            return left.Match(
+                whenSuccessful: leftValue => right.Match(
+                    whenSuccessful: rightValue => Errorable.Success((leftValue.Item1, leftValue.Item2, leftValue.Item3, rightValue)),
+                    whenFailure: errors => Errorable.Failure<(A, B, C, D)>(errors)),
+                whenFailure: leftErrors => right.Match(
+                    whenSuccessful: _ => Errorable.Failure<(A, B, C, D)>(leftErrors),
+                    whenFailure: errors => Errorable.Failure<(A, B, C, D)>(leftErrors).AddErrors(errors)));
         }
 
         public static void Do<A, B>(
@@ -160,6 +198,29 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             errorable.Match(t => whenSuccessful(t.Item1, t.Item2, t.Item3), whenFailure);
         }
 
+        public static void Do<A, B, C, D>(
+            this Errorable<(A, B, C, D)> errorable,
+            Action<A, B, C, D> whenSuccessful,
+            Action<IEnumerable<string>> whenFailure)
+        {
+            if (errorable == null)
+            {
+                throw new ArgumentNullException(nameof(errorable));
+            }
+
+            if (whenSuccessful == null)
+            {
+                throw new ArgumentNullException(nameof(whenSuccessful));
+            }
+
+            if (whenFailure == null)
+            {
+                throw new ArgumentNullException(nameof(whenFailure));
+            }
+
+            errorable.Match(t => whenSuccessful(t.Item1, t.Item2, t.Item3, t.Item4), whenFailure);
+        }
+
         public static Errorable<R> Map<A, B, R>(
             this Errorable<(A, B)> errorable,
             Func<A, B, R> transform)
@@ -196,6 +257,44 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             return errorable.Match(
                 t => Errorable.Success(transform(t.Item1, t.Item2, t.Item3)),
                 e => Errorable.Failure<R>(e));
+        }
+
+        public static Errorable<R> Map<A, B, C, D, R>(
+            this Errorable<(A, B, C, D)> errorable,
+            Func<A, B, C, D, R> transform)
+        {
+            if (errorable == null)
+            {
+                throw new ArgumentNullException(nameof(errorable));
+            }
+
+            if (transform == null)
+            {
+                throw new ArgumentNullException(nameof(transform));
+            }
+
+            return errorable.Match(
+                t => Errorable.Success(transform(t.Item1, t.Item2, t.Item3, t.Item4)),
+                e => Errorable.Failure<R>(e));
+        }
+
+        public static Task<Errorable<R>> MapAsync<A, B, C, D, R>(
+            this Errorable<(A, B, C, D)> errorable,
+            Func<A, B, C, D, Task<R>> transform)
+        {
+            if (errorable == null)
+            {
+                throw new ArgumentNullException(nameof(errorable));
+            }
+
+            if (transform == null)
+            {
+                throw new ArgumentNullException(nameof(transform));
+            }
+
+            return errorable.Match(
+                async t => Errorable.Success(await transform(t.Item1, t.Item2, t.Item3, t.Item4)),
+                e => Task.FromResult(Errorable.Failure<R>(e)));
         }
     }
 }

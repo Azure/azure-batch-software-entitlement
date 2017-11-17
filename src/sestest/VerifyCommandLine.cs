@@ -1,27 +1,23 @@
-﻿using CommandLine;
+using CommandLine;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
-    [Verb("verify", HelpText = "Verify a provided token by calling into the software entitlement service.")]
+    [Verb("verify", HelpText = "Submit a token for verification")]
     public sealed class VerifyCommandLine : CommandLineBase
     {
-        [Option("token", HelpText = "The text of the JWT token to verify.")]
+        [Option("token",
+            HelpText = "Software entitlement token to verify (defaults to the environment variable AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN)")]
         public string Token { get; set; }
 
-        [Option("token-file", HelpText = "A text file containing the text of the JWT token to verify.")]
-        public string TokenFile { get; set; }
+        [Option("app", HelpText = "The application for which entitlement is requested.")]
+        public string Application { get; set; }
 
-        [Option("entitlement-id", HelpText = "Unique identifier for the entitlement to check.")]
-        public string ApplicationId { get; set; }
+        [Option("server",
+            HelpText = "URL for the software entitlement server (defaults to the environment variable AZ_BATCH_ACCOUNT_URL)")]
+        public string Server { get; set; }
 
-        [Option("vmid", HelpText = "Unique identifier for the Azure virtual machine.")]
-        public string VirtualMachineId { get; set; }
-
-        [Option("batch-service-url", HelpText = "URL of the Azure Batch service endpoint for a particular account to contact for verification.")]
-        public string BatchServiceUrl { get; set; }
-
-        // TODO: This needs a much better name
-        [Option('a', "authority", HelpText = "Certificate thumbprint used to sign the cert used for the HTTPS connection.")]
-        public string AuthorityThumbprint { get; set; }
+        [Option("api-version",
+            HelpText = "API version to specify when making the request (defaults to '2017-05-01.5.0')")]
+        public string ApiVersion { get; set; } = "2017-05-01.5.0";
     }
 }

@@ -2,12 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 using CommandLine;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Tokens;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -19,29 +17,27 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         // Provider used for ASP.NET logging
         private static ILoggerProvider _provider;
 
-        // Store used to scan for and obtain certificates
-        private static readonly CertificateStore CertificateStore = new CertificateStore();
-
-        public static int Main(string[] args)
+        public static async Task<int> Main(string[] args)
         {
             var parser = new Parser(ConfigureParser);
 
             var parseResult = parser
-                .ParseArguments<GenerateCommandLine, ServerCommandLine, ListCertificatesCommandLine, FindCertificateCommandLine>(args);
+                .ParseArguments<GenerateCommandLine, ServerCommandLine, ListCertificatesCommandLine, FindCertificateCommandLine, VerifyCommandLine>(args);
 
             parseResult.WithParsed((CommandLineBase options) => ConfigureLogging(options));
 
-            var exitCode = -1;
+            var exitCode = ResultCodes.Failed;
             if (_logger != null)
             {
                 // Logging is ready for use, can try other things
 
-                exitCode = parseResult.MapResult(
+                exitCode = await parseResult.MapResult(
                     (GenerateCommandLine commandLine) => RunCommand(Generate, commandLine),
                     (ServerCommandLine commandLine) => RunCommand(Serve, commandLine),
                     (ListCertificatesCommandLine commandLine) => RunCommand(ListCertificates, commandLine),
                     (FindCertificateCommandLine commandLine) => RunCommand(FindCertificate, commandLine),
-                    errors => 1);
+                    (VerifyCommandLine commandLine) => RunCommand(Submit, commandLine),
+                    errors => Task.FromResult(ResultCodes.Failed));
 
                 if (Debugger.IsAttached)
                 {
@@ -58,73 +54,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="commandLine">Options from the command line.</param>
         /// <returns>Exit code to return from this process.</returns>
-        public static int Generate(GenerateCommandLine commandLine)
+        public static Task<int> Generate(GenerateCommandLine commandLine)
         {
-            var entitlement = NodeEntitlementsBuilder.Build(commandLine);
-            var signingCert = FindCertificate("signing", commandLine.SignatureThumbprint);
-            var encryptionCert = FindCertificate("encryption", commandLine.EncryptionThumbprint);
-
-            var result =
-                entitlement.And(signingCert).And(encryptionCert)
-                    .Map(GenerateToken);
-
-            if (!result.HasValue)
-            {
-                return LogErrors(result.Errors);
-            }
-
-            var token = result.Value;
-            if (string.IsNullOrEmpty(commandLine.TokenFile))
-            {
-                _logger.LogInformation("Token: {JWT}", token);
-                return 0;
-            }
-
-            var fileInfo = new FileInfo(commandLine.TokenFile);
-            _logger.LogInformation("Token file: {FileName}", fileInfo.FullName);
-            try
-            {
-                File.WriteAllText(fileInfo.FullName, token);
-                return 0;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(0, ex, ex.Message);
-                return -1;
-            }
-        }
-
-        /// <summary>
-        /// Generate a token
-        /// </summary>
-        /// <param name="entitlements">Details of the entitlements to encode into the token.</param>
-        /// <param name="signingCert">Certificate to use when signing the token (optional).</param>
-        /// <param name="encryptionCert">Certificate to use when encrypting the token (optional).</param>
-        /// <returns>Generated token, if any; otherwise all related errors.</returns>
-        private static string GenerateToken(
-            NodeEntitlements entitlements,
-            X509Certificate2 signingCert = null,
-            X509Certificate2 encryptionCert = null)
-        {
-            SigningCredentials signingCredentials = null;
-            if (signingCert != null)
-            {
-                var signingKey = new X509SecurityKey(signingCert);
-                signingCredentials = new SigningCredentials(signingKey, SecurityAlgorithms.RsaSha512Signature);
-            }
-
-            EncryptingCredentials encryptingCredentials = null;
-            if (encryptionCert != null)
-            {
-                var encryptionKey = new X509SecurityKey(encryptionCert);
-                encryptingCredentials = new EncryptingCredentials(
-                    encryptionKey, SecurityAlgorithms.RsaOAEP, SecurityAlgorithms.Aes256CbcHmacSha512);
-            }
-
-            var entitlementWithIdentifier = entitlements.WithIdentifier($"entitlement-{Guid.NewGuid():D}");
-
-            var generator = new TokenGenerator(_logger, signingCredentials, encryptingCredentials);
-            return generator.Generate(entitlementWithIdentifier);
+            var command = new GenerateCommand(_logger);
+            return Task.FromResult(command.Execute(commandLine));
         }
 
         /// <summary>
@@ -132,17 +65,23 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="commandLine">Options from the command-line.</param>
         /// <returns>Exit code to return from this process.</returns>
-        public static int Serve(ServerCommandLine commandLine)
+        public static async Task<int> Serve(ServerCommandLine commandLine)
         {
             var options = ServerOptionBuilder.Build(commandLine);
-            return options.Match(RunServer, LogErrors);
+            return await options.Match(
+                RunServer,
+                errors =>
+                {
+                    _logger.LogErrors(errors);
+                    return Task.FromResult(ResultCodes.Failed);
+                });
         }
 
-        private static int RunServer(ServerOptions options)
+        private static Task<int> RunServer(ServerOptions options)
         {
             var server = new SoftwareEntitlementServer(options, _provider);
             server.Run();
-            return 0;
+            return Task.FromResult(ResultCodes.Success);
         }
 
         /// <summary>
@@ -150,55 +89,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="commandLine">Options from the command line.</param>
         /// <returns>Exit code for process.</returns>
-        private static int ListCertificates(ListCertificatesCommandLine commandLine)
+        private static async Task<int> ListCertificates(ListCertificatesCommandLine commandLine)
         {
-            var now = DateTime.Now;
-
-            if (commandLine.ShowExpired)
-            {
-                _logger.LogInformation("Including expired certificates.");
-            }
-
-            var certificateStore = new CertificateStore();
-            var allCertificates = certificateStore.FindAll();
-            var query = allCertificates.Where(c => c.HasPrivateKey)
-                .Where(c => now < c.NotAfter  || commandLine.ShowExpired)
-                .ToList();
-            _logger.LogInformation("Found {Count} certificates with private keys", query.Count);
-
-            var rows = query.Select(DescribeCertificate).ToList();
-            rows.Insert(0, new List<string> { "Name", "Friendly Name", "Thumbprint", "Not Before", "Not After" });
-
-            _logger.LogTable(
-                LogLevel.Information,
-                rows);
-
-            return 0;
-        }
-
-        private static IList<string> DescribeCertificate(X509Certificate2 cert)
-        {
-            var status = string.Empty;
-            if (cert.NotAfter < DateTime.Now)
-            {
-                status = "(expired)";
-            }
-            else if (DateTime.Now < cert.NotBefore)
-            {
-                status = "(not yet active)";
-            }
-
-            const string format = "HH:mm dd/mmm/yyyy";
-
-            return new List<string>
-            {
-                cert.SubjectName.Name,
-                cert.FriendlyName,
-                cert.Thumbprint,
-                cert.NotBefore.ToString(format),
-                cert.NotAfter.ToString(format),
-                status
-            };
+            var command = new ListCertificatesCommand(_logger);
+            return await command.Execute(commandLine).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -206,22 +100,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="commandLine">Options from the command line.</param>
         /// <returns>Exit code for process.</returns>
-        private static int FindCertificate(FindCertificateCommandLine commandLine)
+        private static async Task<int> FindCertificate(FindCertificateCommandLine commandLine)
         {
-            var thumbprint = new CertificateThumbprint(commandLine.Thumbprint);
-            var certificateStore = new CertificateStore();
-            var certificate = certificateStore.FindByThumbprint("required", thumbprint);
-            return certificate.Match(ShowCertificate, LogErrors);
+            var command = new FindCertificateCommand(_logger);
+            return await command.Execute(commandLine).ConfigureAwait(false);
         }
 
-        private static int ShowCertificate(X509Certificate2 certificate)
+        private static async Task<int> Submit(VerifyCommandLine commandLine)
         {
-            foreach (var line in certificate.ToString().AsLines())
-            {
-                _logger.LogInformation(line);
-            }
-
-            return 0;
+            var command = new VerifyCommand(_logger);
+            return await command.Execute(commandLine).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -232,12 +120,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             var logSetup = new LoggerSetup();
 
-            var consoleLevel = TryParse(commandLine.LogLevel, "console", LogLevel.Information);
+            var consoleLevel = TryParseLogLevel(commandLine.LogLevel, "console", LogLevel.Information);
             var actualLevel = consoleLevel.HasValue ? consoleLevel.Value : LogLevel.Information;
 
             logSetup.SendToConsole(actualLevel);
 
-            var fileLevel = TryParse(commandLine.LogFileLevel, "file", actualLevel);
+            var fileLevel = TryParseLogLevel(commandLine.LogFileLevel, "file", actualLevel);
             if (!string.IsNullOrEmpty(commandLine.LogFile))
             {
                 if (fileLevel.HasValue)
@@ -282,39 +170,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="command">Actual command to run.</param>
         /// <param name="commandLine">Parameters provided on the command line.</param>
         /// <returns>Exit code for this command.</returns>
-        private static int RunCommand<T>(Func<T, int> command, T commandLine)
+        private static async Task<int> RunCommand<T>(Func<T, Task<int>> command, T commandLine)
             where T : CommandLineBase
         {
             try
             {
-                return command(commandLine);
+                return await command(commandLine);
             }
             catch (Exception ex)
             {
                 _logger.LogError(0, ex, ex.Message);
-                return -1;
+                return ResultCodes.InternalError;
             }
         }
 
-        private static Errorable<X509Certificate2> FindCertificate(string purpose, string thumbprint)
-        {
-            if (string.IsNullOrEmpty(thumbprint))
-            {
-                // No certificate requested, so we successfully return null
-                return Errorable.Success<X509Certificate2>(null);
-            }
-
-            var t = new CertificateThumbprint(thumbprint);
-            return CertificateStore.FindByThumbprint(purpose, t);
-        }
-
-        private static int LogErrors(IEnumerable<string> errors)
-        {
-            _logger.LogErrors(errors);
-            return -1;
-        }
-
-        private static Errorable<LogLevel> TryParse(string level, string purpose, LogLevel defaultLevel)
+        private static Errorable<LogLevel> TryParseLogLevel(string level, string purpose, LogLevel defaultLevel)
         {
             if (string.IsNullOrEmpty(level))
             {
