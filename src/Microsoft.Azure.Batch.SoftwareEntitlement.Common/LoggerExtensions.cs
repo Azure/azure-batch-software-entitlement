@@ -1,6 +1,8 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
@@ -16,9 +18,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// Each line is passed as a list of strings, one value per column.
         /// </remarks>
         /// <param name="logger">Actual logger to use.</param>
-        /// <param name="level">Log level for the output.</param>
         /// <param name="lines">Lines to format.</param>
-        public static void LogTable(this ILogger logger, LogLevel level, IEnumerable<IEnumerable<string>> lines)
+        public static void LogInformationTable(this ILogger logger, IEnumerable<IEnumerable<string>> lines)
         {
             const int columnGap = 3;
             var rows = lines.Select(r => r.ToList()).ToList();
@@ -31,15 +32,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             var columnCount = rows.Max(r => r.Count);
             var widths = Enumerable.Range(0, columnCount).Select(ColumnWidth).ToList();
 
-            string FormatRow(IEnumerable<string> cells)
-            {
-                return string.Concat(cells.Select((cell, index) => cell.PadRight(widths[index])))
-                    .TrimEnd();
-            }
-
             foreach (var row in rows)
             {
-                logger.Log(level, (EventId)0, row, null, (cells, ex) => FormatRow(cells));
+                var s = string.Concat(row.Select((cell, index) => cell.PadRight(widths[index])))
+                    .TrimEnd();
+                logger.LogInformation(s);
             }
         }
 
@@ -48,13 +45,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// </summary>
         /// <param name="logger">Actual logger to use.</param>
         /// <param name="heading">Heading to display.</param>
-        /// <param name="level">Log level for the output.</param>
-        public static void LogHeader(this ILogger logger, string heading, LogLevel level = LogLevel.Information)
+        public static void LogHeader(this ILogger logger, string heading)
         {
             var line = new string('-', heading.Length + 4);
-            logger.Log(level, (EventId)0, line, null, (s, ex) => s);
-            logger.Log(level, (EventId)0, "  " + heading, null, (s, ex) => s);
-            logger.Log(level, (EventId)0, line, null, (s, ex) => s);
+            logger.LogInformation(line);
+            logger.LogInformation("  " + heading);
+            logger.LogInformation(line);
         }
 
         /// <summary>
@@ -62,11 +58,52 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// </summary>
         /// <param name="logger">Actual logger to use.</param>
         /// <param name="errors">Sequence of errors to log.</param>
-        public  static void LogErrors(this ILogger logger, IEnumerable<string> errors)
+        public static void LogErrors(this ILogger logger, IEnumerable<string> errors)
         {
             foreach (var e in errors)
             {
                 logger.LogError(e);
+            }
+        }
+
+        /// <summary>
+        /// Log a series of information messages
+        /// </summary>
+        /// <param name="logger">Actual logger to use.</param>
+        /// <param name="messages">Sequence of messages to log.</param>
+        public static void LogInformation(this ILogger logger, IEnumerable<string> messages)
+        {
+            foreach (var m in messages)
+            {
+                logger.LogInformation(m);
+            }
+        }
+
+        public static void LogJson(this ILogger logger, string json)
+        {
+            var pretty = JsonPrettify(json).AsLines();
+            logger.LogInformation(pretty);
+        }
+
+        /// <summary>
+        /// Pretty print a JSON string for logging
+        /// </summary>
+        /// <remarks>
+        /// As found on StackOverflow: https://stackoverflow.com/a/30329731/30280
+        /// </remarks>
+        /// <param name="json">JSON string to reformat.</param>
+        /// <returns>Equivalent JSON with nice formatting.</returns>
+        private static string JsonPrettify(string json)
+        {
+            using (var stringReader = new StringReader(json))
+            {
+                using (var stringWriter = new StringWriter())
+                {
+                    var jsonReader = new JsonTextReader(stringReader);
+                    var jsonWriter = new JsonTextWriter(stringWriter) { Formatting = Formatting.Indented };
+                    jsonWriter.WriteToken(jsonReader);
+                    return stringWriter.ToString();
+                }
             }
         }
     }
