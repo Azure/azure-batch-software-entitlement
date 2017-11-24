@@ -22,6 +22,8 @@ Before working through this guide, you will need to have built the tooling and h
 
 The SDK has been written to be cross-platform, working on Windows, Linux and macOS. For brevity, this walk-through uses **PowerShell** only (usable on both Windows and [Linux](https://azure.microsoft.com/blog/powershell-is-open-sourced-and-is-available-on-linux/)); the commands shown should be trivially convertible to your shell of choice, such as `CMD` and `bash` (including `bash` on Windows 10).
 
+**Note:** By default, execution of PowerShell scripts is disabled on many Windows systems. If you get an error "*script.ps1* cannot be loaded because running scripts is disabled on this system", you will need to unblock scripts by running `set-executionpolicy remotesigned` from an elevated PowerShell window. 
+
 ## Selecting Certificates
 
 In production, the software entitlement service generates tokens that are both digitally signed and encrypted in order to prevent misuse. The service also requires connections to be made via HTTPS. To simulate this in a local dev/test environment, we need to select one or more digital certificates that are available on the local machine.
