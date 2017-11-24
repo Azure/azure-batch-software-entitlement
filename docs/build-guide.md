@@ -12,6 +12,8 @@ The C++ source for the client library requires [libcurl](https://curl.haxx.se/li
 
 Build scripts and other tooling are written in PowerShell using the [Psake](https://github.com/psake/psake) make tool. These build scripts work on both Windows and Linux, though initial setup differs.
 
+**Note:** By default, execution of PowerShell scripts is disabled on many Windows systems. If you get an error "*script.ps1* cannot be loaded because running scripts is disabled on this system", you will need to unblock scripts by running `set-executionpolicy remotesigned` from an elevated PowerShell window. 
+
 ### Psake On Windows
 
 Preinstallation of Psake is optional; if it isn't already available, the build scripts will attempt to use a local version downloaded via NuGet. (See `scripts/bootstrap.ps1` for details.)
