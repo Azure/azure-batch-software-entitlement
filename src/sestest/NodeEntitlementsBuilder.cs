@@ -52,62 +52,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// of errors.</returns>
         private Errorable<NodeEntitlements> Build()
         {
-            var entitlement = new NodeEntitlements();
-            var errors = new List<string>();
+            var result = Errorable.Success(new NodeEntitlements())
+                .ConfigureOptional(VirtualMachineId(), (e, url) => e.WithVirtualMachineId(url))
+                .Configure(NotBefore(), (e, notBefore) => e.FromInstant(notBefore))
+                .Configure(NotAfter(), (e, notAfter) => e.UntilInstant(notAfter))
+                .Configure(Audience(), (e, audience) => e.WithAudience(audience))
+                .Configure(Issuer(), (e, issuer) => e.WithIssuer(issuer))
+                .ConfigureAll(Addresses(), (e, address) => e.AddIpAddress(address))
+                .ConfigureAll(Applications(), (e, app) => e.AddApplication(app));
 
-            ConfigureOptional(VirtualMachineId, url => entitlement.WithVirtualMachineId(url));
-            Configure(NotBefore, notBefore => entitlement.FromInstant(notBefore));
-            Configure(NotAfter, notAfter => entitlement.UntilInstant(notAfter));
-            Configure(Audience, audience => entitlement.WithAudience(audience));
-            Configure(Issuer, issuer => entitlement.WithIssuer(issuer));
-            ConfigureAll(Addresses, address => entitlement.AddIpAddress(address));
-            ConfigureAll(Applications, app => entitlement.AddApplication(app));
-
-            if (errors.Any())
-            {
-                return Errorable.Failure<NodeEntitlements>(errors);
-            }
-
-            return Errorable.Success(entitlement);
-
-            // <param name="readConfiguration">function to read the configuration value.</param>
-            // <param name="applyConfiguration">function to modify our configuration with the value read.</param>
-            void Configure<V>(Func<Errorable<V>> readConfiguration, Func<V, NodeEntitlements> applyConfiguration)
-            {
-                readConfiguration().Match(
-                    whenSuccessful: value => entitlement = applyConfiguration(value),
-                    whenFailure: e => errors.AddRange(e));
-            }
-
-            // <param name="readConfiguration">function to read the configuration value.</param>
-            // <param name="applyConfiguration">function to modify our configuration with the value read.</param>
-            void ConfigureOptional<V>(Func<Errorable<V>> readConfiguration, Func<V, NodeEntitlements> applyConfiguration)
-                where V : class
-            {
-                readConfiguration().Match(
-                    whenSuccessful: value =>
-                    {
-                        if (value != null)
-                        {
-                            entitlement = applyConfiguration(value);
-                        }
-                    },
-                    whenFailure: e => errors.AddRange(e));
-            }
-
-            // <param name="readConfiguration">function to read the configuration value.</param>
-            // <param name="applyConfiguration">function to modify our configuration with the value read.</param>
-            void ConfigureAll<V>(
-                Func<IEnumerable<Errorable<V>>> readConfiguration,
-                Func<V, NodeEntitlements> applyConfiguration)
-            {
-                foreach (var configuration in readConfiguration())
-                {
-                    configuration.Match(
-                        whenSuccessful: value => entitlement = applyConfiguration(value),
-                        whenFailure: e => errors.AddRange(e));
-                }
-            }
+            return result;
         }
 
         private Errorable<string> VirtualMachineId()
@@ -218,13 +172,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         private IEnumerable<Errorable<string>> Applications()
         {
-            var apps = _commandLine.ApplicationIds.ToList();
             if (_commandLine.ApplicationIds == null || !_commandLine.ApplicationIds.Any())
             {
                 yield return Errorable.Failure<string>("No applications specified.");
                 yield break;
             }
 
+            var apps = _commandLine.ApplicationIds.ToList();
             foreach (var app in apps)
             {
                 yield return Errorable.Success(app.Trim());
