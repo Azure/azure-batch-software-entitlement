@@ -89,7 +89,7 @@ See [Batch status and error codes](https://docs.microsoft.com/rest/api/batchserv
 
 The service will return HTTP status 400 and the response body will be empty if:
 
-* The software entitlement token is missing, invalid, corrupt or missing any mandatory fields;
+* The software entitlement token is missing, invalid, corrupt, or missing any mandatory fields;
 * The request is badly formed; or
 * The `api-version` specified on the URL is invalid.
 
