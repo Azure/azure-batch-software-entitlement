@@ -58,52 +58,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// of errors.</returns>
         private Errorable<ServerOptions> Build()
         {
-            var options = new ServerOptions();
-            var errors = new List<string>();
+            var result = Errorable.Success(new ServerOptions())
+                .Configure(ServerUrl(), (opt, url) => opt.WithServerUrl(url))
+                .ConfigureOptional(ConnectionCertificate(), (opt, cert) => opt.WithConnectionCertificate(cert))
+                .ConfigureOptional(SigningCertificate(), (opt, cert) => opt.WithSigningCertificate(cert))
+                .ConfigureOptional(EncryptingCertificate(), (opt, cert) => opt.WithEncryptionCertificate(cert))
+                .ConfigureOptional(Audience(), (opt, audience) => opt.WithAudience(audience))
+                .ConfigureOptional(Issuer(), (opt, issuer) => opt.WithIssuer(issuer))
+                .ConfigureSwitch(ExitAfterRequest(), opt => opt.WithAutomaticExitAfterOneRequest());
 
-            void Configure<V>(Func<Errorable<V>> readConfiguration, Func<V, ServerOptions> applyConfiguration)
-            {
-                readConfiguration().Match(
-                    whenSuccessful: value => options = applyConfiguration(value),
-                    whenFailure: e => errors.AddRange(e));
-            }
-
-            void ConfigureOptional<V>(Func<Errorable<V>> readConfiguration, Func<V, ServerOptions> applyConfiguration)
-                where V : class
-            {
-                readConfiguration().Match(
-                    whenSuccessful: value =>
-                    {
-                        if (value != null)
-                        {
-                            options = applyConfiguration(value);
-                        }
-                    },
-                    whenFailure: e => errors.AddRange(e));
-            }
-
-            void ConfigureSwitch(Func<bool> readConfiguration, Func<ServerOptions> applySwitch)
-            {
-                if (readConfiguration())
-                {
-                    options = applySwitch();
-                }
-            }
-
-            Configure(ServerUrl, url => options.WithServerUrl(url));
-            ConfigureOptional(ConnectionCertificate, cert => options.WithConnectionCertificate(cert));
-            ConfigureOptional(SigningCertificate, cert => options.WithSigningCertificate(cert));
-            ConfigureOptional(EncryptingCertificate, cert => options.WithEncryptionCertificate(cert));
-            ConfigureOptional(Audience, audience => options.WithAudience(audience));
-            ConfigureOptional(Issuer, issuer => options.WithIssuer(issuer));
-            ConfigureSwitch(ExitAfterRequest, () => options.WithAutomaticExitAfterOneRequest());
-
-            if (errors.Any())
-            {
-                return Errorable.Failure<ServerOptions>(errors);
-            }
-
-            return Errorable.Success(options);
+            return result;
         }
 
         /// <summary>
@@ -220,9 +184,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Return whether the server should shut down after processing one request
         /// </summary>
         /// <returns></returns>
-        private bool ExitAfterRequest()
+        private Errorable<bool> ExitAfterRequest()
         {
-            return _commandLine.ExitAfterRequest;
+            return Errorable.Success(_commandLine.ExitAfterRequest);
         }
 
         /// <summary>
