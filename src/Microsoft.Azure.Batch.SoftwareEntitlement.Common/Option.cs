@@ -186,15 +186,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="other">Other value to compare with</param>
         /// <returns>True if the two values are equal (value semantics).</returns>
         public bool Equals(IOption<T> other)
-        {
-            if (other == null)
-            {
-                return false;
-            }
+            => other is Some<T> s
+               && Value?.Equals(s.Value) == true;
 
-            var value = Value;
-            return other.Match(() => false, v => Equals(v, value));
-        }
+        /// <summary>
+        /// Test for equality with any other object
+        /// </summary>
+        /// <param name="obj">Object for comparison.</param>
+        /// <returns>True if the same value, false otherwise.</returns>
+        public override bool Equals(object obj)
+            => obj is IOption<T> opt && Equals(opt);
     }
 
     /// <summary>
@@ -209,9 +210,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="other">Other value to compare with</param>
         /// <returns>True if the two values are equal (value semantics).</returns>
         public bool Equals(IOption<T> other)
-        {
-            return other?.GetType() == GetType();
-        }
+            => other is None<T>;
+
+        /// <summary>
+        /// Test for equality with any other object
+        /// </summary>
+        /// <param name="obj">Object for comparison.</param>
+        /// <returns>True if the same value, false otherwise.</returns>
+        public override bool Equals(object obj)
+            => obj is None<T>;
+
 
         /// <summary>
         /// Perform one of two functions based on this option

@@ -87,12 +87,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             }
         }
 
-        public class EqualsMethod : SomeTests
+        public class EqualsOptionMethod : SomeTests
         {
             [Fact]
             public void GivenNull_ReturnsFalse()
             {
-                _option.Equals(null).Should().BeFalse();
+                string nullString = null;
+                _option.Equals(nullString).Should().BeFalse();
             }
 
             [Fact]
@@ -102,10 +103,47 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             }
 
             [Fact]
-            public void GivenEquivilent_ReturnsTrue()
+            public void GivenOther_ReturnsFalse()
+            {
+                var other = Option.Some("other");
+                _option.Equals(other).Should().BeFalse();
+            }
+
+            [Fact]
+            public void GivenEquivalent_ReturnsTrue()
             {
                 var other = Option.Some("sample");
                 _option.Equals(other).Should().BeTrue();
+            }
+        }
+
+        public class EqualsObjectMethod : SomeTests
+        {
+            [Fact]
+            public void GivenNull_ReturnsFalse()
+            {
+                object nullObject = null;
+                _option.Equals(nullObject).Should().BeFalse();
+            }
+
+            [Fact]
+            public void GivenSelf_ReturnsTrue()
+            {
+                object option = _option;
+                _option.Equals(option).Should().BeTrue();
+            }
+
+            [Fact]
+            public void GivenOtherOption_ReturnsFalse()
+            {
+                object other = Option.Some("other");
+                _option.Equals(other).Should().BeFalse();
+            }
+
+            [Fact]
+            public void GivenOtherType_ReturnsFalse()
+            {
+                _option.Equals(this).Should().BeFalse();
             }
         }
     }

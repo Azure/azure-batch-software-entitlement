@@ -88,7 +88,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             }
         }
 
-        public class EqualsMethod : NoneTests
+        public class EqualsOptionMethod : NoneTests
         {
             [Fact]
             public void GivenNull_ReturnsFalse()
@@ -107,6 +107,36 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             {
                 var other = Option.None<string>();
                 _option.Equals(other).Should().BeTrue();
+            }
+        }
+
+        public class EqualsObjectMethod : NoneTests
+        {
+            [Fact]
+            public void GivenNull_ReturnsFalse()
+            {
+                object nullObject = null;
+                _option.Equals(nullObject).Should().BeFalse();
+            }
+
+            [Fact]
+            public void GivenSelf_ReturnsTrue()
+            {
+                object option = _option;
+                _option.Equals(option).Should().BeTrue();
+            }
+
+            [Fact]
+            public void GivenOtherOption_ReturnsFalse()
+            {
+                object other = Option.Some("other");
+                _option.Equals(other).Should().BeFalse();
+            }
+
+            [Fact]
+            public void GivenOtherType_ReturnsFalse()
+            {
+                _option.Equals(this).Should().BeFalse();
             }
         }
     }
