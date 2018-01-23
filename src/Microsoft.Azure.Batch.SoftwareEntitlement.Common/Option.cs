@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
@@ -59,10 +60,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <typeparam name="T">Type of value to wrap.</typeparam>
         /// <param name="value">Value to wrap.</param>
         /// <returns>New instance.</returns>
-        public static IOption<T> Some<T>(T value)
-        {
-            return new Some<T>(value);
-        }
+        public static IOption<T> Some<T>(T value) => new Some<T>(value);
 
         /// <summary>
         /// Create a None{T} for a given type
@@ -79,7 +77,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
     /// Represents the presence of an optional value
     /// </summary>
     /// <typeparam name="T">Type of the value contained.</typeparam>
-    public struct Some<T> : IOption<T>
+    public sealed class Some<T> : IOption<T>
     {
         /// <summary>
         /// Gets the value contained by this Some{T}
