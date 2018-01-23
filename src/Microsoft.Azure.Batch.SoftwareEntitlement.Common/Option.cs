@@ -196,6 +196,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <returns>True if the same value, false otherwise.</returns>
         public override bool Equals(object obj)
             => obj is IOption<T> opt && Equals(opt);
+
+        /// <summary>
+        /// Calculate a hash code for this instance
+        /// </summary>
+        /// <remarks>We just reuse the hash code of the instance we wrap.</remarks>
+        public override int GetHashCode() => Value.GetHashCode();
     }
 
     /// <summary>
@@ -220,6 +226,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         public override bool Equals(object obj)
             => obj is None<T>;
 
+        /// <summary>
+        /// Calculate a hash code for this instance
+        /// </summary>
+        /// <remarks>We just reuse the hash code of the instance we wrap.</remarks>
+        public override int GetHashCode() => 0;
 
         /// <summary>
         /// Perform one of two functions based on this option
