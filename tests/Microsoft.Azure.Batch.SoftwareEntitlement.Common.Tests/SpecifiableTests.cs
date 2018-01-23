@@ -7,6 +7,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
     {
         private readonly Specifiable<string> _defaultOfString = default;
 
+        // Values to specify
+        private readonly string _thisStringValue = "this";
+        private readonly string _nullStringValue;
+
         public class Construction : SpecifiableTests
         {
             [Fact]
@@ -26,62 +30,58 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void CreatedWithValue_IsSpecified()
             {
-                const string value = "test";
-                var result = new Specifiable<string>(value);
+                var result = new Specifiable<string>(_thisStringValue);
                 result.IsSpecified.Should().BeTrue();
             }
 
             [Fact]
             public void CreatedWithNull_IsSpecified()
             {
-                const string value = null;
-                var result = new Specifiable<string>(value);
+                var result = new Specifiable<string>(_nullStringValue);
+                result.IsSpecified.Should().BeTrue();
+            }
+        }
+
+        public class SpecifyAs : SpecifiableTests
+        {
+            [Fact]
+            public void WithValue_IsSpecified()
+            {
+                var result = Specify.As(_thisStringValue);
                 result.IsSpecified.Should().BeTrue();
             }
 
             [Fact]
-            public void CreatedBySpecifyAsValue_IsSpecified()
+            public void WithNull_IsSpecified()
             {
-                const string value = "test";
-                var result = Specify.As(value);
-                result.IsSpecified.Should().BeTrue();
-            }
-
-            [Fact]
-            public void CreatedBySpecifyAsNull_IsSpecified()
-            {
-                const string value = null;
-                var result = Specify.As(value);
+                var result = Specify.As(_nullStringValue);
                 result.IsSpecified.Should().BeTrue();
             }
         }
 
         public class OrDefault : SpecifiableTests
         {
+            private readonly string _otherStringValue = "other";
+
             [Fact]
             public void WhenSpecifiedAsValue_ReturnsInstanceValue()
             {
-                const string thisValue = "this";
-                const string otherValue = "other";
-                var result = Specify.As(thisValue).OrDefault(otherValue);
-                result.Should().Be(thisValue);
+                var result = Specify.As(_thisStringValue).OrDefault(_otherStringValue);
+                result.Should().Be(_thisStringValue);
             }
 
             [Fact]
             public void WhenSpecifiedAsNull_ReturnsNull()
             {
-                const string thisValue = null;
-                const string otherValue = "other";
-                var result = Specify.As(thisValue).OrDefault(otherValue);
+                var result = Specify.As(_nullStringValue).OrDefault(_otherStringValue);
                 result.Should().BeNull();
             }
 
             [Fact]
             public void WhenNotSpecified_ReturnsOtherValue()
             {
-                const string otherValue = "other";
-                var result = _defaultOfString.OrDefault(otherValue);
-                result.Should().Be(otherValue);
+                var result = _defaultOfString.OrDefault(_otherStringValue);
+                result.Should().Be(_otherStringValue);
             }
         }
     }

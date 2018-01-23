@@ -13,7 +13,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <summary>
         /// Whether the value is specified.
         /// </summary>
-        public bool IsSpecified;
+        public bool IsSpecified { get; }
 
         private T _value;
 
