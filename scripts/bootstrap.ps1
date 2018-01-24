@@ -4,6 +4,8 @@
 ## If psake is not already available, it probes several likely locations to try and find it
 ## 
 
+# This helper function is used to try and load Psake from a specified folder
+# If multiple copies of psake are found, it will load the most recent release (by version number)
 function TryLoad-Psake($path) {
     $psakeModule = get-module psake
     if ($psakeModule -ne $null) {
