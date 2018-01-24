@@ -44,7 +44,12 @@ if ((get-module psake) -eq $null) {
 }
 
 if ((get-module psake) -eq $null) {
-    # Still not loaded, let's try the various NuGet caches
+    # Still not loaded, let's download it and then look in the various NuGet caches
+
+    pushd .\src\sestest
+    dotnet add package psake | Out-Null
+    popd
+
     $locals = $null
     $nuget = get-command nuget -ErrorAction SilentlyContinue
     $dotnet = get-command dotnet -ErrorAction SilentlyContinue
