@@ -38,11 +38,19 @@ if ((get-module psake) -eq $null) {
 
 if ((get-module psake) -eq $null) {
     # Still not loaded, let's try the various NuGet caches
-    $locals = .\nuget locals all -list
+    $locals = $null
+    $nuget = get-command nuget -ErrorAction SilentlyContinue
+    $dotnet = get-command dotnet -ErrorAction SilentlyContinue
+    if ($nuget -ne $null) {
+        $locals = & $nuget locals all -list
+    } elseif ($dotnet -ne $null) {
+        $locals = & $dotnet nuget locals all --list
+    }
+
     foreach($local in $locals)
     {
-        $index = $local.IndexOf(":")
-        $folder = $local.Substring($index + 2)
+        $index = $local.LastIndexOf(":")
+        $folder = $local.Substring($index - 1)
         TryLoad-Psake $folder
     }
 }
