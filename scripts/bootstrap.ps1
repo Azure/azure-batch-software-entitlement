@@ -37,6 +37,11 @@ if ((get-module psake) -eq $null) {
 }
 
 if ((get-module psake) -eq $null) {
+    # Not yet loaded, try to load it from the chocolatey installation library
+    TryLoad-Psake $env:ProgramData\chocolatey\lib
+}
+
+if ((get-module psake) -eq $null) {
     # Still not loaded, let's try the various NuGet caches
     $locals = $null
     $nuget = get-command nuget -ErrorAction SilentlyContinue
