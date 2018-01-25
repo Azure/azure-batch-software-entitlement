@@ -19,7 +19,7 @@ function TryLoad-Psake($path) {
     $psakePath = get-childitem $path\psake*\psake.psm1 -ErrorAction SilentlyContinue -Recurse | Sort-Object $toNatural | select-object -last 1
 
     if ($psakePath -eq $null) {
-        Write-Output "[!] Psake not found at $path"
+        Write-Output "[x] Psake not found within $path"
     } else {
         import-module $psakePath
     }
@@ -54,15 +54,20 @@ if ((get-module psake) -eq $null) {
     $nuget = get-command nuget -ErrorAction SilentlyContinue
     $dotnet = get-command dotnet -ErrorAction SilentlyContinue
     if ($nuget -ne $null) {
+        # nuget returns a list of the form "label : folder"
+        Write-Output "[-] Finding NuGet caches via nuget.exe"
         $locals = & $nuget locals all -list
     } elseif ($dotnet -ne $null) {
-        $locals = & $dotnet nuget locals all --list
+        # dotnet returns a list of the form "info : label : folder"
+        # So we strip "info : " from the start of each line
+        Write-Output "[-] Finding NuGet caches via dotnet.exe"
+        $locals = & $dotnet nuget locals all --list | % { $_.SubString(7) }
     }
 
     foreach($local in $locals)
     {
-        $index = $local.LastIndexOf(":")
-        $folder = $local.Substring($index - 1)
+        $index = $local.IndexOf(":")
+        $folder = $local.Substring($index + 1).Trim()
         TryLoad-Psake $folder
     }
 }
@@ -73,8 +78,11 @@ if ($psake -ne $null) {
     Write-Output "[+] Psake loaded from $psakePath"
 }
 else {
-    throw "Unable to load psake"
+    Write-Output "[!]"
+    Write-Output "[!] ***** Unable to load PSake *****"
+    Write-Output "[!]"
+    Write-Output "[?] Try running 'dotnet restore' to download it, then rerun the build."
+    throw "PSake not loaded"
 }
 
 Write-Output ""
-
