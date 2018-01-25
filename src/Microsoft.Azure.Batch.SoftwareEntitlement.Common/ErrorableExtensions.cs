@@ -324,33 +324,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         }
 
         /// <summary>
-        /// Configure an existing subject using an optionally supplied value and transformation
-        /// </summary>
-        /// <remarks>Preserves any/all errors present on <paramref name="subject"/> and <paramref name="value"/>.</remarks>
-        /// <typeparam name="S">Type of the subject to configure.</typeparam>
-        /// <typeparam name="V">Type of the value to use for configuration.</typeparam>
-        /// <param name="subject">Subject instance to configure, wrapped as an <see cref="Errorable{T}"/></param>
-        /// <param name="value">Value to use for configuration, wrapped as an <see cref="Errorable{T}"/>; null if not available.</param>
-        /// <param name="applyConfiguration">Action to use for configuration.</param>
-        /// <returns>Result of configuration.</returns>
-        public static Errorable<S> ConfigureOptional<S, V>(this Errorable<S> subject, Errorable<V> value, Func<S, V, S> applyConfiguration)
-            where V : class
-        {
-            if (subject == null)
-            {
-                throw new ArgumentNullException(nameof(subject));
-            }
-
-            if (value == null)
-            {
-                return subject;
-            }
-
-            return subject.With(value).Map((s, v) => v != null ? applyConfiguration(s, v) : s);
-        }
-
-
-        /// <summary>
         /// Configure an existing subject using a sequences of supplied values and transformation for each one
         /// </summary>
         /// <remarks>Preserves any/all errors present on <paramref name="subject"/> and <paramref name="values"/>.</remarks>
@@ -373,31 +346,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             }
 
             return values.Aggregate(subject, (current, v) => current.With(v).Map(applyConfiguration));
-        }
-
-
-        /// <summary>
-        /// Configure an existing subject using a bool value and transformation to apply if true
-        /// </summary>
-        /// <remarks>Preserves any/all errors present on <paramref name="subject"/> and <paramref name="value"/>.</remarks>
-        /// <typeparam name="S">Type of the subject to configure.</typeparam>
-        /// <param name="subject">Subject instance to configure, wrapped as an <see cref="Errorable{T}"/>.</param>
-        /// <param name="value">Switch value to use (if true, our configuration will be activated).</param>
-        /// <param name="applyConfiguration">Action to use for configuration.</param>
-        /// <returns>Result of configuration.</returns>
-        public static Errorable<S> ConfigureSwitch<S>(this Errorable<S> subject, Errorable<bool> value, Func<S, S> applyConfiguration)
-        {
-            if (subject == null)
-            {
-                throw new ArgumentNullException(nameof(subject));
-            }
-
-            if (value == null)
-            {
-                throw new ArgumentNullException(nameof(value));
-            }
-
-            return subject.With(value).Map((s, v) => v ? applyConfiguration(s) : s);
         }
     }
 }
