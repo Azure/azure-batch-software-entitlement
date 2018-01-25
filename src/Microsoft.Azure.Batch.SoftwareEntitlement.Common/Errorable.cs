@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -172,7 +172,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 
             public override bool HasValue => false;
 
-            public override T Value => throw new InvalidOperationException($"No value of type {typeof(T).Name} available.");
+            public override T Value => throw new InvalidOperationException(
+                $"No value of type {typeof(T).Name} available ({string.Join("; ", Errors)}).");
 
             public override ImmutableHashSet<string> Errors { get; }
 

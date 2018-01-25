@@ -67,7 +67,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>Exit code to return from this process.</returns>
         public static async Task<int> Serve(ServerCommandLine commandLine)
         {
-            var options = ServerOptionBuilder.Build(commandLine);
+            var options = new ServerOptionBuilder(commandLine).Build();
             return await options.Match(
                 RunServer,
                 errors =>
