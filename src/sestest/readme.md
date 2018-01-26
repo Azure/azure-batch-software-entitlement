@@ -69,7 +69,7 @@ The `generate` mode allows you to generate a software entitlement token with the
 
 |   Parameter   | Required  |                                                                                                                Definition                                                                                                                 |
 | ------------- | --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| --application | Mandatory | Unique identifier(s) for the application(s) to include (comma separated).                                                                                                                                                                 |
+| --application-id | Mandatory | Unique identifier(s) for the application(s) to include (comma separated).                                                                                                                                                                 |
 | --not-before  | Optional  | The moment at which the token becomes active and the application is entitled to execute <br/> Format: 'yyyy-mm-ddThh-mm'; 24 hour clock; local time; defaults to now.                                                                     |
 | --not-after   | Optional  | The moment at which the token expires and the application is no longer entitled to execute <br/> Format: 'yyyy-mm-ddThh-mm'; 24 hour clock; local time; defaults to 7 days from now.                                                      |
 | --address     | Optional  | The IP addresses of the machine entitled to execute the application(s). <br/> Defaults to all the IP addresses of the current machine.                                                                                                    |
@@ -82,7 +82,7 @@ You can see this documentation for yourself by running `sestest generate --help`
 
 The exit code for `sestest generate` will be zero (**0**) if a token was correctly generated, non-zero (typically **-1**) if there were any issues.
 
-**PowerShell users**: If you want to list multiple values for the `--application` parameter, wrap the entire list in double quotes to avoid PowerShell interpreting the comma (`,`) for array construction: `--application "app, app, app"`.
+**PowerShell users**: If you want to list multiple values for the `--application-id` parameter, wrap the entire list in double quotes to avoid PowerShell interpreting the comma (`,`) for array construction: `--application-id "app, app, app"`.
 
 The additional parameters `--audience` and `--issuer`  are provided for use by the Azure Batch software engineering team. They allow control of the `aud` and `iss` claims embedded in the generated software entitlement token and can be ignored except in specific testing scenarios. The default values for these parameters are defined as constants in the `Claims` class.
 
