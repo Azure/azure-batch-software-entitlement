@@ -72,7 +72,13 @@ if ((get-module psake) -eq $null) {
     TryLoad-Psake-ViaNuGetCache
 }
 
+if ((get-module psake) -eq $null) {
+    # STILL not loaded, let's try to install it via dotnet, then probe again
+    Write-Output "[!] Running 'dotnet restore' to download psake"
+    dotnet restore .\src\sestest\sestest.csproj --verbosity minimal
+    TryLoad-Psake-ViaNuGetCache
 }
+
 
 $psake = get-module psake
 if ($psake -ne $null) {
@@ -83,7 +89,6 @@ else {
     Write-Output "[!]"
     Write-Output "[!] ***** Unable to load PSake *****"
     Write-Output "[!]"
-    Write-Output "[?] Try running 'dotnet restore' to download it, then rerun the build."
     throw "PSake not loaded"
 }
 
