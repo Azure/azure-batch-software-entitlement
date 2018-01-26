@@ -25,26 +25,8 @@ function TryLoad-Psake($path) {
     }
 }
 
-# Try to load a local copy first (so we can ensure a particular version is used)
-TryLoad-Psake .\lib\psake
-
-if ((get-module psake) -eq $null) {
-    # Don't have psake loaded, try to load it from PowerShell's default module location
-    import-module psake -ErrorAction SilentlyContinue
-}
-
-if ((get-module psake) -eq $null) {
-    # Not yet loaded, try to load it from the packages folder
-    TryLoad-Psake ".\packages\"
-}
-
-if ((get-module psake) -eq $null) {
-    # Not yet loaded, try to load it from the chocolatey installation library
-    TryLoad-Psake $env:ProgramData\chocolatey\lib
-}
-
-if ((get-module psake) -eq $null) {
-    # Still not loaded, let's look in the various NuGet caches
+function TryLoad-Psake-ViaNuGetCache()
+{
     $locals = $null
     $nuget = get-command nuget -ErrorAction SilentlyContinue
     $dotnet = get-command dotnet -ErrorAction SilentlyContinue
@@ -65,6 +47,31 @@ if ((get-module psake) -eq $null) {
         $folder = $local.Substring($index + 1).Trim()
         TryLoad-Psake $folder
     }
+}
+
+# Try to load a local copy first (so we can ensure a particular version is used)
+TryLoad-Psake .\lib\psake
+
+if ((get-module psake) -eq $null) {
+    # Don't have psake loaded, try to load it from PowerShell's default module location
+    import-module psake -ErrorAction SilentlyContinue
+}
+
+if ((get-module psake) -eq $null) {
+    # Not yet loaded, try to load it from the packages folder
+    TryLoad-Psake ".\packages\"
+}
+
+if ((get-module psake) -eq $null) {
+    # Not yet loaded, try to load it from the chocolatey installation library
+    TryLoad-Psake $env:ProgramData\chocolatey\lib
+}
+
+if ((get-module psake) -eq $null) {
+    # Still not loaded, let's look in the various NuGet caches
+    TryLoad-Psake-ViaNuGetCache
+}
+
 }
 
 $psake = get-module psake
