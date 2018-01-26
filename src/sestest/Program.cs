@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
@@ -16,6 +15,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         // Provider used for ASP.NET logging
         private static ILoggerProvider _provider;
+
+        private static ICertificateStore _certificateStore = new CertificateStore();
 
         public static async Task<int> Main(string[] args)
         {
@@ -67,7 +68,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>Exit code to return from this process.</returns>
         public static async Task<int> Serve(ServerCommandLine commandLine)
         {
-            var options = ServerOptionBuilder.Build(commandLine);
+            var builder = new ServerOptionBuilder(commandLine, _certificateStore);
+            var options = builder.Build();
             return await options.Match(
                 RunServer,
                 errors =>
