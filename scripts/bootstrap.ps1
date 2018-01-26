@@ -4,6 +4,8 @@
 ## If psake is not already available, it probes several likely locations to try and find it
 ## 
 
+# This helper function is used to try and load Psake from a specified folder
+# If multiple copies of psake are found, it will load the most recent release (by version number)
 function TryLoad-Psake($path) {
     $psakeModule = get-module psake
     if ($psakeModule -ne $null) {
@@ -17,9 +19,33 @@ function TryLoad-Psake($path) {
     $psakePath = get-childitem $path\psake*\psake.psm1 -ErrorAction SilentlyContinue -Recurse | Sort-Object $toNatural | select-object -last 1
 
     if ($psakePath -eq $null) {
-        Write-Output "[!] Psake not found at $path"
+        Write-Output "[x] Psake not found within $path"
     } else {
         import-module $psakePath
+    }
+}
+
+function TryLoad-Psake-ViaNuGetCache()
+{
+    $locals = $null
+    $nuget = get-command nuget -ErrorAction SilentlyContinue
+    $dotnet = get-command dotnet -ErrorAction SilentlyContinue
+    if ($nuget -ne $null) {
+        # nuget returns a list of the form "label : folder"
+        Write-Output "[-] Finding NuGet caches via nuget.exe"
+        $locals = & $nuget locals all -list
+    } elseif ($dotnet -ne $null) {
+        # dotnet returns a list of the form "info : label : folder"
+        # So we strip "info : " from the start of each line
+        Write-Output "[-] Finding NuGet caches via dotnet.exe"
+        $locals = & $dotnet nuget locals all --list | % { $_.SubString(7) }
+    }
+
+    foreach($local in $locals)
+    {
+        $index = $local.IndexOf(":")
+        $folder = $local.Substring($index + 1).Trim()
+        TryLoad-Psake $folder
     }
 }
 
@@ -37,15 +63,22 @@ if ((get-module psake) -eq $null) {
 }
 
 if ((get-module psake) -eq $null) {
-    # Still not loaded, let's try the various NuGet caches
-    $locals = .\nuget locals all -list
-    foreach($local in $locals)
-    {
-        $index = $local.IndexOf(":")
-        $folder = $local.Substring($index + 2)
-        TryLoad-Psake $folder
-    }
+    # Not yet loaded, try to load it from the chocolatey installation library
+    TryLoad-Psake $env:ProgramData\chocolatey\lib
 }
+
+if ((get-module psake) -eq $null) {
+    # Still not loaded, let's look in the various NuGet caches
+    TryLoad-Psake-ViaNuGetCache
+}
+
+if ((get-module psake) -eq $null) {
+    # STILL not loaded, let's try to install it via dotnet, then probe again
+    Write-Output "[!] Running 'dotnet restore' to download psake"
+    dotnet restore .\src\sestest\sestest.csproj --verbosity minimal
+    TryLoad-Psake-ViaNuGetCache
+}
+
 
 $psake = get-module psake
 if ($psake -ne $null) {
@@ -53,8 +86,10 @@ if ($psake -ne $null) {
     Write-Output "[+] Psake loaded from $psakePath"
 }
 else {
-    throw "Unable to load psake"
+    Write-Output "[!]"
+    Write-Output "[!] ***** Unable to load PSake *****"
+    Write-Output "[!]"
+    throw "PSake not loaded"
 }
 
 Write-Output ""
-
