@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 
@@ -16,38 +14,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         private readonly ServerCommandLine _commandLine;
 
         // Reference to a store in which we can search for certificates
-        private readonly CertificateStore _certificateStore = new CertificateStore();
-
-        // Options used to configure validation
-        private readonly ServerOptionBuilderOptions _options;
-
-        /// <summary>
-        /// Build an instance of <see cref="ServerOptions"/> from the information supplied on the 
-        /// command line by the user
-        /// </summary>
-        /// <param name="commandLine">Command line parameters supplied by the user.</param>
-        /// <param name="options">Options for configuring validation.</param>
-        /// <returns>Either a usable (and completely valid) <see cref="ServerOptions"/> or a set 
-        /// of errors.</returns>
-        public static Errorable<ServerOptions> Build(
-            ServerCommandLine commandLine,
-            ServerOptionBuilderOptions options = ServerOptionBuilderOptions.None)
-        {
-            var builder = new ServerOptionBuilder(commandLine, options);
-            return builder.Build();
-        }
+        private readonly ICertificateStore _certificateStore;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ServerOptionBuilder"/> class
         /// </summary>
         /// <param name="commandLine">Options provided on the command line.</param>
-        /// <param name="options">Options for configuring validation.</param>
-        private ServerOptionBuilder(
+        /// <param name="certificateStore">A store to check supplied certificates against.</param>
+        public ServerOptionBuilder(
             ServerCommandLine commandLine,
-            ServerOptionBuilderOptions options)
+            ICertificateStore certificateStore)
         {
             _commandLine = commandLine;
-            _options = options;
+            _certificateStore = certificateStore;
         }
 
         /// <summary>
@@ -56,7 +35,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <returns>Either a usable (and completely valid) <see cref="ServerOptions"/> or a set 
         /// of errors.</returns>
-        private Errorable<ServerOptions> Build()
+        public Errorable<ServerOptions> Build()
         {
             var result = Errorable.Success(new ServerOptions())
                 .Configure(ServerUrl(), (opt, url) => opt.WithServerUrl(url))
@@ -79,11 +58,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (string.IsNullOrWhiteSpace(_commandLine.ServerUrl))
             {
-                if (_options.HasFlag(ServerOptionBuilderOptions.ServerUrlOptional))
-                {
-                    return Errorable.Success(new Uri("http://test"));
-                }
-
                 return Errorable.Failure<Uri>("No server endpoint URL specified.");
             }
 
@@ -111,11 +85,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (string.IsNullOrEmpty(_commandLine.ConnectionCertificateThumbprint))
             {
-                if (_options.HasFlag(ServerOptionBuilderOptions.ConnectionThumbprintOptional))
-                {
-                    return Errorable.Success<X509Certificate2>(null);
-                }
-
                 return Errorable.Failure<X509Certificate2>("A connection thumbprint is required.");
             }
 
@@ -205,13 +174,5 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var certificateThumbprint = new CertificateThumbprint(thumbprint);
             return _certificateStore.FindByThumbprint(purpose, certificateThumbprint);
         }
-    }
-
-    [Flags]
-    public enum ServerOptionBuilderOptions
-    {
-        None,
-        ServerUrlOptional,
-        ConnectionThumbprintOptional
     }
 }
