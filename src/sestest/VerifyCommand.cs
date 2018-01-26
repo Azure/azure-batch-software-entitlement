@@ -119,7 +119,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             try
             {
-                return Errorable.Success(new Uri(commandLine.Server));
+                return Errorable.Success(new Uri(server));
             }
             catch (UriFormatException ex)
             {
