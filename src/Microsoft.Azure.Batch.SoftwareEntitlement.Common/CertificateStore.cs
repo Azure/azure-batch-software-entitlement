@@ -2,14 +2,35 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
-using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
     /// <summary>
     /// A simple abstraction over the framework supplied store classes
     /// </summary>
-    public sealed class CertificateStore
+    public interface ICertificateStore
+    {
+        /// <summary>
+        /// Find all certificates by looking in the specified location
+        /// </summary>
+        /// <param name="storeName">Name of the store to search within.</param>
+        /// <param name="storeLocation">Location within the store to check.</param>
+        /// <returns>Certificate, if found; null otherwise.</returns>
+        IEnumerable<X509Certificate2> FindAll();
+
+        /// <summary>
+        /// Find a certificate based on the provided thumbprint
+        /// </summary>
+        /// <param name="purpose">A use for which the certificate is needed (for human consumption).</param>
+        /// <param name="thumbprint">Thumbprint of the certificate we need.</param>
+        /// <returns>Certificate, if found; null otherwise.</returns>
+        Errorable<X509Certificate2> FindByThumbprint(string purpose, CertificateThumbprint thumbprint);
+    }
+
+    /// <summary>
+    /// A simple abstraction over the framework supplied store classes
+    /// </summary>
+    public sealed class CertificateStore : ICertificateStore
     {
         // A list of StoreNames where we should look when finding certificates
         private readonly List<StoreName> _storeNames;
