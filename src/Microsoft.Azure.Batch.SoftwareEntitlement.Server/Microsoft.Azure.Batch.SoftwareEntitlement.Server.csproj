@@ -29,7 +29,7 @@
     <PackageReference Include="Microsoft.AspNetCore.StaticFiles" Version="2.0.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="2.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
-    <PackageReference Include="Roslynator.Analyzers" Version="1.5.0" />
+    <PackageReference Include="Roslynator.Analyzers" Version="1.6.0" />
     <PackageReference Include="System.Runtime.Analyzers" Version="1.1.0" />
   </ItemGroup>
   <ItemGroup>
