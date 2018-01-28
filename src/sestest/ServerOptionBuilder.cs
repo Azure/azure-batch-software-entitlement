@@ -39,12 +39,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             var result = Errorable.Success(new ServerOptions())
                 .Configure(ServerUrl(), (opt, url) => opt.WithServerUrl(url))
-                .ConfigureOptional(ConnectionCertificate(), (opt, cert) => opt.WithConnectionCertificate(cert))
-                .ConfigureOptional(SigningCertificate(), (opt, cert) => opt.WithSigningCertificate(cert))
-                .ConfigureOptional(EncryptingCertificate(), (opt, cert) => opt.WithEncryptionCertificate(cert))
-                .ConfigureOptional(Audience(), (opt, audience) => opt.WithAudience(audience))
-                .ConfigureOptional(Issuer(), (opt, issuer) => opt.WithIssuer(issuer))
-                .ConfigureSwitch(ExitAfterRequest(), opt => opt.WithAutomaticExitAfterOneRequest());
+                .Configure(ConnectionCertificate(), (opt, cert) => opt.WithConnectionCertificate(cert))
+                .Configure(SigningCertificate(), (opt, cert) => opt.WithSigningCertificate(cert))
+                .Configure(EncryptingCertificate(), (opt, cert) => opt.WithEncryptionCertificate(cert))
+                .Configure(Audience(), (opt, audience) => opt.WithAudience(audience))
+                .Configure(Issuer(), (opt, issuer) => opt.WithIssuer(issuer))
+                .Configure(ExitAfterRequest(), (opt, exit) => opt.WithAutomaticExitAfterOneRequest(exit));
 
             return result;
         }
@@ -56,14 +56,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// relevant errors.</returns>
         private Errorable<Uri> ServerUrl()
         {
-            if (string.IsNullOrWhiteSpace(_commandLine.ServerUrl))
-            {
-                return Errorable.Failure<Uri>("No server endpoint URL specified.");
-            }
+            // If the server URL is not specified, default it.
+            var serverUrl = string.IsNullOrWhiteSpace(_commandLine.ServerUrl)
+                ? ServerCommandLine.DefaultServerUrl
+                : _commandLine.ServerUrl;
 
             try
             {
-                var result = new Uri(_commandLine.ServerUrl);
+                var result = new Uri(serverUrl);
                 if (!result.HasScheme("https"))
                 {
                     return Errorable.Failure<Uri>("Server endpoint URL must specify https://");

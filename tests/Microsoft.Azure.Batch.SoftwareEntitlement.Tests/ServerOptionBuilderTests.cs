@@ -21,7 +21,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             ConnectionCertificateThumbprint = ConnectionCertificateThumbprint.ToString()
         };
 
-        // Permissive options to bypass mandatory errors when testing other properties
         private const string CertificateNotFoundError = "Certificate not found test error";
 
         private readonly ICertificateStore _certificateStore = new FakeCertificateStore(
@@ -31,19 +30,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         public class ServerUrl : ServerOptionBuilderTests
         {
             [Fact]
-            public void Build_WithEmptyServerUrl_DoesNotReturnValue()
+            public void Build_WithEmptyServerUrl_SetsDefaultServerUrl()
             {
                 _commandLine.ServerUrl = string.Empty;
                 var options = new ServerOptionBuilder(_commandLine, _certificateStore).Build();
-                options.HasValue.Should().BeFalse();
-            }
-
-            [Fact]
-            public void Build_WithEmptyServerUrl_HasErrorForServerUrl()
-            {
-                _commandLine.ServerUrl = string.Empty;
-                var options = new ServerOptionBuilder(_commandLine, _certificateStore).Build();
-                options.Errors.Should().Contain(e => e.Contains("server endpoint URL"));
+                options.Value.ServerUrl.Should().Be(ServerCommandLine.DefaultServerUrl);
             }
 
             [Fact]
