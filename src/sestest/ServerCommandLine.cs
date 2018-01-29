@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using CommandLine;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
@@ -20,6 +21,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public string ConnectionCertificateThumbprint { get; set; }
 
         [Option("url", HelpText = "The URL at which the server should process requests (defaults to '" + DefaultServerUrl + "'; must start with 'https:').")]
+        [SuppressMessage(
+            "Design",
+            "CA1056:Uri properties should not be strings",
+            Justification = "Must be a string to support our commandline.")]
         public string ServerUrl { get; set; }
 
         [Option("audience", HelpText = "[Internal] Audience to which all tokens must be addressed (optional).")]
