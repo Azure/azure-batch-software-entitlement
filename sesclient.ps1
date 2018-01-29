@@ -10,7 +10,7 @@ $sesclient = get-childitem $PSScriptRoot\x64\sesclient.native.exe -recurse | sor
 if ($sesclient -eq $null) 
 {
     Write-Host "Could not find 'sesclient.native.exe' within $PSScriptRoot\x64" -ForegroundColor Red
-    Write-Host "Do you need to run a build?" -ForegroundColor Blue
+    Write-Host "Do you need to run a build?" -ForegroundColor Yellow
     exit -1
 }
 
