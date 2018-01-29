@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -69,8 +70,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 cert.SubjectName.Name,
                 cert.FriendlyName,
                 cert.Thumbprint,
-                cert.NotBefore.ToString(dateFormat),
-                cert.NotAfter.ToString(dateFormat),
+                cert.NotBefore.ToString(dateFormat, CultureInfo.InvariantCulture),
+                cert.NotAfter.ToString(dateFormat, CultureInfo.InvariantCulture),
                 status
             };
         }

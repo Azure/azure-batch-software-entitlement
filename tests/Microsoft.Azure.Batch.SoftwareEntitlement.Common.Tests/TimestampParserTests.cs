@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Globalization;
 using FluentAssertions;
 using Xunit;
 
@@ -43,7 +44,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenTimestampInExpectedFormat_ReturnsExpectedValue()
             {
-                var valueToParse = _timestamp.ToString(TimestampParser.ExpectedFormat);
+                var valueToParse = _timestamp.ToString(TimestampParser.ExpectedFormat, CultureInfo.InvariantCulture);
                 var result = _parser.TryParse(valueToParse, _name);
                 result.HasValue.Should().BeTrue();
                 result.Value.Should().Be(_timestamp);
@@ -52,7 +53,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenTimestampInDifferentFormat_ReturnsExpectedValue()
             {
-                var valueToParse = _timestamp.ToString("G");
+                var valueToParse = _timestamp.ToString("G", CultureInfo.InvariantCulture);
                 var result = _parser.TryParse(valueToParse, _name);
                 result.HasValue.Should().BeTrue();
                 result.Value.Should().Be(_timestamp);

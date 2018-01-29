@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Net;
@@ -210,13 +211,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         private static Errorable<NodeEntitlements> TokenNotYetValidError(DateTime notBefore)
         {
-            var timestamp = notBefore.ToString(TimestampParser.ExpectedFormat);
+            var timestamp = notBefore.ToString(TimestampParser.ExpectedFormat, CultureInfo.InvariantCulture);
             return Errorable.Failure<NodeEntitlements>($"Token will not be valid until {timestamp}");
         }
 
         private static Errorable<NodeEntitlements> TokenExpiredError(DateTime expires)
         {
-            var timestamp = expires.ToString(TimestampParser.ExpectedFormat);
+            var timestamp = expires.ToString(TimestampParser.ExpectedFormat, CultureInfo.InvariantCulture);
             return Errorable.Failure<NodeEntitlements>($"Token expired at {timestamp}");
         }
 
