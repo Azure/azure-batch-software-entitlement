@@ -35,8 +35,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             Errorable<string> app = FindApplication(commandLine);
             Errorable<string> api = FindApiVersion(commandLine);
 
-            Errorable<string> result = await server.With(token).With(app).With(api)
-                .MapAsync(SubmitToken);
+            Errorable<string> result = await server.With(token)
+                .With(app)
+                .With(api)
+                .MapAsync(SubmitToken)
+                .ConfigureAwait(false);
             return result.Match(response =>
                 {
                     Logger.LogJson(response);
@@ -72,7 +75,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 var result = await client.PostAsync(uri, content).ConfigureAwait(false);
                 Logger.LogInformation($"Status Code: {result.StatusCode} ({(int) result.StatusCode})");
 
-                return await result.Content.ReadAsStringAsync();
+                return await result.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
         }
 
