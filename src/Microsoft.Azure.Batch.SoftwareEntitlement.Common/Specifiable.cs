@@ -50,8 +50,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="other">Other specifiable for comparison.</param>
         /// <returns>True if both contain the same value, false otherwise.</returns>
         public bool Equals(Specifiable<T> other)
-            => ReferenceEquals(_value, other._value)
-               || (_value?.Equals(other._value) ?? false);
+            => IsSpecified == other.IsSpecified
+               && Equals(_value, other._value);
 
         /// <summary>
         /// Test to see if another object is equal to this instance

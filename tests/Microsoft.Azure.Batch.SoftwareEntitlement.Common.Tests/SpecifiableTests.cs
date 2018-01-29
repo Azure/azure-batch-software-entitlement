@@ -118,6 +118,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
 
             private readonly Specifiable<string> _null = Specify.As<string>(null);
 
+            private readonly Specifiable<string> _unspecified = new Specifiable<string>();
+
             [Fact]
             public void GivenSelf_ReturnsTrue()
             {
@@ -128,6 +130,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             public void GivenOther_ReturnsFalse()
             {
                 _sample.Equals(_other).Should().BeFalse();
+            }
+
+            [Fact]
+            public void GivenUnspecified_ReturnsFalse()
+            {
+                _sample.Equals(_unspecified).Should().BeFalse();
             }
 
             [Fact]
@@ -146,6 +154,30 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             public void ContainingNullGivenOther_ReturnsFalse()
             {
                 _null.Equals(_other).Should().BeFalse();
+            }
+
+            [Fact]
+            public void ContainingNullGivenUnspecified_ReturnsFalse()
+            {
+                _null.Equals(_unspecified).Should().BeFalse();
+            }
+
+            [Fact]
+            public void WhenUnspecified_EqualsSelf()
+            {
+                _unspecified.Equals(_unspecified).Should().BeTrue();
+            }
+
+            [Fact]
+            public void WhenUnspecified_DoesNotEqualOther()
+            {
+                _unspecified.Equals(_other).Should().BeFalse();
+            }
+
+            [Fact]
+            public void WhenUnspecified_DoesNotEqualNull()
+            {
+                _unspecified.Equals(_null).Should().BeFalse();
             }
         }
     }
