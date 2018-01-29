@@ -169,7 +169,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="principal">Principal from the decoded token.</param>
         /// <param name="application">Application that desires to use the entitlement.</param>
         /// <returns>True if the entitlement specifies the passed application, false otherwise.</returns>
-        private bool VerifyApplication(ClaimsPrincipal principal, string application)
+        private static bool VerifyApplication(ClaimsPrincipal principal, string application)
         {
             var applicationsClaim = principal.FindAll(Claims.Application);
             if (!applicationsClaim.Any(c => string.Equals(c.Value, application, StringComparison.OrdinalIgnoreCase)))
@@ -188,7 +188,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="address">IpAddress requesting verification of the token.</param>
         /// <returns>True if the entitlement was issued to the specified IP address, false
         /// otherwise.</returns>
-        private bool VerifyIpAddress(ClaimsPrincipal principal, IPAddress address)
+        private static bool VerifyIpAddress(ClaimsPrincipal principal, IPAddress address)
         {
             var ipAddressClaims = principal.FindAll(Claims.IpAddress).ToList();
             foreach (var ipClaim in ipAddressClaims)
@@ -227,19 +227,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 $"Invalid token ({reason})");
         }
 
-        private Errorable<NodeEntitlements> ApplicationNotEntitledError(string application)
+        private static Errorable<NodeEntitlements> ApplicationNotEntitledError(string application)
         {
             return Errorable.Failure<NodeEntitlements>(
                 $"Token does not grant entitlement for {application}");
         }
 
-        private Errorable<NodeEntitlements> MachineNotEntitledError(IPAddress address)
+        private static Errorable<NodeEntitlements> MachineNotEntitledError(IPAddress address)
         {
             return Errorable.Failure<NodeEntitlements>(
                 $"Token does not grant entitlement for {address}");
         }
 
-        private Errorable<NodeEntitlements> IdentifierNotPresentError()
+        private static Errorable<NodeEntitlements> IdentifierNotPresentError()
         {
             return Errorable.Failure<NodeEntitlements>(
                 "Entitlement identifier missing from entitlement token.");

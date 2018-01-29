@@ -82,7 +82,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="storeName">Name of the store to search within.</param>
         /// <param name="storeLocation">Location within the store to check.</param>
         /// <returns>Sequence of certificates (possibly empty).</returns>
-        private IList<X509Certificate2> FindAll(StoreName storeName, StoreLocation storeLocation)
+        private static IList<X509Certificate2> FindAll(StoreName storeName, StoreLocation storeLocation)
         {
             using (var store = new X509Store(storeName, storeLocation))
             {
