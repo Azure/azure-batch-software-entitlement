@@ -10,8 +10,8 @@
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.2.1" />
     <PackageReference Include="dotnet-test-nunit" Version="3.4.0-beta-3" />
-    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Https" Version="2.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Https" Version="2.0.1" />
     <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="2.6.0" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
