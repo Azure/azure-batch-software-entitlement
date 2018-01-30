@@ -138,6 +138,28 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
 
             var request = new EntitlementVerificationRequest(requestBody.ApplicationId, remoteAddress);
 
+            if (ApiRequiresHostId(apiVersion))
+            {
+                if (requestBody.HostId == null)
+                {
+                    return Errorable.Failure<(EntitlementVerificationRequest, string)>(
+                        "Missing hostId value from software entitlement request.");
+                }
+
+                request.HostId = requestBody.HostId;
+            }
+
+            if (ApiRequiresCpuCoreCount(apiVersion))
+            {
+                if (!requestBody.Cores.HasValue)
+                {
+                    return Errorable.Failure<(EntitlementVerificationRequest, string)>(
+                        "Missing cores value from software entitlement request.");
+                }
+
+                request.CpuCoreCount = requestBody.Cores;
+            }
+
             return Errorable.Success((Request: request, Token: requestBody.Token));
         }
 
@@ -215,6 +237,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
 
             return apiVersion.Equals(ApiVersion201705, StringComparison.Ordinal)
                    || apiVersion.Equals(ApiVersion201709, StringComparison.Ordinal);
+        }
+
+        private static bool ApiRequiresHostId(string apiVersion)
+        {
+            return string.Equals(apiVersion, ApiVersion201709, StringComparison.Ordinal);
+        }
+
+        private static bool ApiRequiresCpuCoreCount(string apiVersion)
+        {
+            return string.Equals(apiVersion, ApiVersion201709, StringComparison.Ordinal);
         }
 
         private static bool ApiSupportsVirtualMachineId(string apiVersion)

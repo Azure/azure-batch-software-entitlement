@@ -48,6 +48,31 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public string Identifier { get; }
 
         /// <summary>
+        /// Gets the number of CPU cores configured for the selected VM SKU
+        /// </summary>
+        public int? CpuCoreCount { get; }
+
+        /// <summary>
+        /// The unique identifier of the batch account that owns the pool
+        /// </summary>
+        public string BatchAccountId { get; }
+
+        /// <summary>
+        /// The unique identifier for the pool on which the application is expected to be running
+        /// </summary>
+        public string PoolId { get; }
+
+        /// <summary>
+        /// A unique identifier for the job within which the task is running
+        /// </summary>
+        public string JobId { get; }
+
+        /// <summary>
+        /// A unique identifier for the task itself
+        /// </summary>
+        public string TaskId { get; }
+
+        /// <summary>
         /// The audience for whom this entitlement is intended
         /// </summary>
         public string Audience { get; }
@@ -192,6 +217,56 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
+        /// Optionally specify the maximum number of CPU cores expected to be found on the machine
+        /// </summary>
+        /// <param name="cpuCoreCount">The number of CPU cores, or null if not required.</param>
+        /// <returns>A new entitlement.</returns>
+        public NodeEntitlements WithCpuCoreCount(int? cpuCoreCount)
+        {
+            return new NodeEntitlements(this, cpuCoreCount: Specify.As(cpuCoreCount));
+        }
+
+        /// <summary>
+        /// Specify the batch account ID with which the entitlement is associated
+        /// </summary>
+        /// <param name="batchAccountId">The batch account ID</param>
+        /// <returns>A new entitlement</returns>
+        public NodeEntitlements WithBatchAccountId(string batchAccountId)
+        {
+            return new NodeEntitlements(this, batchAccountId: Specify.As(batchAccountId));
+        }
+
+        /// <summary>
+        /// Specify the pool ID with which the entitlement is associated
+        /// </summary>
+        /// <param name="poolId">The pool ID</param>
+        /// <returns>A new entitlement</returns>
+        public NodeEntitlements WithPoolId(string poolId)
+        {
+            return new NodeEntitlements(this, poolId: Specify.As(poolId));
+        }
+
+        /// <summary>
+        /// Specify the job ID with which the entitlement is associated
+        /// </summary>
+        /// <param name="jobId">The job ID</param>
+        /// <returns>A new entitlement</returns>
+        public NodeEntitlements WithJobId(string jobId)
+        {
+            return new NodeEntitlements(this, jobId: Specify.As(jobId));
+        }
+
+        /// <summary>
+        /// Specify the task ID with which the entitlement is associated
+        /// </summary>
+        /// <param name="taskId">The task ID</param>
+        /// <returns>A new entitlement</returns>
+        public NodeEntitlements WithTaskId(string taskId)
+        {
+            return new NodeEntitlements(this, taskId: Specify.As(taskId));
+        }
+
+        /// <summary>
         /// Specify the audience to use in the token 
         /// </summary>
         /// <param name="audience">The audience for the generated token.</param>
@@ -234,6 +309,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="applications">The set of applications entitled to run.</param>
         /// <param name="identifier">Identifier to use for this entitlement.</param>
         /// <param name="addresses">Addresses of the entitled machine.</param>
+        /// <param name="cpuCoreCount">Optionally specify a new value for <see cref="CpuCoreCount"/></param>
+        /// <param name="batchAccountId">Optionally specify a new value for <see cref="BatchAccountId"/></param>
+        /// <param name="poolId">Optionally specify a new value for <see cref="PoolId"/></param>
+        /// <param name="jobId">Optionally specify a new value for <see cref="JobId"/></param>
+        /// <param name="taskId">Optionally specify a new value for <see cref="TaskId"/></param>
         /// <param name="audience">Audience for whom the token is intended.</param>
         /// <param name="issuer">Issuer identifier for the token.</param>
         private NodeEntitlements(
@@ -245,6 +325,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             ImmutableHashSet<string> applications = null,
             Specifiable<string> identifier = default,
             ImmutableHashSet<IPAddress> addresses = null,
+            Specifiable<int?> cpuCoreCount = default,
+            Specifiable<string> batchAccountId = default,
+            Specifiable<string> poolId = default,
+            Specifiable<string> jobId = default,
+            Specifiable<string> taskId = default,
             Specifiable<string> audience = default,
             Specifiable<string> issuer = default)
         {
@@ -260,6 +345,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             Applications = applications ?? original.Applications;
             Identifier = identifier.OrDefault(original.Identifier);
             IpAddresses = addresses ?? original.IpAddresses;
+            CpuCoreCount = cpuCoreCount.OrDefault(original.CpuCoreCount);
+            BatchAccountId = batchAccountId.OrDefault(original.BatchAccountId);
+            PoolId = poolId.OrDefault(original.PoolId);
+            JobId = jobId.OrDefault(original.JobId);
+            TaskId = taskId.OrDefault(original.TaskId);
             Audience = audience.OrDefault(original.Audience);
             Issuer = issuer.OrDefault(original.Issuer);
         }

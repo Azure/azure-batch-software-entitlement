@@ -76,7 +76,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             SecurityKey encryptingKey)
         {
             var parser = new JwtEntitlementParser(expectedAudience, expectedIssuer, signingKey, encryptingKey);
-            return new EntitlementVerifier(parser);
+            return new EntitlementVerifier(parser, new StoredEntitlementHostVerifier());
         }
 
         public class Verify : EntitlementVerifierTests
@@ -84,7 +84,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WhenTokenIsNull_ThrowsException()
             {
-                var verifier = new EntitlementVerifier(new FakeEntitlementParser());
+                var verifier = new EntitlementVerifier(new FakeEntitlementParser(), new StoredEntitlementHostVerifier());
                 Assert.Throws<ArgumentNullException>(
                     () => verifier.Verify(_validEntitlementRequest, null));
             }
@@ -100,7 +100,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var entitlement = _completeEntitlement.WithApplications();
                 var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
+                var verifier = new EntitlementVerifier(parser, new StoredEntitlementHostVerifier());
                 var result = verifier.Verify(_validEntitlementRequest, _testToken);
                 result.HasValue.Should().BeFalse();
                 result.Errors.Should().Contain(e => e.Contains(_validEntitlementRequest.ApplicationId));
@@ -111,7 +111,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var entitlement = _completeEntitlement.WithApplications(_validEntitlementRequest.ApplicationId);
                 var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
+                var verifier = new EntitlementVerifier(parser, new StoredEntitlementHostVerifier());
                 var result = verifier.Verify(_validEntitlementRequest, _testToken);
                 result.HasValue.Should().BeTrue();
             }
@@ -121,7 +121,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var entitlement = _completeEntitlement.WithApplications(_otherApp1);
                 var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
+                var verifier = new EntitlementVerifier(parser, new StoredEntitlementHostVerifier());
                 var result = verifier.Verify(_validEntitlementRequest, _testToken);
                 result.HasValue.Should().BeFalse();
                 result.Errors.Should().Contain(e => e.Contains(_validEntitlementRequest.ApplicationId));
@@ -132,7 +132,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var entitlement = _completeEntitlement.WithApplications(_otherApp1, _otherApp2);
                 var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
+                var verifier = new EntitlementVerifier(parser, new StoredEntitlementHostVerifier());
                 var result = verifier.Verify(_validEntitlementRequest, _testToken);
                 result.HasValue.Should().BeFalse();
                 result.Errors.Should().Contain(e => e.Contains(_validEntitlementRequest.ApplicationId));
@@ -144,7 +144,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var entitlement = _completeEntitlement.WithApplications(
                     _validEntitlementRequest.ApplicationId, _otherApp1, _otherApp2);
                 var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
+                var verifier = new EntitlementVerifier(parser, new StoredEntitlementHostVerifier());
                 var result = verifier.Verify(_validEntitlementRequest, _testToken);
                 result.HasValue.Should().BeTrue();
             }
@@ -160,7 +160,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var entitlement = _completeEntitlement.WithIpAddresses();
                 var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
+                var verifier = new EntitlementVerifier(parser, new StoredEntitlementHostVerifier());
                 var result = verifier.Verify(_validEntitlementRequest, _testToken);
                 result.HasValue.Should().BeFalse();
                 result.Errors.Should().Contain(e => e.Contains(_validEntitlementRequest.IpAddress.ToString()));
@@ -171,7 +171,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var entitlement = _completeEntitlement.WithIpAddresses(_validEntitlementRequest.IpAddress);
                 var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
+                var verifier = new EntitlementVerifier(parser, new StoredEntitlementHostVerifier());
                 var result = verifier.Verify(_validEntitlementRequest, _testToken);
                 result.HasValue.Should().BeTrue();
             }
@@ -181,7 +181,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var entitlement = _completeEntitlement.WithIpAddresses(_otherAddress1);
                 var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
+                var verifier = new EntitlementVerifier(parser, new StoredEntitlementHostVerifier());
                 var result = verifier.Verify(_validEntitlementRequest, _testToken);
                 result.HasValue.Should().BeFalse();
                 result.Errors.Should().Contain(e => e.Contains(_validEntitlementRequest.IpAddress.ToString()));
@@ -192,7 +192,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var entitlement = _completeEntitlement.WithIpAddresses(_otherAddress1, _otherAddress2);
                 var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
+                var verifier = new EntitlementVerifier(parser, new StoredEntitlementHostVerifier());
                 var result = verifier.Verify(_validEntitlementRequest, _testToken);
                 result.HasValue.Should().BeFalse();
                 result.Errors.Should().Contain(e => e.Contains(_validEntitlementRequest.IpAddress.ToString()));
@@ -204,7 +204,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var entitlement = _completeEntitlement.WithIpAddresses(
                     _validEntitlementRequest.IpAddress, _otherAddress1, _otherAddress2);
                 var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
+                var verifier = new EntitlementVerifier(parser, new StoredEntitlementHostVerifier());
                 var result = verifier.Verify(_validEntitlementRequest, _testToken);
                 result.HasValue.Should().BeTrue();
             }

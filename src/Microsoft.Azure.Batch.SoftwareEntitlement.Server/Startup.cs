@@ -45,6 +45,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server
                     serverOptions.SigningKey,
                     serverOptions.EncryptionKey);
             });
+            services.TryAddSingleton<IHostVerifier, StoredEntitlementHostVerifier>();
             services.TryAddSingleton<EntitlementVerifier>();
         }
 

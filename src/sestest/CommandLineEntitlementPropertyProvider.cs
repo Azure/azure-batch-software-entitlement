@@ -80,6 +80,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return Errorable.Success(_commandLine.Issuer);
         }
 
+        private Errorable<int> CpuCoreCount()
+        {
+            // if the user does not specify a cpu core count, we default to the number of logical cores on the current machine
+            return Errorable.Success(_commandLine.CpuCoreCount ?? Environment.ProcessorCount);
+        }
+
+        private Errorable<string> BatchAccountId() => Errorable.Success(_commandLine.BatchAccountId);
+
+        private Errorable<string> PoolId() => Errorable.Success(_commandLine.PoolId);
+
+        private Errorable<string> JobId() => Errorable.Success(_commandLine.JobId);
+
+        private Errorable<string> TaskId() => Errorable.Success(_commandLine.TaskId);
+
         public Errorable<IEnumerable<IPAddress>> IpAddresses()
         {
             var result = new List<Errorable<IPAddress>>();

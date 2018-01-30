@@ -1,4 +1,4 @@
-﻿namespace Microsoft.Azure.Batch.SoftwareEntitlement
+namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
     /// <summary>
     /// Values used to define the claims used in our software entitlement token
@@ -36,5 +36,31 @@
         /// Identifier use for the claim specifying the permitted virtual machine
         /// </summary>
         public const string VirtualMachineId = "vmid";
+
+        /// <summary>
+        /// The identifier to use for the maximum expected number of CPU cores permitted on the
+        /// virtual machine
+        /// </summary>
+        public const string CpuCoreCount = "maxcores";
+
+        /// <summary>
+        /// The unique identifier of the batch account that owns the pool
+        /// </summary>
+        public const string BatchAccountId = "batchaccount";
+
+        /// <summary>
+        /// The unique identifier for the pool on which the application is expected to be running
+        /// </summary>
+        public const string PoolId = "poolid";
+
+        /// <summary>
+        /// A unique identifier for the job within which the task is running
+        /// </summary>
+        public const string JobId = "jobid";
+
+        /// <summary>
+        /// A unique identifier for the task itself
+        /// </summary>
+        public const string TaskId = "taskid";
     }
 }

@@ -106,32 +106,34 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             var claims = new List<Claim>();
 
-            if (!string.IsNullOrEmpty(entitlements.VirtualMachineId))
-            {
-                _logger.LogDebug("Virtual machine Id: {VirtualMachineId}", entitlements.VirtualMachineId);
-                claims.Add(new Claim(Claims.VirtualMachineId, entitlements.VirtualMachineId));
-            }
-
-            if (!string.IsNullOrEmpty(entitlements.Identifier))
-            {
-                _logger.LogDebug("Entitlement Id: {EntitlementId}", entitlements.Identifier);
-                claims.Add(new Claim(Claims.EntitlementId, entitlements.Identifier));
-            }
+            AddClaim(claims, Claims.VirtualMachineId, "Virtual machine id", entitlements.VirtualMachineId);
+            AddClaim(claims, Claims.CpuCoreCount, "CPU core count", entitlements.CpuCoreCount?.ToString(CultureInfo.InvariantCulture));
+            AddClaim(claims, Claims.BatchAccountId, "Batch account id", entitlements.BatchAccountId);
+            AddClaim(claims, Claims.PoolId, "Pool id", entitlements.PoolId);
+            AddClaim(claims, Claims.JobId, "Job id", entitlements.JobId);
+            AddClaim(claims, Claims.TaskId, "Task id", entitlements.TaskId);
+            AddClaim(claims, Claims.EntitlementId, "Entitlement id", entitlements.Identifier);
 
             foreach (var ip in entitlements.IpAddresses)
             {
-                _logger.LogDebug("IP Address: {IP}", ip);
-                claims.Add(new Claim(Claims.IpAddress, ip.ToString()));
+                AddClaim(claims, Claims.IpAddress, "IP address", ip.ToString());
             }
 
             foreach (var app in entitlements.Applications)
             {
-                _logger.LogDebug("Application Id: {ApplicationId}", app);
-                var claim = new Claim(Claims.Application, app);
-                claims.Add(claim);
+                AddClaim(claims, Claims.Application, "Application id", app);
             }
 
             return claims;
+        }
+
+        private void AddClaim(IList<Claim> claims, string claimId, string claimName, string claimValue)
+        {
+            if (!string.IsNullOrEmpty(claimValue))
+            {
+                _logger.LogDebug($"{claimName}: {{{claimId}}}", claimValue);
+                claims.Add(new Claim(claimId, claimValue));
+            }
         }
     }
 }

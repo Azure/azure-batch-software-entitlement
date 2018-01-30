@@ -32,5 +32,17 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Address of the machine requesting token validation
         /// </summary>
         public IPAddress IpAddress { get; }
+
+        /// <summary>
+        /// The number of CPU cores reported to be found by the application,
+        /// or null if that doesn't need to be verified
+        /// </summary>
+        public int? CpuCoreCount { get; set; }
+
+        /// <summary>
+        /// A unique identifier for the host machine, or null if that doesn't
+        /// need to be verified
+        /// </summary>
+        public string HostId { get; set; }
     }
 }
