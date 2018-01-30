@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -72,9 +72,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// Add an error
         /// </summary>
         /// <remarks>Will abandon any wrapped value if this is the first error encountered.</remarks>
-        /// <param name="error">Error to record.</param>
+        /// <param name="message">Error to record.</param>
         /// <returns>A new instance with the error included.</returns>
-        public abstract Errorable<T> AddError(string error);
+        public abstract Errorable<T> AddError(string message);
 
         /// <summary>
         /// Add a sequence of errors
@@ -130,9 +130,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 
             public override ImmutableHashSet<string> Errors => ImmutableHashSet<string>.Empty;
 
-            public override Errorable<T> AddError(string error)
+            public override Errorable<T> AddError(string message)
             {
-                var errors = ImmutableHashSet<string>.Empty.Add(error);
+                var errors = ImmutableHashSet<string>.Empty.Add(message);
                 return new FailureImplementation(errors);
             }
 
@@ -176,9 +176,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 
             public override ImmutableHashSet<string> Errors { get; }
 
-            public override Errorable<T> AddError(string error)
+            public override Errorable<T> AddError(string message)
             {
-                return new FailureImplementation(Errors.Add(error));
+                return new FailureImplementation(Errors.Add(message));
             }
 
             /// <summary>

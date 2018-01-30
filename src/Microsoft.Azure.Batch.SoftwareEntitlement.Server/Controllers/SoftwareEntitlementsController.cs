@@ -189,12 +189,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
                    || apiVersion.Equals(ApiVersion201709, StringComparison.Ordinal);
         }
 
-        private bool ApiSupportsVirtualMachineId(string apiVersion)
+        private static bool ApiSupportsVirtualMachineId(string apiVersion)
         {
             return string.Equals(apiVersion, ApiVersion201705, StringComparison.Ordinal);
         }
 
-        private bool ApiSupportsExpiryTimestamp(string apiVersion)
+        private static bool ApiSupportsExpiryTimestamp(string apiVersion)
         {
             return string.Equals(apiVersion, ApiVersion201709, StringComparison.Ordinal);
         }

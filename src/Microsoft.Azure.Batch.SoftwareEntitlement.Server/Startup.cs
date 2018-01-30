@@ -26,6 +26,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server
 
         public IConfigurationRoot Configuration { get; }
 
+        [SuppressMessage(
+            "Performance",
+            "CA1822: Member ConfigureServices does not access instance data and can be marked as static",
+            Justification = "Must be non-static to be called by the ASP.NET Runtime.")]
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {

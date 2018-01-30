@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using FluentAssertions;
@@ -85,7 +85,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                 yield return new object[] { invalidOperationException, 1 };
 
                 // Another single exception, different type
-                var argumentException = new ArgumentException();
+                var argumentException = new ArgumentException("arg");
                 yield return new object[] { argumentException, 1 };
 
                 // Parent and child
