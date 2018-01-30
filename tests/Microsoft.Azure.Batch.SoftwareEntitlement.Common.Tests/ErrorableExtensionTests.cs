@@ -355,5 +355,41 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                 return 42;
             }
         }
+
+        public class Then
+        {
+            private readonly Errorable<int> _success = Errorable.Success(42);
+
+            private readonly Errorable<int> _failure = Errorable.Failure<int>("Goodbye cruel world.");
+
+            [Fact]
+            public void SuccessThenSuccess_ReturnsExpectedValue()
+            {
+                var result = _success.Then(num => Errorable.Success(num + 1));
+                result.Value.Should().Be(43);
+            }
+
+            [Fact]
+            public void SuccessThenFailure_HasExpectedErrors()
+            {
+                var result = _success.Then(num => Errorable.Failure<int>("expected error"));
+                result.Errors.Count.Should().Be(1);
+                result.Errors.Should().Contain("expected error");
+            }
+
+            [Fact]
+            public void FailureThenAnything_SecondFunctionNotExecuted()
+            {
+                var executed = false;
+                var result = _failure.Then(num =>
+                {
+                    executed = true;
+                    return Errorable.Success(0);
+                });
+
+                result.Errors.Count.Should().Be(1);
+                executed.Should().BeFalse();
+            }
+        }
     }
 }
