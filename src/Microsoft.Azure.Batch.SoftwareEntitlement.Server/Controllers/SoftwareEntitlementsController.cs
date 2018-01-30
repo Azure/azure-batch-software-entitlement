@@ -15,7 +15,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         private readonly ServerOptions _serverOptions;
 
         // A reference to our logger
-
         private readonly ILogger _logger;
         private readonly IApplicationLifetime _lifetime;
 
@@ -57,43 +56,47 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         [HttpPost]
         [Produces("application/json")]
         public IActionResult RequestEntitlement(
-            [FromBody] SoftwareEntitlementRequest entitlementRequest,
+            [FromBody] SoftwareEntitlementRequestBody entitlementRequestBody,
             [FromQuery(Name = "api-version")] string apiVersion)
         {
             try
             {
                 if (!IsValidApiVersion(apiVersion))
                 {
-                    return CreateInvalidApiVersionError(entitlementRequest, apiVersion);
+                    _logger.LogDebug(
+                        "Selected api-version of {ApiVersion} is not supported; denying entitlement request.",
+                        apiVersion);
+                    return CreateBadRequestResponse($"Selected api-version of {apiVersion} is not supported; denying entitlement request.");
                 }
 
                 _logger.LogInformation(
                     "Selected api-version is {ApiVersion}",
                     apiVersion);
 
-                if (entitlementRequest == null)
+                if (entitlementRequestBody == null)
                 {
-                    return CreateMissingRequestError();
+                    _logger.LogDebug("No software entitlement request body");
+                    return CreateBadRequestResponse("No software entitlement request body");
                 }
 
                 _logger.LogInformation(
                     "Requesting entitlement for {Application}",
-                    entitlementRequest.ApplicationId);
-                _logger.LogDebug("Request token: {Token}", entitlementRequest.Token);
+                    entitlementRequestBody.ApplicationId);
+                _logger.LogDebug("Request token: {Token}", entitlementRequestBody.Token);
 
                 var remoteAddress = HttpContext.Connection.RemoteIpAddress;
                 _logger.LogDebug("Remote Address: {Address}", remoteAddress);
 
                 Errorable<NodeEntitlements> verificationResult = _verifier.Verify(
-                    entitlementRequest.Token,
+                    entitlementRequestBody.Token,
                     _serverOptions.Audience,
                     _serverOptions.Issuer,
-                    entitlementRequest.ApplicationId,
+                    entitlementRequestBody.ApplicationId,
                     remoteAddress);
 
                 return verificationResult.Match(
                     whenSuccessful: entitlement => CreateEntitlementApprovedResponse(apiVersion, entitlement),
-                    whenFailure: errors => CreateEntitlementDeniedError(entitlementRequest, errors));
+                    whenFailure: errors => CreateEntitlementDeniedResponse(entitlementRequestBody, errors));
             }
             finally
             {
@@ -124,7 +127,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             return Ok(response);
         }
 
-        private ObjectResult CreateEntitlementDeniedError(SoftwareEntitlementRequest entitlementRequest,
+        private ObjectResult CreateEntitlementDeniedResponse(SoftwareEntitlementRequestBody entitlementRequestBody,
             IEnumerable<string> errors)
         {
             foreach (var e in errors)
@@ -135,35 +138,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             var error = new SoftwareEntitlementFailureResponse
             {
                 Code = "EntitlementDenied",
-                Message = new ErrorMessage($"Entitlement for {entitlementRequest.ApplicationId} was denied.")
+                Message = new ErrorMessage($"Entitlement for {entitlementRequestBody.ApplicationId} was denied.")
             };
 
             return StatusCode(403, error);
         }
 
-        private ObjectResult CreateMissingRequestError()
+        private ObjectResult CreateBadRequestResponse(string errorMessage)
         {
-            _logger.LogError("No software entitlement request made");
-
             var error = new SoftwareEntitlementFailureResponse
             {
                 Code = "EntitlementDenied",
-                Message = new ErrorMessage("No software entitlement request made.")
-            };
-
-            return StatusCode(400, error);
-        }
-
-        private ObjectResult CreateInvalidApiVersionError(SoftwareEntitlementRequest entitlementRequest, string apiVersion)
-        {
-            _logger.LogError(
-                "Selected api-version of {ApiVersion} is not supported; denying entitlement request.",
-                apiVersion);
-
-            var error = new SoftwareEntitlementFailureResponse
-            {
-                Code = "EntitlementDenied",
-                Message = new ErrorMessage($"Entitlement for {entitlementRequest.ApplicationId} was denied.")
+                Message = new ErrorMessage(errorMessage)
             };
 
             return StatusCode(400, error);
