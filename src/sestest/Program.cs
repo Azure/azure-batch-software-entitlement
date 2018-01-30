@@ -38,7 +38,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     (ListCertificatesCommandLine commandLine) => RunCommand(ListCertificates, commandLine),
                     (FindCertificateCommandLine commandLine) => RunCommand(FindCertificate, commandLine),
                     (VerifyCommandLine commandLine) => RunCommand(Submit, commandLine),
-                    errors => Task.FromResult(ResultCodes.Failed));
+                    errors => Task.FromResult(ResultCodes.Failed))
+                    .ConfigureAwait(false);
 
                 if (Debugger.IsAttached)
                 {
@@ -76,7 +77,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 {
                     _logger.LogErrors(errors);
                     return Task.FromResult(ResultCodes.Failed);
-                });
+                })
+                .ConfigureAwait(false);
         }
 
         private static Task<int> RunServer(ServerOptions options)
@@ -177,7 +179,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             try
             {
-                return await command(commandLine);
+                return await command(commandLine).ConfigureAwait(false);
             }
             catch (Exception ex)
             {

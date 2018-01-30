@@ -294,7 +294,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             }
 
             return errorable.Match(
-                async t => Errorable.Success(await transform(t.Item1, t.Item2, t.Item3, t.Item4)),
+                async t => Errorable.Success(await transform(t.Item1, t.Item2, t.Item3, t.Item4).ConfigureAwait(false)),
                 e => Task.FromResult(Errorable.Failure<R>(e)));
         }
 

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Net;
 using FluentAssertions;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
@@ -81,7 +82,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         public class NotBeforeProperty : NodeEntitlementsBuilderTests
         {
             private readonly string _validNotBefore =
-                DateTimeOffset.Now.ToString(TimestampParser.ExpectedFormat);
+                DateTimeOffset.Now.ToString(TimestampParser.ExpectedFormat, CultureInfo.InvariantCulture);
 
             [Fact]
             public void WhenMissing_BuildStillReturnsValue()
@@ -113,7 +114,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 _commandLine.NotBefore = _validNotBefore;
                 var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
                 // Compare as formatted strings to avoid issues with extra seconds we don't care about
-                entitlement.Value.NotBefore.ToString(TimestampParser.ExpectedFormat)
+                entitlement.Value.NotBefore.ToString(TimestampParser.ExpectedFormat, CultureInfo.InvariantCulture)
                     .Should().Be(_validNotBefore);
             }
         }
@@ -121,7 +122,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         public class NotAfterProperty : NodeEntitlementsBuilderTests
         {
             private readonly string _validNotAfter =
-                DateTimeOffset.Now.AddDays(7).ToString(TimestampParser.ExpectedFormat);
+                DateTimeOffset.Now.AddDays(7).ToString(TimestampParser.ExpectedFormat, CultureInfo.InvariantCulture);
 
             [Fact]
             public void WhenMissing_BuildStillReturnsValue()
@@ -153,7 +154,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 _commandLine.NotAfter = _validNotAfter;
                 var entitlement = NodeEntitlementsBuilder.Build(_commandLine);
                 // Compare as formatted strings to avoid issues with extra seconds we don't care about
-                entitlement.Value.NotAfter.ToString(TimestampParser.ExpectedFormat)
+                entitlement.Value.NotAfter.ToString(TimestampParser.ExpectedFormat, CultureInfo.InvariantCulture)
                     .Should().Be(_validNotAfter);
             }
         }

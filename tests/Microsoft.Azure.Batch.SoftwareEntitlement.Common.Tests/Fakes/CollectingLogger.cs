@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.Extensions.Logging;
@@ -56,6 +56,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests.Fakes
         }
     }
 
+    [SuppressMessage(
+        "Performance",
+        "CA1815: Should override Equals.",
+        Justification = "This class doesn't need equality.")]
     public struct LogEvent
     {
         public LogLevel Level { get; }

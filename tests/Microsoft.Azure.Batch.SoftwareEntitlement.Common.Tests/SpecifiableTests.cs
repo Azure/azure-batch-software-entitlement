@@ -9,7 +9,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
 
         // Values to specify
         private readonly string _thisStringValue = "this";
-        private readonly string _nullStringValue;
+        private readonly string _nullStringValue = null;
 
         public class Construction : SpecifiableTests
         {

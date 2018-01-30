@@ -35,8 +35,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             Errorable<string> app = FindApplication(commandLine);
             Errorable<string> api = FindApiVersion(commandLine);
 
-            Errorable<string> result = await server.With(token).With(app).With(api)
-                .MapAsync(SubmitToken);
+            Errorable<string> result = await server.With(token)
+                .With(app)
+                .With(api)
+                .MapAsync(SubmitToken)
+                .ConfigureAwait(false);
             return result.Match(response =>
                 {
                     Logger.LogJson(response);
@@ -72,7 +75,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 var result = await client.PostAsync(uri, content).ConfigureAwait(false);
                 Logger.LogInformation($"Status Code: {result.StatusCode} ({(int) result.StatusCode})");
 
-                return await result.Content.ReadAsStringAsync();
+                return await result.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
         }
 
@@ -93,7 +96,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return Errorable.Success(token);
         }
 
-        private Errorable<string> FindApplication(VerifyCommandLine commandLine)
+        private static Errorable<string> FindApplication(VerifyCommandLine commandLine)
         {
             var application = commandLine.Application;
             if (string.IsNullOrEmpty(application))
@@ -128,7 +131,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
         }
 
-        private Errorable<string> FindApiVersion(VerifyCommandLine commandLine)
+        private static Errorable<string> FindApiVersion(VerifyCommandLine commandLine)
         {
             var version = commandLine.ApiVersion;
             if (string.IsNullOrEmpty(version))
@@ -150,7 +153,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return result;
         }
 
-        private string CreateParameters(params (string name, string value)[] parameters)
+        private static string CreateParameters(params (string name, string value)[] parameters)
         {
             var query = HttpUtility.ParseQueryString(string.Empty);
             foreach (var p in parameters)

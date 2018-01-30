@@ -7,6 +7,11 @@
 using System.Diagnostics.CodeAnalysis;
 
 [assembly: SuppressMessage(
+    "Design",
+    "CA1034:Nested types should not be visible",
+    Justification = "This project uses nested public classes for scoping.")]
+
+[assembly: SuppressMessage(
     "Performance",
     "RCS1096:Use bitwise operation instead of calling 'HasFlag'.",
     Justification = "This project prefers the clarity of HasFlag().")]
