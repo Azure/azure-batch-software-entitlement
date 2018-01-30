@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
@@ -61,38 +62,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         {
             try
             {
-                if (!IsValidApiVersion(apiVersion))
+                var (parameters, requestError) = TryExtractParameters(apiVersion, entitlementRequestBody);
+                if (requestError != null)
                 {
-                    _logger.LogDebug(
-                        "Selected api-version of {ApiVersion} is not supported; denying entitlement request.",
-                        apiVersion);
-                    return CreateBadRequestResponse($"Selected api-version of {apiVersion} is not supported; denying entitlement request.");
+                    return CreateBadRequestResponse(requestError);
                 }
-
-                _logger.LogInformation(
-                    "Selected api-version is {ApiVersion}",
-                    apiVersion);
-
-                if (entitlementRequestBody == null)
-                {
-                    _logger.LogDebug("No software entitlement request body");
-                    return CreateBadRequestResponse("No software entitlement request body");
-                }
-
-                _logger.LogInformation(
-                    "Requesting entitlement for {Application}",
-                    entitlementRequestBody.ApplicationId);
-                _logger.LogDebug("Request token: {Token}", entitlementRequestBody.Token);
-
-                var remoteAddress = HttpContext.Connection.RemoteIpAddress;
-                _logger.LogDebug("Remote Address: {Address}", remoteAddress);
 
                 Errorable<NodeEntitlements> verificationResult = _verifier.Verify(
-                    entitlementRequestBody.Token,
+                    parameters.Token,
                     _serverOptions.Audience,
                     _serverOptions.Issuer,
-                    entitlementRequestBody.ApplicationId,
-                    remoteAddress);
+                    parameters.ApplicationId,
+                    parameters.RemoteAddress);
 
                 return verificationResult.Match(
                     whenSuccessful: entitlement => CreateEntitlementApprovedResponse(apiVersion, entitlement),
@@ -105,6 +86,73 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
                     _lifetime.StopApplication();
                 }
             }
+        }
+
+        private class EntitlementRequestParameters
+        {
+            public string Token { get; set; }
+
+            public string ApplicationId { get; set; }
+
+            public IPAddress RemoteAddress { get; set; }
+        }
+
+        /// <summary>
+        /// Attempts to extracts all the parameters required for validating an entitlement request.
+        /// Any error here reflects a badly formed request.
+        /// </summary>
+        /// <param name="apiVersion">The API version from the query string</param>
+        /// <param name="requestBody">The information in the request body</param>
+        /// <returns>
+        /// A tuple in which either the <see cref="EntitlementRequestParameters"/> and token values
+        /// are present if the request was well formed, or an informative error otherwise.
+        /// </returns>
+        private (EntitlementRequestParameters Parameters, string Error) TryExtractParameters(
+            string apiVersion,
+            SoftwareEntitlementRequestBody requestBody)
+        {
+            if (!IsValidApiVersion(apiVersion))
+            {
+                _logger.LogDebug(
+                    "Selected api-version of {ApiVersion} is not supported; denying entitlement request.",
+                    apiVersion);
+
+                return (Parameters: null, Error: $"Selected api-version of {apiVersion} is not supported; denying entitlement request.");
+            }
+
+            _logger.LogInformation(
+                "Selected api-version is {ApiVersion}",
+                apiVersion);
+
+            if (requestBody == null)
+            {
+                _logger.LogDebug("No software entitlement request body");
+                return (Parameters: null, Error: "Missing request body from software entitlement request.");
+            }
+
+            if (string.IsNullOrEmpty(requestBody.Token))
+            {
+                _logger.LogDebug("token not specified in request body");
+                return (Parameters: null, Error: "Missing token from software entitlement request.");
+            }
+
+            if (string.IsNullOrEmpty(requestBody.ApplicationId))
+            {
+                _logger.LogDebug("applicationId not specified in request body");
+                return (Parameters: null, Error: "Missing applicationId value from software entitlement request.");
+            }
+
+            var remoteAddress = HttpContext.Connection.RemoteIpAddress;
+            _logger.LogDebug("Remote Address: {Address}", remoteAddress);
+
+            var parameters = new EntitlementRequestParameters
+            {
+                Token = requestBody.Token,
+                ApplicationId = requestBody.ApplicationId,
+                RemoteAddress = remoteAddress
+            };
+
+            return (Parameters: parameters, Error: null);
         }
 
         private ObjectResult CreateEntitlementApprovedResponse(string apiVersion, NodeEntitlements entitlement)
