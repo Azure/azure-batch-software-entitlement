@@ -23,8 +23,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         // Verifier used to check tokens
         private readonly TokenVerifier _verifier;
 
-        private const string ApiVersion201705 =  "2017-05-01.5.0";
-        private const string ApiVersion201709 =  "2017-09-01.6.0";
+        private const string ApiVersion201705 = "2017-05-01.5.0";
+        private const string ApiVersion201709 = "2017-09-01.6.0";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SoftwareEntitlementsController"/> class
@@ -65,34 +65,17 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             {
                 if (!IsValidApiVersion(apiVersion))
                 {
-                    _logger.LogDebug(
-                        "Selected api-version of {ApiVersion} is not supported; denying entitlement request.",
-                        apiVersion);
-
                     return CreateBadRequestResponse(
                         $"Selected api-version of {apiVersion} is not supported; denying entitlement request.");
                 }
 
-                var (parameters, requestError) = TryExtractParameters(
-                    apiVersion,
-                    HttpContext,
-                    entitlementRequestBody);
+                _logger.LogInformation(
+                    "Selected api-version is {ApiVersion}",
+                    apiVersion);
 
-                if (requestError != null)
-                {
-                    return CreateBadRequestResponse(requestError);
-                }
-
-                Errorable<NodeEntitlements> verificationResult = _verifier.Verify(
-                    parameters.Token,
-                    _serverOptions.Audience,
-                    _serverOptions.Issuer,
-                    parameters.ApplicationId,
-                    parameters.RemoteAddress);
-
-                return verificationResult.Match(
-                    whenSuccessful: entitlement => CreateEntitlementApprovedResponse(apiVersion, entitlement),
-                    whenFailure: errors => CreateEntitlementDeniedResponse(entitlementRequestBody, errors));
+                return ExtractParameters(apiVersion, HttpContext, entitlementRequestBody).Match(
+                    whenSuccessful: r => IssueEntitlement(r.Parameters, r.Token, apiVersion),
+                    whenFailure: e => CreateBadRequestResponse(e));
             }
             finally
             {
@@ -101,6 +84,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
                     _lifetime.StopApplication();
                 }
             }
+        }
+
+        private IActionResult IssueEntitlement(EntitlementRequestParameters parameters, string token, string apiVersion)
+        {
+            Errorable<NodeEntitlements> verificationResult = _verifier.Verify(
+                token,
+                _serverOptions.Audience,
+                _serverOptions.Issuer,
+                parameters.ApplicationId,
+                parameters.RemoteAddress);
+
+            return verificationResult.Match(
+                whenSuccessful: entitlement => CreateEntitlementApprovedResponse(apiVersion, entitlement),
+                whenFailure: errors => CreateEntitlementDeniedResponse(parameters.ApplicationId, errors));
         }
 
         private class EntitlementRequestParameters
@@ -117,36 +114,33 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         /// Any error here reflects a badly formed request.
         /// </summary>
         /// <param name="apiVersion">The API version from the query string</param>
+        /// <param name="httpContext">The HTTP context of the request</param>
         /// <param name="requestBody">The information in the request body</param>
         /// <returns>
         /// A tuple in which either the <see cref="EntitlementRequestParameters"/> and token values
         /// are present if the request was well formed, or an informative error otherwise.
         /// </returns>
-        private (EntitlementRequestParameters Parameters, string Error) TryExtractParameters(
+        private Errorable<(EntitlementRequestParameters Parameters, string Token)> ExtractParameters(
             string apiVersion,
             HttpContext httpContext,
             SoftwareEntitlementRequestBody requestBody)
         {
-            _logger.LogInformation(
-                "Selected api-version is {ApiVersion}",
-                apiVersion);
-
             if (requestBody == null)
             {
-                _logger.LogDebug("No software entitlement request body");
-                return (Parameters: null, Error: "Missing request body from software entitlement request.");
+                return Errorable.Failure<(EntitlementRequestParameters, string)>(
+                    "Missing request body from software entitlement request.");
             }
 
             if (string.IsNullOrEmpty(requestBody.Token))
             {
-                _logger.LogDebug("token not specified in request body");
-                return (Parameters: null, Error: "Missing token from software entitlement request.");
+                return Errorable.Failure<(EntitlementRequestParameters, string)>(
+                    "Missing token from software entitlement request.");
             }
 
             if (string.IsNullOrEmpty(requestBody.ApplicationId))
             {
-                _logger.LogDebug("applicationId not specified in request body");
-                return (Parameters: null, Error: "Missing applicationId value from software entitlement request.");
+                return Errorable.Failure<(EntitlementRequestParameters, string)>(
+                    "Missing applicationId value from software entitlement request.");
             }
 
             var remoteAddress = httpContext.Connection.RemoteIpAddress;
@@ -159,7 +153,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
                 RemoteAddress = remoteAddress
             };
 
-            return (Parameters: parameters, Error: null);
+            return Errorable.Success((Parameters: parameters, Token: requestBody.Token));
         }
 
         private ObjectResult CreateEntitlementApprovedResponse(string apiVersion, NodeEntitlements entitlement)
@@ -182,8 +176,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             return Ok(response);
         }
 
-        private ObjectResult CreateEntitlementDeniedResponse(SoftwareEntitlementRequestBody entitlementRequestBody,
-            IEnumerable<string> errors)
+        private ObjectResult CreateEntitlementDeniedResponse(string applicationId, IEnumerable<string> errors)
         {
             foreach (var e in errors)
             {
@@ -193,18 +186,27 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             var error = new SoftwareEntitlementFailureResponse
             {
                 Code = "EntitlementDenied",
-                Message = new ErrorMessage($"Entitlement for {entitlementRequestBody.ApplicationId} was denied.")
+                Message = new ErrorMessage($"Entitlement for {applicationId} was denied.")
             };
 
             return StatusCode(403, error);
         }
 
-        private ObjectResult CreateBadRequestResponse(string errorMessage)
+        private ObjectResult CreateBadRequestResponse(params string[] errors)
+            => CreateBadRequestResponse((IEnumerable<string>)errors);
+
+        private ObjectResult CreateBadRequestResponse(IEnumerable<string> errors)
         {
+            foreach (var e in errors)
+            {
+                _logger.LogError(e);
+            }
+
+            var message = string.Join("; ", errors);
             var error = new SoftwareEntitlementFailureResponse
             {
                 Code = "EntitlementDenied",
-                Message = new ErrorMessage(errorMessage)
+                Message = new ErrorMessage(message)
             };
 
             return StatusCode(400, error);
@@ -225,7 +227,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
 
             // Check all the valid apiVersions
             // TODO: Once this list passes three or four items, use a HashSet<string> to do the check more efficiently
-            
+
             return apiVersion.Equals(ApiVersion201705, StringComparison.Ordinal)
                    || apiVersion.Equals(ApiVersion201709, StringComparison.Ordinal);
         }
