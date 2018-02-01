@@ -1,10 +1,10 @@
 using System;
-using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
+using Microsoft.Azure.Batch.SoftwareEntitlement.Server;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
@@ -63,13 +63,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             using (var client = new HttpClient())
             {
-                var request = new SoftwareEntitlementRequest
+                var requestBody = new SoftwareEntitlementRequestBody
                 {
                     Token = token,
                     ApplicationId = app
                 };
 
-                var requestJson = JsonConvert.SerializeObject(request);
+                var requestJson = JsonConvert.SerializeObject(requestBody);
                 var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
 
                 var result = await client.PostAsync(uri, content).ConfigureAwait(false);
