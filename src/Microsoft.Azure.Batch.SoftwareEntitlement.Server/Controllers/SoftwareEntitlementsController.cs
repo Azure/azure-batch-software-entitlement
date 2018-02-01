@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
@@ -62,7 +63,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         {
             try
             {
-                var (parameters, requestError) = TryExtractParameters(apiVersion, entitlementRequestBody);
+                if (!IsValidApiVersion(apiVersion))
+                {
+                    _logger.LogDebug(
+                        "Selected api-version of {ApiVersion} is not supported; denying entitlement request.",
+                        apiVersion);
+
+                    return CreateBadRequestResponse(
+                        $"Selected api-version of {apiVersion} is not supported; denying entitlement request.");
+                }
+
+                var (parameters, requestError) = TryExtractParameters(
+                    apiVersion,
+                    HttpContext,
+                    entitlementRequestBody);
+
                 if (requestError != null)
                 {
                     return CreateBadRequestResponse(requestError);
@@ -109,17 +124,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         /// </returns>
         private (EntitlementRequestParameters Parameters, string Error) TryExtractParameters(
             string apiVersion,
+            HttpContext httpContext,
             SoftwareEntitlementRequestBody requestBody)
         {
-            if (!IsValidApiVersion(apiVersion))
-            {
-                _logger.LogDebug(
-                    "Selected api-version of {ApiVersion} is not supported; denying entitlement request.",
-                    apiVersion);
-
-                return (Parameters: null, Error: $"Selected api-version of {apiVersion} is not supported; denying entitlement request.");
-            }
-
             _logger.LogInformation(
                 "Selected api-version is {ApiVersion}",
                 apiVersion);
@@ -142,7 +149,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
                 return (Parameters: null, Error: "Missing applicationId value from software entitlement request.");
             }
 
-            var remoteAddress = HttpContext.Connection.RemoteIpAddress;
+            var remoteAddress = httpContext.Connection.RemoteIpAddress;
             _logger.LogDebug("Remote Address: {Address}", remoteAddress);
 
             var parameters = new EntitlementRequestParameters
