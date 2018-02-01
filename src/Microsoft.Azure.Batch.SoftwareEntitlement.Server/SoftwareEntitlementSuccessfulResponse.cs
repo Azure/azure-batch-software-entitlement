@@ -1,7 +1,7 @@
 using System;
 using Newtonsoft.Json;
 
-namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
+namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server
 {
     /// <summary>
     /// A response for a successful request for a software entitlement
