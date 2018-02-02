@@ -38,7 +38,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             return _entitlementReader.ReadFromToken(token)
-                .Then(e => Verify(request, e));
+                .Bind(e => Verify(request, e));
         }
 
         private static Errorable<NodeEntitlements> Verify(

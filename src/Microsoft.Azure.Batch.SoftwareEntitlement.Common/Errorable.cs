@@ -108,6 +108,29 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         public abstract R Match<R>(Func<T, R> whenSuccessful, Func<IEnumerable<string>, R> whenFailure);
 
         /// <summary>
+        /// Executes a function returning an <see cref="Errorable{T}"/> conditionally, depending
+        /// on the result or a previous <see cref="Errorable{T}"/>.
+        /// </summary>
+        /// <typeparam name="TNew">The return type of <paramref name="whenSuccessful"/></typeparam>
+        /// <param name="whenSuccessful">A function to execute on <paramref name="errorable"/> if it
+        /// was successful</param>
+        /// <returns>
+        /// An <see cref="Errorable{T}"/> containing the result of executing <paramref name="whenSuccessful"/>
+        /// if the input was sucessful, or the errors from <paramref name="errorable"/> otherwise.
+        /// </returns>
+        public Errorable<TNew> Bind<TNew>(Func<T, Errorable<TNew>> whenSuccessful)
+        {
+            if (whenSuccessful == null)
+            {
+                throw new ArgumentNullException(nameof(whenSuccessful));
+            }
+
+            return Match(
+                whenSuccessful: whenSuccessful,
+                whenFailure: errors => Errorable.Failure<TNew>(errors));
+        }
+
+        /// <summary>
         /// Private constructor to prevent other subclasses
         /// </summary>
         private Errorable()

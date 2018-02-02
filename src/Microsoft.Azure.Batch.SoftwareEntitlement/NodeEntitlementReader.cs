@@ -35,6 +35,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         public Errorable<NodeEntitlements> ReadFromToken(string tokenString)
         {
+            return ParseToken(tokenString)
+                .Bind(parsed => ReadClaims(parsed.Principal, parsed.Token));
+        }
+
+        private Errorable<(ClaimsPrincipal Principal, SecurityToken Token)> ParseToken(string tokenString)
+        {
             var validationParameters = new TokenValidationParameters
             {
                 ValidateAudience = true,
@@ -50,27 +56,32 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 TokenDecryptionKey = _encryptionKey
             };
 
-            ClaimsPrincipal principal;
-            SecurityToken token;
+            Errorable<(ClaimsPrincipal Principal, SecurityToken Token)> Failure(string error)
+                => Errorable.Failure<(ClaimsPrincipal Principal, SecurityToken Token)>(error);
 
             try
             {
                 var handler = new JwtSecurityTokenHandler();
-                principal = handler.ValidateToken(tokenString, validationParameters, out token);
+                var principal = handler.ValidateToken(tokenString, validationParameters, out var token);
+
+                return Errorable.Success((Principal: principal, Token: token));
             }
             catch (SecurityTokenNotYetValidException exception)
             {
-                return TokenNotYetValidError(exception.NotBefore);
+                return Failure(TokenNotYetValidError(exception.NotBefore));
             }
             catch (SecurityTokenExpiredException exception)
             {
-                return TokenExpiredError(exception.Expires);
+                return Failure(TokenExpiredError(exception.Expires));
             }
             catch (SecurityTokenException exception)
             {
-                return InvalidTokenError(exception.Message);
+                return Failure(InvalidTokenError(exception.Message));
             }
+        }
 
+        private static Errorable<NodeEntitlements> ReadClaims(ClaimsPrincipal principal, SecurityToken token)
+        {
             // Set standard claims from token: NotBefore, NotAfter and Issuer
             var result = new NodeEntitlements()
                 .FromInstant(new DateTimeOffset(token.ValidFrom))
@@ -104,7 +115,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 }
                 else
                 {
-                    return InvalidTokenError($"Invalid IP claim: {ipClaim.Value}");
+                    return Errorable.Failure<NodeEntitlements>(InvalidTokenError($"Invalid IP claim: {ipClaim.Value}"));
                 }
             }
 
@@ -123,22 +134,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return Errorable.Success(result);
         }
 
-        private static Errorable<NodeEntitlements> TokenNotYetValidError(DateTime notBefore)
+        private static string TokenNotYetValidError(DateTime notBefore)
         {
             var timestamp = notBefore.ToString(TimestampParser.ExpectedFormat, CultureInfo.InvariantCulture);
-            return Errorable.Failure<NodeEntitlements>($"Token will not be valid until {timestamp}");
+            return $"Token will not be valid until {timestamp}";
         }
 
-        private static Errorable<NodeEntitlements> TokenExpiredError(DateTime expires)
+        private static string TokenExpiredError(DateTime expires)
         {
             var timestamp = expires.ToString(TimestampParser.ExpectedFormat, CultureInfo.InvariantCulture);
-            return Errorable.Failure<NodeEntitlements>($"Token expired at {timestamp}");
+            return $"Token expired at {timestamp}";
         }
 
-        private static Errorable<NodeEntitlements> InvalidTokenError(string reason)
+        private static string InvalidTokenError(string reason)
         {
-            return Errorable.Failure<NodeEntitlements>(
-                $"Invalid token ({reason})");
+            return $"Invalid token ({reason})";
         }
     }
 }

@@ -434,38 +434,5 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 
             return values.Aggregate(subject, (current, v) => current.With(v).Map(applyConfiguration));
         }
-
-        /// <summary>
-        /// Executes a function returning an <see cref="Errorable{T}"/> conditionally, depending
-        /// on the result or a previous <see cref="Errorable{T}"/>.
-        /// </summary>
-        /// <typeparam name="TOld">The type of <paramref name="errorable"/> and the input to
-        /// <paramref name="whenSuccessful"/>.</typeparam>
-        /// <typeparam name="TNew">The return type of <paramref name="whenSuccessful"/></typeparam>
-        /// <param name="errorable">An existing <see cref="Errorable{T}"/> object.</param>
-        /// <param name="whenSuccessful">A function to execute on <paramref name="errorable"/> if it
-        /// was successful</param>
-        /// <returns>
-        /// An <see cref="Errorable{T}"/> containing the result of executing <paramref name="whenSuccessful"/>
-        /// if the input was sucessful, or the errors from <paramref name="errorable"/> otherwise.
-        /// </returns>
-        public static Errorable<TNew> Then<TOld, TNew>(
-            this Errorable<TOld> errorable,
-            Func<TOld, Errorable<TNew>> whenSuccessful)
-        {
-            if (errorable == null)
-            {
-                throw new ArgumentNullException(nameof(errorable));
-            }
-
-            if (whenSuccessful == null)
-            {
-                throw new ArgumentNullException(nameof(whenSuccessful));
-            }
-
-            return errorable.Match(
-                whenSuccessful: whenSuccessful,
-                whenFailure: errors => Errorable.Failure<TNew>(errors));
-        }
     }
 }
