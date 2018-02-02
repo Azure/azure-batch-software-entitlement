@@ -19,8 +19,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Initializes a new instance of the <see cref="TokenReader"/> class
         /// </summary>
-        /// <param name="signingKey">Optional key to use when verifying the signature of the token.</param> 
-        /// <param name="encryptingKey">Optional key to use when decrypting the token.</param> 
+        /// <param name="expectedAudience">The audience claim that tokens to be read are expected to have.</param>
+        /// <param name="expectedIssuer">The issuer claim that tokens to be read are expected to have.</param>
+        /// <param name="signingKey">Optional key to use when verifying the signature of the token.</param>
+        /// <param name="encryptingKey">Optional key to use when decrypting the token.</param>
         public NodeEntitlementReader(
             string expectedAudience,
             string expectedIssuer,
