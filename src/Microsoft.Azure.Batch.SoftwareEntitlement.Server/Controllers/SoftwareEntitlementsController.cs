@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Net;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -20,8 +19,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         private readonly ILogger _logger;
         private readonly IApplicationLifetime _lifetime;
 
-        // Verifier used to check tokens
-        private readonly TokenVerifier _verifier;
+        // Verifier used to check entitlement
+        private readonly EntitlementVerifier _verifier;
 
         private const string ApiVersion201705 = "2017-05-01.5.0";
         private const string ApiVersion201709 = "2017-09-01.6.0";
@@ -32,11 +31,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         /// <param name="serverOptions">Options to use when handling requests.</param>
         /// <param name="logger">Reference to our logger for diagnostics.</param>
         /// <param name="lifetime">Lifetime instance to allow us to automatically shut down if requested.</param>
-        public SoftwareEntitlementsController(ServerOptions serverOptions, ILogger logger, IApplicationLifetime lifetime)
+        /// <param name="verifier">A component responsible for checking data in the request against the claims
+        /// in the token</param>
+        public SoftwareEntitlementsController(
+            ServerOptions serverOptions,
+            ILogger logger,
+            IApplicationLifetime lifetime,
+            EntitlementVerifier verifier)
         {
             _serverOptions = serverOptions;
             _logger = logger;
             _lifetime = lifetime;
+            _verifier = verifier;
 
             if (_serverOptions.SigningKey != null)
             {
@@ -51,8 +57,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
                     "Tokens must be encrypted with {Credentials}",
                     _serverOptions.EncryptionKey.KeyId);
             }
-
-            _verifier = new TokenVerifier(_serverOptions.SigningKey, _serverOptions.EncryptionKey);
         }
 
         [HttpPost]
@@ -74,8 +78,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
                     apiVersion);
 
                 return ExtractParameters(apiVersion, HttpContext, entitlementRequestBody).Match(
-                    whenSuccessful: r => IssueEntitlement(r.Parameters, r.Token, apiVersion),
-                    whenFailure: e => CreateBadRequestResponse(e));
+                    whenSuccessful: r => IssueEntitlement(r.Request, r.Token, apiVersion),
+                    whenFailure: errors => CreateBadRequestResponse(errors));
             }
             finally
             {
@@ -86,27 +90,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             }
         }
 
-        private IActionResult IssueEntitlement(EntitlementRequestParameters parameters, string token, string apiVersion)
+        private IActionResult IssueEntitlement(EntitlementVerificationRequest request, string token, string apiVersion)
         {
-            Errorable<NodeEntitlements> verificationResult = _verifier.Verify(
-                token,
-                _serverOptions.Audience,
-                _serverOptions.Issuer,
-                parameters.ApplicationId,
-                parameters.RemoteAddress);
+            var verificationResult = _verifier.Verify(request, token);
 
             return verificationResult.Match(
                 whenSuccessful: entitlement => CreateEntitlementApprovedResponse(apiVersion, entitlement),
-                whenFailure: errors => CreateEntitlementDeniedResponse(parameters.ApplicationId, errors));
-        }
-
-        private class EntitlementRequestParameters
-        {
-            public string Token { get; set; }
-
-            public string ApplicationId { get; set; }
-
-            public IPAddress RemoteAddress { get; set; }
+                whenFailure: errors => CreateEntitlementDeniedResponse(request.ApplicationId, errors));
         }
 
         /// <summary>
@@ -117,43 +107,38 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         /// <param name="httpContext">The HTTP context of the request</param>
         /// <param name="requestBody">The information in the request body</param>
         /// <returns>
-        /// A tuple in which either the <see cref="EntitlementRequestParameters"/> and token values
+        /// A tuple in which either the <see cref="EntitlementVerificationRequest"/> and token values
         /// are present if the request was well formed, or an informative error otherwise.
         /// </returns>
-        private Errorable<(EntitlementRequestParameters Parameters, string Token)> ExtractParameters(
+        private Errorable<(EntitlementVerificationRequest Request, string Token)> ExtractParameters(
             string apiVersion,
             HttpContext httpContext,
             SoftwareEntitlementRequestBody requestBody)
         {
             if (requestBody == null)
             {
-                return Errorable.Failure<(EntitlementRequestParameters, string)>(
+                return Errorable.Failure<(EntitlementVerificationRequest, string)>(
                     "Missing request body from software entitlement request.");
             }
 
             if (string.IsNullOrEmpty(requestBody.Token))
             {
-                return Errorable.Failure<(EntitlementRequestParameters, string)>(
+                return Errorable.Failure<(EntitlementVerificationRequest, string)>(
                     "Missing token from software entitlement request.");
             }
 
             if (string.IsNullOrEmpty(requestBody.ApplicationId))
             {
-                return Errorable.Failure<(EntitlementRequestParameters, string)>(
+                return Errorable.Failure<(EntitlementVerificationRequest, string)>(
                     "Missing applicationId value from software entitlement request.");
             }
 
             var remoteAddress = httpContext.Connection.RemoteIpAddress;
             _logger.LogDebug("Remote Address: {Address}", remoteAddress);
 
-            var parameters = new EntitlementRequestParameters
-            {
-                Token = requestBody.Token,
-                ApplicationId = requestBody.ApplicationId,
-                RemoteAddress = remoteAddress
-            };
+            var request = new EntitlementVerificationRequest(requestBody.ApplicationId, remoteAddress);
 
-            return Errorable.Success((Parameters: parameters, Token: requestBody.Token));
+            return Errorable.Success((Request: request, Token: requestBody.Token));
         }
 
         private ObjectResult CreateEntitlementApprovedResponse(string apiVersion, NodeEntitlements entitlement)

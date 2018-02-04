@@ -16,9 +16,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public string VirtualMachineId { get; }
 
         /// <summary>
-        /// The moment at which the entitlement was created
+        /// The moment at which the entitlement is issued
         /// </summary>
-        public DateTimeOffset Created { get; }
+        public DateTimeOffset IssuedAt { get; }
 
         /// <summary>
         /// The earliest moment at which the entitlement is active
@@ -63,7 +63,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var now = DateTimeOffset.Now;
 
             VirtualMachineId = string.Empty;
-            Created = now;
+            IssuedAt = now;
             NotBefore = now;
             NotAfter = now + TimeSpan.FromDays(7);
             Applications = ImmutableHashSet<string>.Empty;
@@ -85,6 +85,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             return new NodeEntitlements(this, virtualMachineId: Specify.As(virtualMachineId));
+        }
+
+        /// <summary>
+        /// Specify the instant at which the token is issued
+        /// </summary>
+        /// <param name="issuedAt">Date the token is issued.</param>
+        /// <returns>A new entitlement.</returns>
+        public NodeEntitlements WithIssuedAt(DateTimeOffset issuedAt)
+        {
+            return new NodeEntitlements(this, issuedAt: Specify.As(issuedAt));
         }
 
         /// <summary>
@@ -188,6 +198,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <remarks>Specify any of the optional parameters to modify the clone from the original.</remarks>
         /// <param name="original">Original entitlement to clone.</param>
+        /// <param name="issuedAt">Optionally specify a new value for <see cref="IssuedAt"/></param>
         /// <param name="notBefore">Optionally specify a new value for <see cref="NotBefore"/>.</param>
         /// <param name="notAfter">Optionally specify a new value for <see cref="NotAfter"/>.</param>
         /// <param name="virtualMachineId">Optionally specify a new value for <see cref="VirtualMachineId"/>.</param>
@@ -198,6 +209,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="issuer">Issuer identifier for the token.</param>
         private NodeEntitlements(
             NodeEntitlements original,
+            Specifiable<DateTimeOffset> issuedAt = default,
             Specifiable<DateTimeOffset> notBefore = default,
             Specifiable<DateTimeOffset> notAfter = default,
             Specifiable<string> virtualMachineId = default,
@@ -212,7 +224,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 throw new ArgumentNullException(nameof(original));
             }
 
-            Created = original.Created;
+            IssuedAt = issuedAt.OrDefault(original.IssuedAt);
             NotBefore = notBefore.OrDefault(original.NotBefore);
             NotAfter = notAfter.OrDefault(original.NotAfter);
             VirtualMachineId = virtualMachineId.OrDefault(original.VirtualMachineId);
