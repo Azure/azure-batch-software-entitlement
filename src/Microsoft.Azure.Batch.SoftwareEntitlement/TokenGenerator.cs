@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
+using System.Linq;
 using System.Security.Claims;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Extensions.Logging;
@@ -113,16 +114,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             AddClaim(claims, Claims.JobId, "Job id", entitlements.JobId);
             AddClaim(claims, Claims.TaskId, "Task id", entitlements.TaskId);
             AddClaim(claims, Claims.EntitlementId, "Entitlement id", entitlements.Identifier);
-
-            foreach (var ip in entitlements.IpAddresses)
-            {
-                AddClaim(claims, Claims.IpAddress, "IP address", ip.ToString());
-            }
-
-            foreach (var app in entitlements.Applications)
-            {
-                AddClaim(claims, Claims.Application, "Application id", app);
-            }
+            AddClaims(claims, Claims.IpAddress, "IP address", entitlements.IpAddresses.Select(ip => ip.ToString()));
+            AddClaims(claims, Claims.Application, "Application id", entitlements.Applications);
 
             return claims;
         }
@@ -133,6 +126,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             {
                 _logger.LogDebug($"{claimName}: {{{claimId}}}", claimValue);
                 claims.Add(new Claim(claimId, claimValue));
+            }
+        }
+
+        private void AddClaims(IList<Claim> claims, string claimId, string claimName, IEnumerable<string> claimValues)
+        {
+            foreach (var claimValue in claimValues)
+            {
+                AddClaim(claims, claimId, claimName, claimValue);
             }
         }
     }
