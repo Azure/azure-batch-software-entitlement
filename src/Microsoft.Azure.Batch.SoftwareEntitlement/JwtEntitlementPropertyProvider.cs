@@ -103,6 +103,46 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             => ReadAll(Claims.IpAddress).Select(ParseIpAddress).Reduce();
 
         /// <summary>
+        /// Gets the number of CPU cores configured for the selected VM SKU
+        /// </summary>
+        public Errorable<int> CpuCoreCount()
+        {
+            var coreCountText = Read(Claims.CpuCoreCount);
+            if (string.IsNullOrEmpty(coreCountText))
+            {
+                return Errorable.Failure<int>("Missing CPU core count in token.");
+            }
+
+            return int.TryParse(coreCountText, out int coreCount)
+                ? Errorable.Success(coreCount)
+                : Errorable.Failure<int>($"Invalid CPU core count value '{coreCountText}'");
+        }
+
+        /// <summary>
+        /// The unique identifier of the batch account that owns the pool
+        /// </summary>
+        public Errorable<string> BatchAccountId()
+            => Errorable.Success(Read(Claims.BatchAccountId));
+
+        /// <summary>
+        /// The unique identifier for the pool on which the application is expected to be running
+        /// </summary>
+        public Errorable<string> PoolId()
+            => Errorable.Success(Read(Claims.PoolId));
+
+        /// <summary>
+        /// A unique identifier for the job within which the task is running
+        /// </summary>
+        public Errorable<string> JobId()
+            => Errorable.Success(Read(Claims.JobId));
+
+        /// <summary>
+        /// A unique identifier for the task itself
+        /// </summary>
+        public Errorable<string> TaskId()
+            => Errorable.Success(Read(Claims.TaskId));
+
+        /// <summary>
         /// Gets the virtual machine identifier for the machine entitled to use the specified packages from a claim
         /// in the principal.
         /// </summary>

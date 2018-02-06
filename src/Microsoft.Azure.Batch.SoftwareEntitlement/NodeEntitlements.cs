@@ -101,6 +101,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 .With(provider.Audience()).Map((e, val) => e.WithAudience(val))
                 .With(provider.ApplicationIds()).Map((e, vals) => e.WithApplications(vals))
                 .With(provider.IpAddresses()).Map((e, vals) => e.WithIpAddresses(vals))
+				.With(provider.CpuCoreCount()).Map((e, val) => e.WithCpuCoreCount(val))
+				.With(provider.BatchAccountId()).Map((e, val) => e.WithBatchAccountId(val))
+				.With(provider.PoolId()).Map((e, val) => e.WithPoolId(val))
+				.With(provider.JobId()).Map((e, val) => e.WithJobId(val))
+				.With(provider.TaskId()).Map((e, val) => e.WithTaskId(val))
                 .With(provider.VirtualMachineId()).Map((e, val) => e.WithVirtualMachineId(val))
                 .With(provider.EntitlementId()).Map((e, val) => e.WithIdentifier(val));
         }

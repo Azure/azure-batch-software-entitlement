@@ -21,7 +21,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 Issuer = Errorable.Success("https://issuer.region.batch.azure.test"),
                 NotAfter = Errorable.Success(now + TimeSpan.FromDays(7)),
                 NotBefore = Errorable.Success(now),
-                VirtualMachineId = Errorable.Success("Sample")
+                VirtualMachineId = Errorable.Success("Sample"),
+                CpuCoreCount = Errorable.Success(4),
+                BatchAccountId = Errorable.Success((string)null),
+                PoolId = Errorable.Success((string)null),
+                JobId = Errorable.Success((string)null),
+                TaskId = Errorable.Success((string)null)
             };
         }
 
@@ -43,6 +48,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
         public Errorable<string> VirtualMachineId { get; set; }
 
+        public Errorable<int> CpuCoreCount { get; set; }
+
+        public Errorable<string> BatchAccountId { get; set; }
+
+        public Errorable<string> PoolId { get; set; }
+
+        public Errorable<string> JobId { get; set; }
+
+        public Errorable<string> TaskId { get; set; }
+
         Errorable<IEnumerable<string>> IEntitlementPropertyProvider.ApplicationIds() => ApplicationIds;
 
         Errorable<string> IEntitlementPropertyProvider.Audience() => Audience;
@@ -50,6 +65,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         Errorable<string> IEntitlementPropertyProvider.EntitlementId() => EntitlementId;
 
         Errorable<IEnumerable<IPAddress>> IEntitlementPropertyProvider.IpAddresses() => IpAddresses;
+
+        Errorable<int> IEntitlementPropertyProvider.CpuCoreCount() => CpuCoreCount;
+
+        Errorable<string> IEntitlementPropertyProvider.BatchAccountId() => BatchAccountId;
+
+        Errorable<string> IEntitlementPropertyProvider.PoolId() => PoolId;
+
+        Errorable<string> IEntitlementPropertyProvider.JobId() => JobId;
+
+        Errorable<string> IEntitlementPropertyProvider.TaskId() => TaskId;
 
         Errorable<DateTimeOffset> IEntitlementPropertyProvider.IssuedAt() => IssuedAt;
 

@@ -48,6 +48,31 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         Errorable<IEnumerable<IPAddress>> IpAddresses();
 
         /// <summary>
+        /// Gets the number of CPU cores configured for the selected VM SKU
+        /// </summary>
+        Errorable<int> CpuCoreCount();
+
+        /// <summary>
+        /// The unique identifier of the batch account that owns the pool
+        /// </summary>
+        Errorable<string> BatchAccountId();
+
+        /// <summary>
+        /// The unique identifier for the pool on which the application is expected to be running
+        /// </summary>
+        Errorable<string> PoolId();
+
+        /// <summary>
+        /// A unique identifier for the job within which the task is running
+        /// </summary>
+        Errorable<string> JobId();
+
+        /// <summary>
+        /// A unique identifier for the task itself
+        /// </summary>
+        Errorable<string> TaskId();
+
+        /// <summary>
         /// Gets the virtual machine identifier for the machine entitled to use the specified packages
         /// </summary>
         Errorable<string> VirtualMachineId();
