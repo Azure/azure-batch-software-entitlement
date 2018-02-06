@@ -92,10 +92,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     encryptionKey, SecurityAlgorithms.RsaOAEP, SecurityAlgorithms.Aes256CbcHmacSha512);
             }
 
-            var entitlementWithIdentifier = entitlements.WithIdentifier($"entitlement-{Guid.NewGuid():D}");
-
             var generator = new TokenGenerator(Logger, signingCredentials, encryptingCredentials);
-            return generator.Generate(entitlementWithIdentifier);
+            return generator.Generate(entitlements);
         }
 
         private static Errorable<X509Certificate2> FindCertificate(string purpose, string thumbprint)

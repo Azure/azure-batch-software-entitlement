@@ -27,10 +27,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             Justification = "Must be a string to support our commandline.")]
         public string ServerUrl { get; set; }
 
-        [Option("audience", HelpText = "[Internal] Audience to which all tokens must be addressed (optional).")]
+        [Option("audience", HelpText = "[Internal] Audience to which all tokens must be addressed (optional, defaults to '" + Claims.DefaultAudience + "').")]
         public string Audience { get; set; }
 
-        [Option("issuer", HelpText = "[Internal] Issuer by which all tokens must have been created (optional).")]
+        [Option("issuer", HelpText = "[Internal] Issuer by which all tokens must have been created (optional, defaults to '" + Claims.DefaultIssuer + "').")]
         public string Issuer { get; set; }
 
         [Option("exit-after-request", HelpText = "Server will automatically exit after processing one request.")]

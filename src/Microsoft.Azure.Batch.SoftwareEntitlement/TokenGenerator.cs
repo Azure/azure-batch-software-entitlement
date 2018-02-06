@@ -77,11 +77,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     EncryptingCredentials.Key.KeyId);
             }
 
-            var effectiveIssuer = entitlements.Issuer ?? Claims.DefaultIssuer;
-            _logger.LogDebug("Issued by {Issuer}", effectiveIssuer);
-
-            var effectiveAudience = entitlements.Audience ?? Claims.DefaultAudience;
-            _logger.LogDebug("Audience is {Audience}", effectiveAudience);
+            _logger.LogDebug("Issued by {Issuer}", entitlements.Issuer);
+            _logger.LogDebug("Audience is {Audience}", entitlements.Audience);
 
             var claims = CreateClaims(entitlements);
             var claimsIdentity = new ClaimsIdentity(claims);
@@ -91,8 +88,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 NotBefore = entitlements.NotBefore.UtcDateTime,
                 Expires = entitlements.NotAfter.UtcDateTime,
                 IssuedAt = entitlements.IssuedAt.UtcDateTime,
-                Issuer = effectiveIssuer,
-                Audience = effectiveAudience,
+                Issuer = entitlements.Issuer,
+                Audience = entitlements.Audience,
                 SigningCredentials = SigningCredentials,
                 EncryptingCredentials = EncryptingCredentials
             };

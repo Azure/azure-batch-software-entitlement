@@ -22,6 +22,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         // A steady reference for "now"
         private readonly DateTimeOffset _now = DateTimeOffset.Now;
 
+        private readonly string _entitlementId = $"entitlement-{Guid.NewGuid():D}";
+
         /// <summary>
         /// Build an instance of <see cref="NodeEntitlements"/> from the information supplied on the 
         /// command line by the user
@@ -52,24 +54,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// of errors.</returns>
         private Errorable<NodeEntitlements> Build()
         {
-            var result = Errorable.Success(new NodeEntitlements())
-                .Configure(VirtualMachineId(), (e, url) => e.WithVirtualMachineId(url))
-                .Configure(NotBefore(), (e, notBefore) => e.FromInstant(notBefore))
-                .Configure(NotAfter(), (e, notAfter) => e.UntilInstant(notAfter))
-                .Configure(Audience(), (e, audience) => e.WithAudience(audience))
-                .Configure(Issuer(), (e, issuer) => e.WithIssuer(issuer))
-                .ConfigureAll(Addresses(), (e, address) => e.AddIpAddress(address))
-                .ConfigureAll(Applications(), (e, app) => e.AddApplication(app));
-
-            return result;
+            return Errorable.Success(new NodeEntitlements())
+                .With(NotBefore()).Map((e, val) => e.FromInstant(val))
+                .With(NotAfter()).Map((e, val) => e.UntilInstant(val))
+                .With(IssuedAt()).Map((e, val) => e.WithIssuedAt(val))
+                .With(Issuer()).Map((e, val) => e.WithIssuer(val))
+                .With(Audience()).Map((e, val) => e.WithAudience(val))
+                .With(ApplicationIds()).Map((e, vals) => e.WithApplications(vals))
+                .With(IpAddresses()).Map((e, vals) => e.WithIpAddresses(vals))
+                .With(VirtualMachineId()).Map((e, val) => e.WithVirtualMachineId(val))
+                .With(EntitlementId()).Map((e, val) => e.WithIdentifier(val));
         }
 
-        private Errorable<string> VirtualMachineId()
-        {
-            // VirtualMachineId is not allowed to be set to null, but string.Empty is valid
-            // (that's the value if otherwise unspecified).
-            return Errorable.Success(_commandLine.VirtualMachineId ?? string.Empty);
-        }
+        private Errorable<DateTimeOffset> IssuedAt()
+            => Errorable.Success(_now);
 
         private Errorable<DateTimeOffset> NotBefore()
         {
@@ -97,7 +95,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (string.IsNullOrEmpty(_commandLine.Audience))
             {
-                // if the audience does not specify an audience, we use a default value to "self-sign"
+                // if the user does not specify an audience, we use a default value to "self-sign"
                 return Errorable.Success(Claims.DefaultAudience);
             }
 
@@ -108,14 +106,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (string.IsNullOrEmpty(_commandLine.Issuer))
             {
-                // if the audience does not specify an issuer, we use a default value to "self-sign"
+                // if the user does not specify an issuer, we use a default value to "self-sign"
                 return Errorable.Success(Claims.DefaultIssuer);
             }
 
             return Errorable.Success(_commandLine.Issuer);
         }
 
-        private IEnumerable<Errorable<IPAddress>> Addresses()
+        private Errorable<IEnumerable<IPAddress>> IpAddresses()
         {
             var result = new List<Errorable<IPAddress>>();
             if (_commandLine.Addresses != null)
@@ -131,7 +129,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 result.AddRange(ListMachineIpAddresses());
             }
 
-            return result;
+            return result.Reduce();
         }
 
         private static IEnumerable<Errorable<IPAddress>> ListMachineIpAddresses()
@@ -166,19 +164,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return Errorable.Failure<IPAddress>($"IP address '{address}' is not in an expected format (IPv4 and IPv6 supported).");
         }
 
-        private IEnumerable<Errorable<string>> Applications()
+        private Errorable<IEnumerable<string>> ApplicationIds()
         {
             if (_commandLine.ApplicationIds == null || !_commandLine.ApplicationIds.Any())
             {
-                yield return Errorable.Failure<string>("No applications specified.");
-                yield break;
+                return Errorable.Failure<IEnumerable<string>>("No applications specified.");
             }
 
-            var apps = _commandLine.ApplicationIds.ToList();
-            foreach (var app in apps)
-            {
-                yield return Errorable.Success(app.Trim());
-            }
+            var apps = _commandLine.ApplicationIds.Select(app => app.Trim());
+            return Errorable.Success(apps);
         }
+
+        private Errorable<string> VirtualMachineId()
+            => Errorable.Success(_commandLine.VirtualMachineId);
+
+        private Errorable<string> EntitlementId()
+            => Errorable.Success(_entitlementId);
     }
 }
