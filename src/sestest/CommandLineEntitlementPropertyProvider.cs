@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     /// A factory object that tries to create a <see cref="NodeEntitlements"/> instance when given 
     /// the <see cref="GenerateCommandLine"/> specified by the user.
     /// </summary>
-    public class NodeEntitlementsBuilder
+    public class CommandLineEntitlementPropertyProvider : IEntitlementPropertyProvider
     {
         // Reference to the generate command line we wrap
         private readonly GenerateCommandLine _commandLine;
@@ -25,51 +25,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         private readonly string _entitlementId = $"entitlement-{Guid.NewGuid():D}";
 
         /// <summary>
-        /// Build an instance of <see cref="NodeEntitlements"/> from the information supplied on the 
-        /// command line by the user
-        /// </summary>
-        /// <param name="commandLine">Command line parameters supplied by the user.</param>
-        /// <returns>Either a usable (and completely valid) <see cref="NodeEntitlements"/> or a set 
-        /// of errors.</returns>
-        public static Errorable<NodeEntitlements> Build(GenerateCommandLine commandLine)
-        {
-            var builder = new NodeEntitlementsBuilder(commandLine);
-            return builder.Build();
-        }
-
-        /// <summary>
         /// Initializes a new instance of the <see cref="GenerateCommandLine"/> class
         /// </summary>
         /// <param name="commandLine">Options provided on the command line.</param>
-        private NodeEntitlementsBuilder(GenerateCommandLine commandLine)
+        public CommandLineEntitlementPropertyProvider(GenerateCommandLine commandLine)
         {
             _commandLine = commandLine ?? throw new ArgumentNullException(nameof(commandLine));
         }
 
-        /// <summary>
-        /// Build an instance of <see cref="NodeEntitlements"/> from the information supplied on the 
-        /// command line by the user
-        /// </summary>
-        /// <returns>Either a usable (and completely valid) <see cref="NodeEntitlements"/> or a set 
-        /// of errors.</returns>
-        private Errorable<NodeEntitlements> Build()
-        {
-            return Errorable.Success(new NodeEntitlements())
-                .With(NotBefore()).Map((e, val) => e.FromInstant(val))
-                .With(NotAfter()).Map((e, val) => e.UntilInstant(val))
-                .With(IssuedAt()).Map((e, val) => e.WithIssuedAt(val))
-                .With(Issuer()).Map((e, val) => e.WithIssuer(val))
-                .With(Audience()).Map((e, val) => e.WithAudience(val))
-                .With(ApplicationIds()).Map((e, vals) => e.WithApplications(vals))
-                .With(IpAddresses()).Map((e, vals) => e.WithIpAddresses(vals))
-                .With(VirtualMachineId()).Map((e, val) => e.WithVirtualMachineId(val))
-                .With(EntitlementId()).Map((e, val) => e.WithIdentifier(val));
-        }
-
-        private Errorable<DateTimeOffset> IssuedAt()
+        public Errorable<DateTimeOffset> IssuedAt()
             => Errorable.Success(_now);
 
-        private Errorable<DateTimeOffset> NotBefore()
+        public Errorable<DateTimeOffset> NotBefore()
         {
             if (string.IsNullOrEmpty(_commandLine.NotBefore))
             {
@@ -80,7 +47,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return _timestampParser.TryParse(_commandLine.NotBefore, "NotBefore");
         }
 
-        private Errorable<DateTimeOffset> NotAfter()
+        public Errorable<DateTimeOffset> NotAfter()
         {
             if (string.IsNullOrEmpty(_commandLine.NotAfter))
             {
@@ -91,7 +58,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return _timestampParser.TryParse(_commandLine.NotAfter, "NotAfter");
         }
 
-        private Errorable<string> Audience()
+        public Errorable<string> Audience()
         {
             if (string.IsNullOrEmpty(_commandLine.Audience))
             {
@@ -102,7 +69,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return Errorable.Success(_commandLine.Audience);
         }
 
-        private Errorable<string> Issuer()
+        public Errorable<string> Issuer()
         {
             if (string.IsNullOrEmpty(_commandLine.Issuer))
             {
@@ -113,7 +80,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return Errorable.Success(_commandLine.Issuer);
         }
 
-        private Errorable<IEnumerable<IPAddress>> IpAddresses()
+        public Errorable<IEnumerable<IPAddress>> IpAddresses()
         {
             var result = new List<Errorable<IPAddress>>();
             if (_commandLine.Addresses != null)
@@ -164,7 +131,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return Errorable.Failure<IPAddress>($"IP address '{address}' is not in an expected format (IPv4 and IPv6 supported).");
         }
 
-        private Errorable<IEnumerable<string>> ApplicationIds()
+        public Errorable<IEnumerable<string>> ApplicationIds()
         {
             if (_commandLine.ApplicationIds == null || !_commandLine.ApplicationIds.Any())
             {
@@ -175,10 +142,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return Errorable.Success(apps);
         }
 
-        private Errorable<string> VirtualMachineId()
+        public Errorable<string> VirtualMachineId()
             => Errorable.Success(_commandLine.VirtualMachineId);
 
-        private Errorable<string> EntitlementId()
+        public Errorable<string> EntitlementId()
             => Errorable.Success(_entitlementId);
     }
 }

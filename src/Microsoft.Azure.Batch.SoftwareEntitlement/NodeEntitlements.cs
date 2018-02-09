@@ -66,6 +66,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             IpAddresses = ImmutableHashSet<IPAddress>.Empty;
         }
 
+        public static Errorable<NodeEntitlements> Build(IEntitlementPropertyProvider provider)
+        {
+            return Errorable.Success(new NodeEntitlements())
+                .With(provider.NotBefore()).Map((e, val) => e.FromInstant(val))
+                .With(provider.NotAfter()).Map((e, val) => e.UntilInstant(val))
+                .With(provider.IssuedAt()).Map((e, val) => e.WithIssuedAt(val))
+                .With(provider.Issuer()).Map((e, val) => e.WithIssuer(val))
+                .With(provider.Audience()).Map((e, val) => e.WithAudience(val))
+                .With(provider.ApplicationIds()).Map((e, vals) => e.WithApplications(vals))
+                .With(provider.IpAddresses()).Map((e, vals) => e.WithIpAddresses(vals))
+                .With(provider.VirtualMachineId()).Map((e, val) => e.WithVirtualMachineId(val))
+                .With(provider.EntitlementId()).Map((e, val) => e.WithIdentifier(val));
+        }
+
         /// <summary>
         /// Specify the virtual machine Id of the machine
         /// </summary>
@@ -174,11 +188,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>A new entitlement</returns>
         public NodeEntitlements WithIdentifier(string identifier)
         {
-            if (string.IsNullOrEmpty(identifier))
-            {
-                throw new ArgumentException("Expect to have an identifier", nameof(identifier));
-            }
-
             return new NodeEntitlements(this, identifier: Specify.As(identifier));
         }
 
