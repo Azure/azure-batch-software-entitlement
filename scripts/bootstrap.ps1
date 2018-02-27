@@ -49,6 +49,9 @@ function TryLoad-Psake-ViaNuGetCache()
     }
 }
 
+# Prevent the dotnet CLI from displaying a welcome message on first use
+$env:DOTNET_PRINT_TELEMETRY_MESSAGE = "false"
+
 # Try to load a local copy first (so we can ensure a particular version is used)
 TryLoad-Psake .\lib\psake
 
