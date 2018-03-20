@@ -43,11 +43,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             Errorable<string> app = FindApplication(commandLine);
             Errorable<string> api = FindApiVersion(commandLine);
 
-            var result = await server.With(token)
+            Errorable<int> result = await server.With(token)
                 .With(app)
                 .With(api)
                 .MapAsync(SubmitToken)
                 .ConfigureAwait(false);
+
             return result.Match(
                 exitCode => exitCode,
                 errors =>
