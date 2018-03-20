@@ -1,5 +1,7 @@
 using System;
+using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -7,6 +9,7 @@ using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -15,6 +18,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     /// </summary>
     public sealed class VerifyCommand : CommandBase
     {
+        private static readonly JsonSerializerSettings SerializerSettings = new JsonSerializerSettings
+        {
+            ContractResolver = new CamelCasePropertyNamesContractResolver()
+        };
+
         /// <summary>
         /// Initializes a new instance of the <see cref="VerifyCommand"/> class
         /// </summary>
@@ -54,29 +62,56 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         private async Task<string> SubmitToken(Uri server, string token, string app, string api)
         {
-            var builder = new UriBuilder(server);
-            //TODO: Do this in a path safe way similar to Path.Combine
-            builder.Path = builder.Path + "softwareEntitlements";
-            builder.Query = CreateParameters(("api-version", api));
+            var serverPath = server.AbsolutePath.EndsWith('/')
+                ? server.AbsolutePath
+                : server.AbsolutePath + "/";
+
+            var builder = new UriBuilder(server.Scheme, server.Host, server.Port)
+            {
+                Path = serverPath + "softwareEntitlements",
+                Query = CreateParameters(("api-version", api))
+            };
 
             var uri = builder.Uri;
 
-            using (var client = new HttpClient())
+            using (var handler = GetClientHandler())
             {
-                var requestBody = new SoftwareEntitlementRequestBody
+                using (var client = new HttpClient(handler))
                 {
-                    Token = token,
-                    ApplicationId = app
-                };
+                    var requestBody = new SoftwareEntitlementRequestBody
+                    {
+                        Token = token,
+                        ApplicationId = app
+                    };
 
-                var requestJson = JsonConvert.SerializeObject(requestBody);
-                var content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+                    var requestJson = JsonConvert.SerializeObject(requestBody, SerializerSettings);
 
-                var result = await client.PostAsync(uri, content).ConfigureAwait(false);
-                Logger.LogInformation($"Status Code: {result.StatusCode} ({(int) result.StatusCode})");
+                    // Create the request content, specifying the content type with the "odata" qualifier
+                    // (without this the request is rejected with an HTTP 400).
+                    var content = new StringContent(requestJson, Encoding.UTF8);
+                    content.Headers.ContentType = MediaTypeWithQualityHeaderValue.Parse("application/json; odata=minimalmetadata");
 
-                return await result.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var result = await client.PostAsync(uri, content).ConfigureAwait(false);
+                    Logger.LogInformation($"Status Code: {result.StatusCode} ({(int)result.StatusCode})");
+
+                    return await result.Content.ReadAsStringAsync().ConfigureAwait(false);
+                }
             }
+        }
+
+        private static HttpClientHandler GetClientHandler()
+        {
+            var handler = new HttpClientHandler();
+
+            // Ensure we pick up any HTTPS proxy configured in an environment variable
+            // (as the SDK does).
+            var proxyOrigin = Environment.GetEnvironmentVariable("https_proxy");
+            if (proxyOrigin != null)
+            {
+                handler.Proxy = new WebProxy(proxyOrigin);
+            }
+
+            return handler;
         }
 
         private Errorable<string> FindToken(VerifyCommandLine commandLine)
