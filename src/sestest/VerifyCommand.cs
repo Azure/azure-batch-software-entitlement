@@ -43,16 +43,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             Errorable<string> app = FindApplication(commandLine);
             Errorable<string> api = FindApiVersion(commandLine);
 
-            Errorable<string> result = await server.With(token)
+            Errorable<int> result = await server.With(token)
                 .With(app)
                 .With(api)
                 .MapAsync(SubmitToken)
                 .ConfigureAwait(false);
-            return result.Match(response =>
-                {
-                    Logger.LogJson(response);
-                    return ResultCodes.Success;
-                },
+
+            return result.Match(
+                exitCode => exitCode,
                 errors =>
                 {
                     Logger.LogErrors(errors);
@@ -60,7 +58,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 });
         }
 
-        private async Task<string> SubmitToken(Uri server, string token, string app, string api)
+        private async Task<int> SubmitToken(Uri server, string token, string app, string api)
         {
             var serverPath = server.AbsolutePath.EndsWith('/')
                 ? server.AbsolutePath
@@ -92,9 +90,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     content.Headers.ContentType = MediaTypeWithQualityHeaderValue.Parse("application/json; odata=minimalmetadata");
 
                     var result = await client.PostAsync(uri, content).ConfigureAwait(false);
+
                     Logger.LogInformation($"Status Code: {result.StatusCode} ({(int)result.StatusCode})");
 
-                    return await result.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    var responseContent = await result.Content.ReadAsStringAsync().ConfigureAwait(false);
+                    if (!result.IsSuccessStatusCode)
+                    {
+                        Logger.LogError(result.ReasonPhrase);
+                        return ResultCodes.Failed;
+                    }
+
+                    Logger.LogJson(responseContent);
+                    return ResultCodes.Success;
                 }
             }
         }
