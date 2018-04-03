@@ -17,7 +17,7 @@ Task Clean -Depends Clean.SourceFolder, Clean.OutFolder, Clean.PublishFolder
 Task Build.Xplat -Depends Clean, Build.SesTest, Unit.Tests
 
 # Publish distributable zip files for the each tool and platform
-Task Publish.Archives -Depends Clean, Publish.SesTest.Win64, Publish.SesTest.Linux64, Publish.SesClient
+Task Publish.Archives -Depends Clean, Request.Release, Publish.SesTest.Win64, Publish.SesTest.Linux64, Publish.SesClient
 
 # Build all the components for use on Windows
 Task Build.Windows -Depends Clean, Build.SesLibrary, Build.SesClient, Build.SesTest
