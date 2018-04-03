@@ -176,8 +176,8 @@ Task Publish.SesTest.Linux64 -Depends Requires.DotNetExe, Restore.NuGetPackages 
 }
 
 Task Publish.SesClient -Depends Build.SesLibrary, Build.SesClient {
-    $clientDir = resolve-path $srcDir\sesclient.native\x64\*
-    $archive = "$publishDir\sesclient-$semanticVersion-x64.zip"
+    $clientDir = resolve-path $srcDir\sesclient.native\$targetPlatform\$configuration
+    $archive = "$publishDir\sesclient-$semanticVersion-$targetPlatform.zip"
     exec {
         compress-archive $clientDir\*.exe, $clientDir\*.dll $archive
     }
