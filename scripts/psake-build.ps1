@@ -149,7 +149,7 @@ Task Cover.Tests -Depends Requires.Opencover, Requires.ReportGenerator, Requires
     & $reportGeneratorExe "-reports:$outDir\*.cover.xml" "-targetdir:$outDir\cover\"
 }
 
-Task Publish.SesTest.Win64 -Depends Requires.DotNetExe, Restore.NuGetPackages {
+Task Publish.SesTest.Win64 -Depends Requires.DotNetExe, Restore.NuGetPackages, Generate.Version {
     exec {
         & $dotnetExe publish $srcDir\sestest\sestest.csproj --self-contained --output $publishDir\sestest\win10-x64 --runtime win10-x64 /p:Version=$semanticVersion
     }
@@ -162,7 +162,7 @@ Task Publish.SesTest.Win64 -Depends Requires.DotNetExe, Restore.NuGetPackages {
     Write-Output "Created archive $archive"
 }
 
-Task Publish.SesTest.Linux64 -Depends Requires.DotNetExe, Restore.NuGetPackages {
+Task Publish.SesTest.Linux64 -Depends Requires.DotNetExe, Restore.NuGetPackages, Generate.Version {
     exec {
         & $dotnetExe publish $srcDir\sestest\sestest.csproj --self-contained --output $publishDir\sestest\linux-x64 --runtime linux-x64 /p:Version=$semanticVersion
     }
@@ -191,18 +191,22 @@ Task Publish.SesClient -Depends Build.SesLibrary, Build.SesClient {
 ## Tasks used to configure the build
 
 Task Request.x64 {
+    Write-Output "64 bit build"
     $script:targetPlatform = "x64"
 }
 
 Task Request.x86 {
+    Write-Output "32 bit build"
     $script:targetPlatform = "x86"
 }
 
 Task Request.Debug {
+    Write-Output "Debug build"
     $script:configuration = "Debug"
 }
 
 Task Request.Release {
+    Write-Output "Release build"
     $script:configuration = "Release"
 }
 
@@ -274,7 +278,7 @@ Task Requires.OutDir {
 Task Requires.Platform {
 
     if ($targetPlatform -eq $null) {
-        $script:targetPlatform = "Debug"
+        $script:targetPlatform = "x64"
     }
 
     Write-Output "Target platform is $targetPlatform"
