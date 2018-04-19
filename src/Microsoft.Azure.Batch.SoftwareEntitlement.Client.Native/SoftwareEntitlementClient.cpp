@@ -99,7 +99,7 @@ CertInfo s_Batch_China_CloudAPI_CA = {
 	".batch.chinacloudapi.cn"
 };
 
-CertInfo s_D_TRUST_SSL_Class_3_CA_1_2009 = {
+CertInfo s_Batch_Germany_CloudAPI_CA = {
     {{ 0x2f,0xc5,0xde,0x65,0x28,0xcd,0xbe,0x50,0xa1,0x4c,0x38,0x2f,0xc1,0xde,0x52,0x4f,0xaa,0xbf,0x95,0xfc }},
     "D-TRUST SSL Class 3 CA 1 2009",
      ".batch.microsoftazure.de" 
@@ -112,9 +112,9 @@ std::array<CertInfo, 9> s_microsoftIntermediateCerts = {{
     s_Microsoft_IT_TLS_CA_2,
     s_Microsoft_IT_TLS_CA_4,
     s_Microsoft_IT_TLS_CA_5,
-	s_Batch_USGov_CloudAPI_CA,
-	s_Batch_China_CloudAPI_CA,
-    s_D_TRUST_SSL_Class_3_CA_1_2009
+    s_Batch_USGov_CloudAPI_CA,
+    s_Batch_China_CloudAPI_CA,
+    s_Batch_Germany_CloudAPI_CA
 }};
 
 std::vector<CertInfo> s_sslCerts;
