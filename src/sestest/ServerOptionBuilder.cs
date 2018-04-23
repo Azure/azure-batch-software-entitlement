@@ -38,13 +38,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public Errorable<ServerOptions> Build()
         {
             var result = Errorable.Success(new ServerOptions())
-                .Configure(ServerUrl(), (opt, url) => opt.WithServerUrl(url))
-                .Configure(ConnectionCertificate(), (opt, cert) => opt.WithConnectionCertificate(cert))
-                .Configure(SigningCertificate(), (opt, cert) => opt.WithSigningCertificate(cert))
-                .Configure(EncryptingCertificate(), (opt, cert) => opt.WithEncryptionCertificate(cert))
-                .Configure(Audience(), (opt, audience) => opt.WithAudience(audience))
-                .Configure(Issuer(), (opt, issuer) => opt.WithIssuer(issuer))
-                .Configure(ExitAfterRequest(), (opt, exit) => opt.WithAutomaticExitAfterOneRequest(exit));
+                .With(ServerUrl()).Map((opt, url) => opt.WithServerUrl(url))
+                .With(ConnectionCertificate()).Map((opt, cert) => opt.WithConnectionCertificate(cert))
+                .With(SigningCertificate()).Map((opt, cert) => opt.WithSigningCertificate(cert))
+                .With(EncryptingCertificate()).Map((opt, cert) => opt.WithEncryptionCertificate(cert))
+                .With(Audience()).Map((opt, audience) => opt.WithAudience(audience))
+                .With(Issuer()).Map((opt, issuer) => opt.WithIssuer(issuer))
+                .With(ExitAfterRequest()).Map((opt, exit) => opt.WithAutomaticExitAfterOneRequest(exit));
 
             return result;
         }

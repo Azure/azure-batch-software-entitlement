@@ -11,7 +11,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     /// A factory object that tries to create a <see cref="NodeEntitlements"/> instance when given 
     /// the <see cref="GenerateCommandLine"/> specified by the user.
     /// </summary>
-    public class NodeEntitlementsBuilder
+    public class CommandLineEntitlementPropertyProvider : IEntitlementPropertyProvider
     {
         // Reference to the generate command line we wrap
         private readonly GenerateCommandLine _commandLine;
@@ -22,56 +22,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         // A steady reference for "now"
         private readonly DateTimeOffset _now = DateTimeOffset.Now;
 
-        /// <summary>
-        /// Build an instance of <see cref="NodeEntitlements"/> from the information supplied on the 
-        /// command line by the user
-        /// </summary>
-        /// <param name="commandLine">Command line parameters supplied by the user.</param>
-        /// <returns>Either a usable (and completely valid) <see cref="NodeEntitlements"/> or a set 
-        /// of errors.</returns>
-        public static Errorable<NodeEntitlements> Build(GenerateCommandLine commandLine)
-        {
-            var builder = new NodeEntitlementsBuilder(commandLine);
-            return builder.Build();
-        }
+        private readonly string _entitlementId = $"entitlement-{Guid.NewGuid():D}";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GenerateCommandLine"/> class
         /// </summary>
         /// <param name="commandLine">Options provided on the command line.</param>
-        private NodeEntitlementsBuilder(GenerateCommandLine commandLine)
+        public CommandLineEntitlementPropertyProvider(GenerateCommandLine commandLine)
         {
             _commandLine = commandLine ?? throw new ArgumentNullException(nameof(commandLine));
         }
 
-        /// <summary>
-        /// Build an instance of <see cref="NodeEntitlements"/> from the information supplied on the 
-        /// command line by the user
-        /// </summary>
-        /// <returns>Either a usable (and completely valid) <see cref="NodeEntitlements"/> or a set 
-        /// of errors.</returns>
-        private Errorable<NodeEntitlements> Build()
-        {
-            var result = Errorable.Success(new NodeEntitlements())
-                .Configure(VirtualMachineId(), (e, url) => e.WithVirtualMachineId(url))
-                .Configure(NotBefore(), (e, notBefore) => e.FromInstant(notBefore))
-                .Configure(NotAfter(), (e, notAfter) => e.UntilInstant(notAfter))
-                .Configure(Audience(), (e, audience) => e.WithAudience(audience))
-                .Configure(Issuer(), (e, issuer) => e.WithIssuer(issuer))
-                .ConfigureAll(Addresses(), (e, address) => e.AddIpAddress(address))
-                .ConfigureAll(Applications(), (e, app) => e.AddApplication(app));
+        public Errorable<DateTimeOffset> IssuedAt()
+            => Errorable.Success(_now);
 
-            return result;
-        }
-
-        private Errorable<string> VirtualMachineId()
-        {
-            // VirtualMachineId is not allowed to be set to null, but string.Empty is valid
-            // (that's the value if otherwise unspecified).
-            return Errorable.Success(_commandLine.VirtualMachineId ?? string.Empty);
-        }
-
-        private Errorable<DateTimeOffset> NotBefore()
+        public Errorable<DateTimeOffset> NotBefore()
         {
             if (string.IsNullOrEmpty(_commandLine.NotBefore))
             {
@@ -82,7 +47,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return _timestampParser.TryParse(_commandLine.NotBefore, "NotBefore");
         }
 
-        private Errorable<DateTimeOffset> NotAfter()
+        public Errorable<DateTimeOffset> NotAfter()
         {
             if (string.IsNullOrEmpty(_commandLine.NotAfter))
             {
@@ -93,29 +58,29 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return _timestampParser.TryParse(_commandLine.NotAfter, "NotAfter");
         }
 
-        private Errorable<string> Audience()
+        public Errorable<string> Audience()
         {
             if (string.IsNullOrEmpty(_commandLine.Audience))
             {
-                // if the audience does not specify an audience, we use a default value to "self-sign"
+                // if the user does not specify an audience, we use a default value to "self-sign"
                 return Errorable.Success(Claims.DefaultAudience);
             }
 
             return Errorable.Success(_commandLine.Audience);
         }
 
-        private Errorable<string> Issuer()
+        public Errorable<string> Issuer()
         {
             if (string.IsNullOrEmpty(_commandLine.Issuer))
             {
-                // if the audience does not specify an issuer, we use a default value to "self-sign"
+                // if the user does not specify an issuer, we use a default value to "self-sign"
                 return Errorable.Success(Claims.DefaultIssuer);
             }
 
             return Errorable.Success(_commandLine.Issuer);
         }
 
-        private IEnumerable<Errorable<IPAddress>> Addresses()
+        public Errorable<IEnumerable<IPAddress>> IpAddresses()
         {
             var result = new List<Errorable<IPAddress>>();
             if (_commandLine.Addresses != null)
@@ -131,7 +96,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 result.AddRange(ListMachineIpAddresses());
             }
 
-            return result;
+            return result.Reduce();
         }
 
         private static IEnumerable<Errorable<IPAddress>> ListMachineIpAddresses()
@@ -166,19 +131,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return Errorable.Failure<IPAddress>($"IP address '{address}' is not in an expected format (IPv4 and IPv6 supported).");
         }
 
-        private IEnumerable<Errorable<string>> Applications()
+        public Errorable<IEnumerable<string>> ApplicationIds()
         {
             if (_commandLine.ApplicationIds == null || !_commandLine.ApplicationIds.Any())
             {
-                yield return Errorable.Failure<string>("No applications specified.");
-                yield break;
+                return Errorable.Failure<IEnumerable<string>>("No applications specified.");
             }
 
-            var apps = _commandLine.ApplicationIds.ToList();
-            foreach (var app in apps)
-            {
-                yield return Errorable.Success(app.Trim());
-            }
+            var apps = _commandLine.ApplicationIds.Select(app => app.Trim());
+            return Errorable.Success(apps);
         }
+
+        public Errorable<string> VirtualMachineId()
+            => Errorable.Success(_commandLine.VirtualMachineId);
+
+        public Errorable<string> EntitlementId()
+            => Errorable.Success(_entitlementId);
     }
 }

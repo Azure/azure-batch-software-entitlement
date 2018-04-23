@@ -31,7 +31,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>Results of execution (0 = success).</returns>
         public int Execute(GenerateCommandLine commandLine)
         {
-            Errorable<NodeEntitlements> entitlement = NodeEntitlementsBuilder.Build(commandLine);
+            var provider = new CommandLineEntitlementPropertyProvider(commandLine);
+            Errorable<NodeEntitlements> entitlement = NodeEntitlements.Build(provider);
             Errorable<X509Certificate2> signingCert = FindCertificate("signing", commandLine.SignatureThumbprint);
             Errorable<X509Certificate2> encryptionCert = FindCertificate("encryption", commandLine.EncryptionThumbprint);
 
@@ -92,10 +93,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     encryptionKey, SecurityAlgorithms.RsaOAEP, SecurityAlgorithms.Aes256CbcHmacSha512);
             }
 
-            var entitlementWithIdentifier = entitlements.WithIdentifier($"entitlement-{Guid.NewGuid():D}");
-
             var generator = new TokenGenerator(Logger, signingCredentials, encryptingCredentials);
-            return generator.Generate(entitlementWithIdentifier);
+            return generator.Generate(entitlements);
         }
 
         private static Errorable<X509Certificate2> FindCertificate(string purpose, string thumbprint)

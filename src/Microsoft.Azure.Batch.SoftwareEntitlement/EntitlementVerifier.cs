@@ -9,22 +9,22 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     /// </summary>
     public class EntitlementVerifier
     {
-        private readonly NodeEntitlementReader _entitlementReader;
+        private readonly IEntitlementParser _entitlementParser;
 
         /// <summary>
         /// Constructs a new <see cref="EntitlementVerifier"/>
         /// </summary>
-        /// <param name="entitlementReader">Reads an entitlement from a string token</param>
-        public EntitlementVerifier(NodeEntitlementReader entitlementReader)
+        /// <param name="tokenParser">Extracts identity information from a string token</param>
+        public EntitlementVerifier(IEntitlementParser entitlementParser)
         {
-            _entitlementReader = entitlementReader;
+            _entitlementParser = entitlementParser ?? throw new ArgumentNullException(nameof(entitlementParser));
         }
 
         /// <summary>
         /// Verifies an entitlement request against the specified token.
         /// </summary>
-        /// <param name="request"></param>
-        /// <param name="token"></param>
+        /// <param name="request">The entitlement request</param>
+        /// <param name="token">The token string containing the entitlements</param>
         /// <returns>An <see cref="Errorable{NodeEntitlements}"/> containing the validated
         /// <see cref="NodeEntitlements"/> if validation was successful, or one or more
         /// validation errors otherwise.</returns>
@@ -37,7 +37,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 throw new ArgumentNullException(nameof(token));
             }
 
-            return _entitlementReader.ReadFromToken(token)
+            return _entitlementParser
+                .Parse(token)
                 .Bind(e => Verify(request, e));
         }
 
@@ -53,11 +54,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             if (!entitlement.IpAddresses.Any(addr => addr.Equals(request.IpAddress)))
             {
                 return Errorable.Failure<NodeEntitlements>($"Token does not grant entitlement for {request.IpAddress}");
-            }
-
-            if (entitlement.Identifier == null)
-            {
-                return Errorable.Failure<NodeEntitlements>("Entitlement identifier missing from entitlement token");
             }
 
             return Errorable.Success(entitlement);

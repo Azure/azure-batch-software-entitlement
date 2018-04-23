@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net;
 using FluentAssertions;
 using Xunit;
@@ -28,12 +28,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         public class WithVirtualMachineIdMethod : NodeEntitlementsTests
         {
             [Fact]
-            public void GivenNull_ThrowsArgumentNullException()
+            public void GivenNull_SetsIdToNull()
             {
-                var exception =
-                    Assert.Throws<ArgumentNullException>(
-                        () => _emptyEntitlement.WithVirtualMachineId(null));
-                exception.ParamName.Should().Be("virtualMachineId");
+                _emptyEntitlement.WithVirtualMachineId(null)
+                    .VirtualMachineId.Should().Be(null);
             }
 
             [Fact]
@@ -65,7 +63,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
         }
 
-        public class AddApplicationMethod : NodeEntitlementsTests
+        public class WithApplicationsMethod : NodeEntitlementsTests
         {
             private const string Application = "contosoapp";
 
@@ -74,14 +72,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var exception =
                     Assert.Throws<ArgumentNullException>(
-                        () => _emptyEntitlement.AddApplication(null));
-                exception.ParamName.Should().Be("application");
+                        () => _emptyEntitlement.WithApplications(null));
+                exception.ParamName.Should().Be("applications");
             }
 
             [Fact]
             public void GivenApplicationId_AddsToConfiguration()
             {
-                var entitlement = _emptyEntitlement.AddApplication(Application);
+                var entitlement = _emptyEntitlement.WithApplications(Application);
                 entitlement.Applications.Should().HaveCount(1);
                 entitlement.Applications.Should().Contain(Application);
             }
@@ -90,8 +88,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void GivenDuplicateApplicationId_DoesNotAddToConfiguration()
             {
                 var entitlement = _emptyEntitlement
-                    .AddApplication(Application)
-                    .AddApplication(Application);
+                    .WithApplications(Application, Application);
                 entitlement.Applications.Should().HaveCount(1);
                 entitlement.Applications.Should().Contain(Application);
             }
@@ -99,7 +96,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void GivenApplicationIdWithWhitespace_RemovesWhitespace()
             {
-                var entitlement = _emptyEntitlement.AddApplication("  " + Application + "  ");
+                var entitlement = _emptyEntitlement.WithApplications("  " + Application + "  ");
                 entitlement.Applications.Should().HaveCount(1);
                 entitlement.Applications.Should().Contain(Application.Trim());
             }
@@ -116,21 +113,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var exception =
                     Assert.Throws<ArgumentNullException>(
-                        () => _emptyEntitlement.AddIpAddress(null));
-                exception.ParamName.Should().Be("address");
+                        () => _emptyEntitlement.WithIpAddresses(null));
+                exception.ParamName.Should().Be("ipAddresses");
             }
 
             [Fact]
             public void GivenIpAddress_ModifiesConfiguration()
             {
-                var entitlement = _emptyEntitlement.AddIpAddress(_addressA);
+                var entitlement = _emptyEntitlement.WithIpAddresses(_addressA);
                 entitlement.IpAddresses.Should().Contain(_addressA);
             }
 
             [Fact]
             public void GivenSecondIpAddress_ModifiesConfiguration()
             {
-                var entitlement = _emptyEntitlement.AddIpAddress(_addressB);
+                var entitlement = _emptyEntitlement.WithIpAddresses(_addressB);
                 entitlement.IpAddresses.Should().Contain(_addressB);
             }
 
@@ -138,8 +135,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void GivenSecondIpAddress_RetainsFirst()
             {
                 var entitlement = _emptyEntitlement
-                    .AddIpAddress(_addressA)
-                    .AddIpAddress(_addressB);
+                    .WithIpAddresses(_addressA, _addressB);
                 entitlement.IpAddresses.Should().Contain(_addressA);
             }
         }
@@ -150,21 +146,17 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             private readonly string _identifier = "an-identifier-for-an-entitlement";
 
             [Fact]
-            public void GivenNull_ThrowsException()
+            public void GivenNull_SetsIdentifierToNull()
             {
-                var exception =
-                    Assert.Throws<ArgumentException>(
-                        () => _emptyEntitlement.WithIdentifier(null));
-                exception.ParamName.Should().Be("identifier");
+                var entitlement = _emptyEntitlement.WithIdentifier(null);
+                entitlement.Identifier.Should().BeNull();
             }
 
             [Fact]
-            public void GivenBlank_ThrowsException()
+            public void GivenBlank_SetsIdentifierToEmpty()
             {
-                var exception =
-                    Assert.Throws<ArgumentException>(
-                        () => _emptyEntitlement.WithIdentifier(string.Empty));
-                exception.ParamName.Should().Be("identifier");
+                var entitlement = _emptyEntitlement.WithIdentifier(string.Empty);
+                entitlement.Identifier.Should().BeEmpty();
             }
 
             [Fact]
@@ -203,6 +195,85 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var entitlement = _emptyEntitlement.WithAudience(_audience);
                 entitlement.Audience.Should().Be(_audience);
+            }
+        }
+
+        public class Create : NodeEntitlementsTests
+        {
+            private readonly FakeEntitlementPropertyProvider _validProvider = FakeEntitlementPropertyProvider.CreateValid();
+
+            [Fact]
+            public void GivenValidReader_ReturnsNoErrors()
+            {
+                // If this test fails, verify that the command line specified by _commandLine 
+                // (above) correctly specifies a valid token; If this constraint is violated, most 
+                // all of the tests later in this file might fail with spurious errors.
+                var entitlement = NodeEntitlements.Build(_validProvider);
+                entitlement.Errors.Should()
+                    .BeEmpty(because: $"the command line represented by {nameof(_validProvider)} should result in a valid token");
+            }
+
+            [Fact]
+            public void GivenValidReader_ApplicationIdsAreSet()
+            {
+                var entitlement = NodeEntitlements.Build(_validProvider);
+                entitlement.Value.Applications.Should().BeEquivalentTo(_validProvider.ApplicationIds.Value);
+            }
+
+            [Fact]
+            public void GivenValidReader_AudienceIsSet()
+            {
+                var entitlement = NodeEntitlements.Build(_validProvider);
+                entitlement.Value.Audience.Should().Be(_validProvider.Audience.Value);
+            }
+
+            [Fact]
+            public void GivenValidReader_IdentifierIsSet()
+            {
+                var entitlement = NodeEntitlements.Build(_validProvider);
+                entitlement.Value.Identifier.Should().Be(_validProvider.EntitlementId.Value);
+            }
+
+            [Fact]
+            public void GivenValidReader_IpAddressesAreSet()
+            {
+                var entitlement = NodeEntitlements.Build(_validProvider);
+                entitlement.Value.IpAddresses.Should().BeEquivalentTo(_validProvider.IpAddresses.Value);
+            }
+
+            [Fact]
+            public void GivenValidReader_IssuedAtIsSet()
+            {
+                var entitlement = NodeEntitlements.Build(_validProvider);
+                entitlement.Value.IssuedAt.Should().Be(_validProvider.IssuedAt.Value);
+            }
+
+            [Fact]
+            public void GivenValidReader_IssuerIsSet()
+            {
+                var entitlement = NodeEntitlements.Build(_validProvider);
+                entitlement.Value.Issuer.Should().Be(_validProvider.Issuer.Value);
+            }
+
+            [Fact]
+            public void GivenValidReader_NotAfterIsSet()
+            {
+                var entitlement = NodeEntitlements.Build(_validProvider);
+                entitlement.Value.NotAfter.Should().Be(_validProvider.NotAfter.Value);
+            }
+
+            [Fact]
+            public void GivenValidReader_NotBeforeIsSet()
+            {
+                var entitlement = NodeEntitlements.Build(_validProvider);
+                entitlement.Value.NotBefore.Should().Be(_validProvider.NotBefore.Value);
+            }
+
+            [Fact]
+            public void GivenValidReader_VirtualMachineIdIsSet()
+            {
+                var entitlement = NodeEntitlements.Build(_validProvider);
+                entitlement.Value.VirtualMachineId.Should().Be(_validProvider.VirtualMachineId.Value);
             }
         }
     }
