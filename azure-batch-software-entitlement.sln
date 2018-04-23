@@ -29,6 +29,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "sesclient.native", "src\ses
 		{6ACCAD67-C207-4370-B39A-63651223A21C} = {6ACCAD67-C207-4370-B39A-63651223A21C}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "sestest.Tests", "tests\sestest.Tests\sestest.Tests.csproj", "{45ABCC13-E804-4785-A11E-56F083158AB5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -133,6 +135,18 @@ Global
 		{DA18B560-4FCD-4C16-9E37-3715EB19C2CE}.Release|x64.Build.0 = Release|x64
 		{DA18B560-4FCD-4C16-9E37-3715EB19C2CE}.Release|x86.ActiveCfg = Release|Win32
 		{DA18B560-4FCD-4C16-9E37-3715EB19C2CE}.Release|x86.Build.0 = Release|Win32
+		{45ABCC13-E804-4785-A11E-56F083158AB5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{45ABCC13-E804-4785-A11E-56F083158AB5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{45ABCC13-E804-4785-A11E-56F083158AB5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{45ABCC13-E804-4785-A11E-56F083158AB5}.Debug|x64.Build.0 = Debug|Any CPU
+		{45ABCC13-E804-4785-A11E-56F083158AB5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{45ABCC13-E804-4785-A11E-56F083158AB5}.Debug|x86.Build.0 = Debug|Any CPU
+		{45ABCC13-E804-4785-A11E-56F083158AB5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{45ABCC13-E804-4785-A11E-56F083158AB5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{45ABCC13-E804-4785-A11E-56F083158AB5}.Release|x64.ActiveCfg = Release|Any CPU
+		{45ABCC13-E804-4785-A11E-56F083158AB5}.Release|x64.Build.0 = Release|Any CPU
+		{45ABCC13-E804-4785-A11E-56F083158AB5}.Release|x86.ActiveCfg = Release|Any CPU
+		{45ABCC13-E804-4785-A11E-56F083158AB5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
