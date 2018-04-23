@@ -30,17 +30,12 @@ The following shows a sample JSON payload for the request:
 }
 ```
 
-| Element       | Required  | Type    | Description                                                                                                                                                                                                                                                              |
-| ------------- | --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| token         | Mandatory | string  | The software entitlement token supplied to the software package via environment variable from Azure Batch                                                                                                                                                                |
-| applicationId | Mandatory | string  | A unique identifier for the application requesting an entitlement to run. <br/> **Samples**: contosoapp, application <br/> Application identifiers are lowercase (though comparisons will be case-insensitive), with no punctuation, whitespace or non-alpha characters. |
-| hostid        | Mandatory | string  | A unique identifier for the current host (the machine requesting entitlement).                                                                                                                                                                                           |
-| cores         | Mandatory | integer | The number of processor cores detected on the host machine                                                                                                                                                                                                               |
+| Element       | Required  | Type   | Description                                                                                                                                                                                                                                                                                |
+| ------------- | --------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| token         | Mandatory | string | The software entitlement token supplied to the software package via environment variable from Azure Batch                                                                                                                                                                                  |
+| applicationId | Mandatory | string | A unique identifier for the application requesting an entitlement to run. <br/> **Samples**: contosoapp, application <br/> Application identifiers are lowercase (though comparisons will be case-insensitive), with no punctuation, whitespace or non-alpha characters. |
 
 Specific unique application identifiers for each software package will be agreed between Azure Batch and the software vendor in advance, prior to integration.
-
-The `hostid` is used to lock an entitlement for use by a specific machine, mitigating against any reuse attack that tries to exfiltrate tokens to other machines for use. The exact details used to create a machine hash are specific to each application - it just needs to be a printable string.
-We recommend using information that is unlikely to change between machine reboots, such as IP addresses and hard drive labels. Using transient informaiton that changes (such as the current time, a nonce value, or the current process id) is discouraged because it would inappropriately prevent multiple invocations of properly licensed applications from occuring at the same time under the same entitlement token.
 
 ### RESPONSE 200 - OK
 
