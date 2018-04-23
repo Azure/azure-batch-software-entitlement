@@ -24,7 +24,7 @@ using System.Diagnostics.CodeAnalysis;
 [assembly: SuppressMessage(
     "Performance",
     "CA1822:Mark members as static",
-    Justification = "Some tests don't share intiialization but still need to be non-static")]
+    Justification = "Some tests don't share intialization but still need to be non-static")]
 
 [assembly: SuppressMessage(
     "Performance",
