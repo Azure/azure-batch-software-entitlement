@@ -1,4 +1,4 @@
-# Software entitlement service test client (sesclient.native)eed
+# Software entitlement service test client (sesclient.native)
 
 This command line executable demonstrates use of the [native-code software entitlement library](../Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native).
 

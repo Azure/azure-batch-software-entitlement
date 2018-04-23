@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using FluentAssertions;
 using Xunit;
@@ -208,6 +208,42 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     v => throw new InvalidOperationException("Should not be called"),
                     errors => 192);
                 result.Should().Be(192);
+            }
+        }
+
+        public class Bind
+        {
+            private readonly Errorable<int> _success = Errorable.Success(42);
+
+            private readonly Errorable<int> _failure = Errorable.Failure<int>("Goodbye cruel world.");
+
+            [Fact]
+            public void SuccessThenSuccess_ReturnsExpectedValue()
+            {
+                var result = _success.Bind(num => Errorable.Success(num + 1));
+                result.Value.Should().Be(43);
+            }
+
+            [Fact]
+            public void SuccessThenFailure_HasExpectedErrors()
+            {
+                var result = _success.Bind(num => Errorable.Failure<int>("expected error"));
+                result.Errors.Count.Should().Be(1);
+                result.Errors.Should().Contain("expected error");
+            }
+
+            [Fact]
+            public void FailureThenAnything_SecondFunctionNotExecuted()
+            {
+                var executed = false;
+                var result = _failure.Bind(num =>
+                {
+                    executed = true;
+                    return Errorable.Success(0);
+                });
+
+                result.Errors.Count.Should().Be(1);
+                executed.Should().BeFalse();
             }
         }
     }

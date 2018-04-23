@@ -66,20 +66,27 @@ if ((get-module psake) -eq $null) {
 }
 
 if ((get-module psake) -eq $null) {
+    # Still not loaded, let's try the various NuGet caches
+    $locals = .\nuget locals all -list
+    foreach($local in $locals)
+    {
+        $index = $local.IndexOf(":")
+        $folder = $local.Substring($index + 2)
+        TryLoad-Psake $folder
+    }
+    
+if ((get-module psake) -eq $null) {
     # Not yet loaded, try to load it from the chocolatey installation library
     TryLoad-Psake $env:ProgramData\chocolatey\lib
 }
 
-if ((get-module psake) -eq $null) {
-    # Still not loaded, let's look in the various NuGet caches
-    TryLoad-Psake-ViaNuGetCache
+$psake = get-module psake
+if ($psake -ne $null) {
+    $psakePath = $psake.Path
+    Write-Output "[+] Psake loaded from $psakePath"
 }
-
-if ((get-module psake) -eq $null) {
-    # STILL not loaded, let's try to install it via dotnet, then probe again
-    Write-Output "[!] Running 'dotnet restore' to download psake"
-    dotnet restore .\src\sestest\sestest.csproj --verbosity minimal
-    TryLoad-Psake-ViaNuGetCache
+else {
+    throw "Unable to load psake"
 }
 
 

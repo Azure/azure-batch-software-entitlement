@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 
@@ -16,38 +14,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         private readonly ServerCommandLine _commandLine;
 
         // Reference to a store in which we can search for certificates
-        private readonly CertificateStore _certificateStore = new CertificateStore();
-
-        // Options used to configure validation
-        private readonly ServerOptionBuilderOptions _options;
-
-        /// <summary>
-        /// Build an instance of <see cref="ServerOptions"/> from the information supplied on the 
-        /// command line by the user
-        /// </summary>
-        /// <param name="commandLine">Command line parameters supplied by the user.</param>
-        /// <param name="options">Options for configuring validation.</param>
-        /// <returns>Either a usable (and completely valid) <see cref="ServerOptions"/> or a set 
-        /// of errors.</returns>
-        public static Errorable<ServerOptions> Build(
-            ServerCommandLine commandLine,
-            ServerOptionBuilderOptions options = ServerOptionBuilderOptions.None)
-        {
-            var builder = new ServerOptionBuilder(commandLine, options);
-            return builder.Build();
-        }
+        private readonly ICertificateStore _certificateStore;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ServerOptionBuilder"/> class
         /// </summary>
         /// <param name="commandLine">Options provided on the command line.</param>
-        /// <param name="options">Options for configuring validation.</param>
-        private ServerOptionBuilder(
+        /// <param name="certificateStore">A store to check supplied certificates against.</param>
+        public ServerOptionBuilder(
             ServerCommandLine commandLine,
-            ServerOptionBuilderOptions options)
+            ICertificateStore certificateStore)
         {
             _commandLine = commandLine;
-            _options = options;
+            _certificateStore = certificateStore;
         }
 
         /// <summary>
@@ -56,54 +35,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <returns>Either a usable (and completely valid) <see cref="ServerOptions"/> or a set 
         /// of errors.</returns>
-        private Errorable<ServerOptions> Build()
+        public Errorable<ServerOptions> Build()
         {
-            var options = new ServerOptions();
-            var errors = new List<string>();
+            var result = Errorable.Success(new ServerOptions())
+                .Configure(ServerUrl(), (opt, url) => opt.WithServerUrl(url))
+                .Configure(ConnectionCertificate(), (opt, cert) => opt.WithConnectionCertificate(cert))
+                .Configure(SigningCertificate(), (opt, cert) => opt.WithSigningCertificate(cert))
+                .Configure(EncryptingCertificate(), (opt, cert) => opt.WithEncryptionCertificate(cert))
+                .Configure(Audience(), (opt, audience) => opt.WithAudience(audience))
+                .Configure(Issuer(), (opt, issuer) => opt.WithIssuer(issuer))
+                .Configure(ExitAfterRequest(), (opt, exit) => opt.WithAutomaticExitAfterOneRequest(exit));
 
-            void Configure<V>(Func<Errorable<V>> readConfiguration, Func<V, ServerOptions> applyConfiguration)
-            {
-                readConfiguration().Match(
-                    whenSuccessful: value => options = applyConfiguration(value),
-                    whenFailure: e => errors.AddRange(e));
-            }
-
-            void ConfigureOptional<V>(Func<Errorable<V>> readConfiguration, Func<V, ServerOptions> applyConfiguration)
-                where V : class
-            {
-                readConfiguration().Match(
-                    whenSuccessful: value =>
-                    {
-                        if (value != null)
-                        {
-                            options = applyConfiguration(value);
-                        }
-                    },
-                    whenFailure: e => errors.AddRange(e));
-            }
-
-            void ConfigureSwitch(Func<bool> readConfiguration, Func<ServerOptions> applySwitch)
-            {
-                if (readConfiguration())
-                {
-                    options = applySwitch();
-                }
-            }
-
-            Configure(ServerUrl, url => options.WithServerUrl(url));
-            ConfigureOptional(ConnectionCertificate, cert => options.WithConnectionCertificate(cert));
-            ConfigureOptional(SigningCertificate, cert => options.WithSigningCertificate(cert));
-            ConfigureOptional(EncryptingCertificate, cert => options.WithEncryptionCertificate(cert));
-            ConfigureOptional(Audience, audience => options.WithAudience(audience));
-            ConfigureOptional(Issuer, issuer => options.WithIssuer(issuer));
-            ConfigureSwitch(ExitAfterRequest, () => options.WithAutomaticExitAfterOneRequest());
-
-            if (errors.Any())
-            {
-                return Errorable.Failure<ServerOptions>(errors);
-            }
-
-            return Errorable.Success(options);
+            return result;
         }
 
         /// <summary>
@@ -113,19 +56,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// relevant errors.</returns>
         private Errorable<Uri> ServerUrl()
         {
-            if (string.IsNullOrWhiteSpace(_commandLine.ServerUrl))
-            {
-                if (_options.HasFlag(ServerOptionBuilderOptions.ServerUrlOptional))
-                {
-                    return Errorable.Success(new Uri("http://test"));
-                }
-
-                return Errorable.Failure<Uri>("No server endpoint URL specified.");
-            }
+            // If the server URL is not specified, default it.
+            var serverUrl = string.IsNullOrWhiteSpace(_commandLine.ServerUrl)
+                ? ServerCommandLine.DefaultServerUrl
+                : _commandLine.ServerUrl;
 
             try
             {
-                var result = new Uri(_commandLine.ServerUrl);
+                var result = new Uri(serverUrl);
                 if (!result.HasScheme("https"))
                 {
                     return Errorable.Failure<Uri>("Server endpoint URL must specify https://");
@@ -147,11 +85,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (string.IsNullOrEmpty(_commandLine.ConnectionCertificateThumbprint))
             {
-                if (_options.HasFlag(ServerOptionBuilderOptions.ConnectionThumbprintOptional))
-                {
-                    return Errorable.Success<X509Certificate2>(null);
-                }
-
                 return Errorable.Failure<X509Certificate2>("A connection thumbprint is required.");
             }
 
@@ -220,9 +153,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Return whether the server should shut down after processing one request
         /// </summary>
         /// <returns></returns>
-        private bool ExitAfterRequest()
+        private Errorable<bool> ExitAfterRequest()
         {
-            return _commandLine.ExitAfterRequest;
+            return Errorable.Success(_commandLine.ExitAfterRequest);
         }
 
         /// <summary>
@@ -241,13 +174,5 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var certificateThumbprint = new CertificateThumbprint(thumbprint);
             return _certificateStore.FindByThumbprint(purpose, certificateThumbprint);
         }
-    }
-
-    [Flags]
-    public enum ServerOptionBuilderOptions
-    {
-        None,
-        ServerUrlOptional,
-        ConnectionThumbprintOptional
     }
 }

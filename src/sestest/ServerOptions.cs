@@ -1,5 +1,6 @@
 using System;
 using System.Security.Cryptography.X509Certificates;
+using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -55,31 +56,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Create a modified <see cref="ServerOptions"/> with the specified signing certificate
         /// </summary>
-        /// <param name="certificate">Signing certificate to use (may not be null).</param>
+        /// <param name="certificate">Signing certificate to use (may be null).</param>
         /// <returns>New instance of <see cref="ServerOptions"/>.</returns>
         public ServerOptions WithSigningCertificate(X509Certificate2 certificate)
         {
-            if (certificate == null)
-            {
-                throw new ArgumentNullException(nameof(certificate));
-            }
-
-            return new ServerOptions(this, signingCertificate: certificate);
+            return new ServerOptions(this, signingCertificate: Specify.As(certificate));
         }
 
         /// <summary>
         /// Create a modified <see cref="ServerOptions"/> with the specified encryption certificate
         /// </summary>
-        /// <param name="certificate">Signing certificate to use (may not be null).</param>
+        /// <param name="certificate">Encryption certificate to use (may be null).</param>
         /// <returns>New instance of <see cref="ServerOptions"/>.</returns>
         public ServerOptions WithEncryptionCertificate(X509Certificate2 certificate)
         {
-            if (certificate == null)
-            {
-                throw new ArgumentNullException(nameof(certificate));
-            }
-
-            return new ServerOptions(this, encryptionCertificate: certificate);
+            return new ServerOptions(this, encryptionCertificate: Specify.As(certificate));
         }
 
         /// <summary>
@@ -94,7 +85,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 throw new ArgumentNullException(nameof(certificate));
             }
 
-            return new ServerOptions(this, connectionCertificate: certificate);
+            return new ServerOptions(this, connectionCertificate: Specify.As(certificate));
         }
 
         /// <summary>
@@ -109,7 +100,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 throw new ArgumentNullException(nameof(url));
             }
 
-            return new ServerOptions(this, serverUrl: url);
+            return new ServerOptions(this, serverUrl: Specify.As(url));
         }
 
         /// <summary> 
@@ -124,7 +115,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 throw new ArgumentException("Expect to have an audience", nameof(audience));
             }
 
-            return new ServerOptions(this, audience: audience);
+            return new ServerOptions(this, audience: Specify.As(audience));
         }
 
         /// <summary> 
@@ -139,16 +130,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 throw new ArgumentException("Expect to have an issuer", nameof(issuer));
             }
 
-            return new ServerOptions(this, issuer: issuer);
+            return new ServerOptions(this, issuer: Specify.As(issuer));
         }
 
         /// <summary>
         /// Indicate whether the server should automatically shut down after processing one request
         /// </summary>
         /// <returns>New instance of <see cref="ServerOptions"/>.</returns>
-        public ServerOptions WithAutomaticExitAfterOneRequest()
+        public ServerOptions WithAutomaticExitAfterOneRequest(bool exitAfterRequest)
         {
-            return new ServerOptions(this, exitAfterRequest: true);
+            return new ServerOptions(this, exitAfterRequest: Specify.As(exitAfterRequest));
         }
 
         /// <summary>
@@ -164,26 +155,26 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="exitAfterRequest">Specify whether to automatically shut down after one request.</param>
         private ServerOptions(
             ServerOptions original,
-            X509Certificate2 signingCertificate = null,
-            X509Certificate2 encryptionCertificate = null,
-            X509Certificate2 connectionCertificate = null,
-            Uri serverUrl = null,
-            string audience = null,
-            string issuer = null,
-            bool? exitAfterRequest = null)
+            Specifiable<X509Certificate2> signingCertificate = default,
+            Specifiable<X509Certificate2> encryptionCertificate = default,
+            Specifiable<X509Certificate2> connectionCertificate = default,
+            Specifiable<Uri> serverUrl = default,
+            Specifiable<string> audience = default,
+            Specifiable<string> issuer = default,
+            Specifiable<bool> exitAfterRequest = default)
         {
             if (original == null)
             {
                 throw new ArgumentNullException(nameof(original));
             }
 
-            SigningCertificate = signingCertificate ?? original.SigningCertificate;
-            EncryptionCertificate = encryptionCertificate ?? original.EncryptionCertificate;
-            ConnectionCertificate = connectionCertificate ?? original.ConnectionCertificate;
-            ServerUrl = serverUrl ?? original.ServerUrl;
-            Audience = audience ?? original.Audience;
-            Issuer = issuer ?? original.Issuer;
-            ExitAfterRequest = exitAfterRequest ?? original.ExitAfterRequest;
+            SigningCertificate = signingCertificate.OrDefault(original.SigningCertificate);
+            EncryptionCertificate = encryptionCertificate.OrDefault(original.EncryptionCertificate);
+            ConnectionCertificate = connectionCertificate.OrDefault(original.ConnectionCertificate);
+            ServerUrl = serverUrl.OrDefault(original.ServerUrl);
+            Audience = audience.OrDefault(original.Audience);
+            Issuer = issuer.OrDefault(original.Issuer);
+            ExitAfterRequest = exitAfterRequest.OrDefault(original.ExitAfterRequest);
         }
     }
 }

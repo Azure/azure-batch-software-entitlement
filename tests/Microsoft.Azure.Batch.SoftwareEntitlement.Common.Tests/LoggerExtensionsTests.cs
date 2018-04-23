@@ -1,7 +1,5 @@
-﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using FluentAssertions;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests.Fakes;
 using Microsoft.Extensions.Logging;
@@ -25,7 +23,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     new List<string> { "gamma" },
                     new List<string> { "delta" }
                 };
-                _logger.LogTable(LogLevel.Information, lines);
+                _logger.LogInformationTable(lines);
                 _logger.Events.Should().HaveCount(4);
                 _logger.Events.Should().OnlyContain(e => e.Level == LogLevel.Information);
                 _logger.Events.Select(e => e.Message).Should().ContainInOrder("alpha", "beta", "gamma", "delta");
@@ -45,7 +43,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     new List<string> { "phi", "Uranus" },
                     new List<string> { "omicron", "Neptune" }
                 };
-                _logger.LogTable(LogLevel.Information, lines);
+                _logger.LogInformationTable(lines);
                 _logger.Events.Should().HaveCount(8);
                 _logger.Events.Should().OnlyContain(e => e.Level == LogLevel.Information);
                 _logger.Events.Select(e => e.Message).Should().ContainInOrder(
@@ -73,7 +71,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     new List<string> { "phi", "Uranus" },
                     new List<string> { "omicron", "Neptune" }
                 };
-                _logger.LogTable(LogLevel.Information, lines);
+                _logger.LogInformationTable(lines);
                 _logger.Events.Should().HaveCount(8);
                 _logger.Events.Should().OnlyContain(e => e.Level == LogLevel.Information);
                 _logger.Events.Select(e => e.Message).Should().ContainInOrder(

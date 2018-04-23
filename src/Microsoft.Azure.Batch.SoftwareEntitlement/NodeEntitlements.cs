@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Immutable;
 using System.Net;
+using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
@@ -15,9 +16,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public string VirtualMachineId { get; }
 
         /// <summary>
-        /// The moment at which the entitlement was created
+        /// The moment at which the entitlement is issued
         /// </summary>
-        public DateTimeOffset Created { get; }
+        public DateTimeOffset IssuedAt { get; }
 
         /// <summary>
         /// The earliest moment at which the entitlement is active
@@ -62,7 +63,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var now = DateTimeOffset.Now;
 
             VirtualMachineId = string.Empty;
-            Created = now;
+            IssuedAt = now;
             NotBefore = now;
             NotAfter = now + TimeSpan.FromDays(7);
             Applications = ImmutableHashSet<string>.Empty;
@@ -78,12 +79,22 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>A new entitlement.</returns>
         public NodeEntitlements WithVirtualMachineId(string virtualMachineId)
         {
-            if (string.IsNullOrEmpty(virtualMachineId))
+            if (virtualMachineId == null)
             {
                 throw new ArgumentNullException(nameof(virtualMachineId));
             }
 
-            return new NodeEntitlements(this, virtualMachineId: virtualMachineId);
+            return new NodeEntitlements(this, virtualMachineId: Specify.As(virtualMachineId));
+        }
+
+        /// <summary>
+        /// Specify the instant at which the token is issued
+        /// </summary>
+        /// <param name="issuedAt">Date the token is issued.</param>
+        /// <returns>A new entitlement.</returns>
+        public NodeEntitlements WithIssuedAt(DateTimeOffset issuedAt)
+        {
+            return new NodeEntitlements(this, issuedAt: Specify.As(issuedAt));
         }
 
         /// <summary>
@@ -93,7 +104,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>A new entitlement.</returns>
         public NodeEntitlements FromInstant(DateTimeOffset notBefore)
         {
-            return new NodeEntitlements(this, notBefore: notBefore);
+            return new NodeEntitlements(this, notBefore: Specify.As(notBefore));
         }
 
         /// <summary>
@@ -103,7 +114,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns></returns>
         public NodeEntitlements UntilInstant(DateTimeOffset notAfter)
         {
-            return new NodeEntitlements(this, notAfter: notAfter);
+            return new NodeEntitlements(this, notAfter: Specify.As(notAfter));
         }
 
         /// <summary>
@@ -148,7 +159,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 throw new ArgumentException("Expect to have an identifier", nameof(identifier));
             }
 
-            return new NodeEntitlements(this, identifier: identifier);
+            return new NodeEntitlements(this, identifier: Specify.As(identifier));
         }
 
         /// <summary>
@@ -163,7 +174,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 throw new ArgumentException("Expect to have an audience", nameof(audience));
             }
 
-            return new NodeEntitlements(this, audience: audience);
+            return new NodeEntitlements(this, audience: Specify.As(audience));
         }
 
         /// <summary>
@@ -178,7 +189,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 throw new ArgumentException("Expect to have an issuer", nameof(issuer));
             }
 
-            return new NodeEntitlements(this, issuer: issuer);
+            return new NodeEntitlements(this, issuer: Specify.As(issuer));
         }
 
         /// <summary>
@@ -187,6 +198,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <remarks>Specify any of the optional parameters to modify the clone from the original.</remarks>
         /// <param name="original">Original entitlement to clone.</param>
+        /// <param name="issuedAt">Optionally specify a new value for <see cref="IssuedAt"/></param>
         /// <param name="notBefore">Optionally specify a new value for <see cref="NotBefore"/>.</param>
         /// <param name="notAfter">Optionally specify a new value for <see cref="NotAfter"/>.</param>
         /// <param name="virtualMachineId">Optionally specify a new value for <see cref="VirtualMachineId"/>.</param>
@@ -197,25 +209,30 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="issuer">Issuer identifier for the token.</param>
         private NodeEntitlements(
             NodeEntitlements original,
-            DateTimeOffset? notBefore = null,
-            DateTimeOffset? notAfter = null,
-            string virtualMachineId = null,
+            Specifiable<DateTimeOffset> issuedAt = default,
+            Specifiable<DateTimeOffset> notBefore = default,
+            Specifiable<DateTimeOffset> notAfter = default,
+            Specifiable<string> virtualMachineId = default,
             ImmutableHashSet<string> applications = null,
-            string identifier = null,
+            Specifiable<string> identifier = default,
             ImmutableHashSet<IPAddress> addresses = null,
-            string audience = null,
-            string issuer = null)
+            Specifiable<string> audience = default,
+            Specifiable<string> issuer = default)
         {
-            Created = original.Created;
+            if (original == null)
+            {
+                throw new ArgumentNullException(nameof(original));
+            }
 
-            NotBefore = notBefore ?? original.NotBefore;
-            NotAfter = notAfter ?? original.NotAfter;
-            VirtualMachineId = virtualMachineId ?? original.VirtualMachineId;
+            IssuedAt = issuedAt.OrDefault(original.IssuedAt);
+            NotBefore = notBefore.OrDefault(original.NotBefore);
+            NotAfter = notAfter.OrDefault(original.NotAfter);
+            VirtualMachineId = virtualMachineId.OrDefault(original.VirtualMachineId);
             Applications = applications ?? original.Applications;
-            Identifier = identifier ?? original.Identifier;
+            Identifier = identifier.OrDefault(original.Identifier);
             IpAddresses = addresses ?? original.IpAddresses;
-            Audience = audience ?? original.Audience;
-            Issuer = issuer ?? original.Issuer;
+            Audience = audience.OrDefault(original.Audience);
+            Issuer = issuer.OrDefault(original.Issuer);
         }
     }
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using CommandLine;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
@@ -8,6 +9,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     [Verb("server", HelpText = "Run as a standalone software entitlement server.")]
     public sealed class ServerCommandLine : CommandLineBase
     {
+        public const string DefaultServerUrl = "https://localhost:4443";
+
         [Option("sign", HelpText = "Thumbprint of the certificate used to sign tokens (optional; if specified, all tokens must be signed).")]
         public string SigningCertificateThumbprint { get; set; }
 
@@ -17,8 +20,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         [Option("connection", HelpText = "Thumbprint of the certificate to pin for use with HTTPS (mandatory).")]
         public string ConnectionCertificateThumbprint { get; set; }
 
-        [Option("url", HelpText = "The URL at which the server should process requests (defaults to 'https://localhost:4443'; must start with 'https:').")]
-        public string ServerUrl { get; set; } = "https://localhost:4443";
+        [Option("url", HelpText = "The URL at which the server should process requests (defaults to '" + DefaultServerUrl + "'; must start with 'https:').")]
+        [SuppressMessage(
+            "Design",
+            "CA1056:Uri properties should not be strings",
+            Justification = "Must be a string to support our commandline.")]
+        public string ServerUrl { get; set; }
 
         [Option("audience", HelpText = "[Internal] Audience to which all tokens must be addressed (optional).")]
         public string Audience { get; set; }

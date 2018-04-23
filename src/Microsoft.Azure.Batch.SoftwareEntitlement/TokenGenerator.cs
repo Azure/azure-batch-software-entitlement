@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
@@ -56,10 +57,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             _logger.LogDebug(
                 "Not Before: {NotBefore}",
-                entitlements.NotBefore.ToString(TimestampParser.ExpectedFormat));
+                entitlements.NotBefore.ToString(TimestampParser.ExpectedFormat, CultureInfo.InvariantCulture));
             _logger.LogDebug(
                 "Not After: {NotAfter}",
-                entitlements.NotAfter.ToString(TimestampParser.ExpectedFormat));
+                entitlements.NotAfter.ToString(TimestampParser.ExpectedFormat, CultureInfo.InvariantCulture));
 
             if (SigningCredentials != null)
             {
@@ -89,7 +90,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 Subject = claimsIdentity,
                 NotBefore = entitlements.NotBefore.UtcDateTime,
                 Expires = entitlements.NotAfter.UtcDateTime,
-                IssuedAt = DateTimeOffset.Now.UtcDateTime,
+                IssuedAt = entitlements.IssuedAt.UtcDateTime,
                 Issuer = effectiveIssuer,
                 Audience = effectiveAudience,
                 SigningCredentials = SigningCredentials,

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -72,9 +72,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// Add an error
         /// </summary>
         /// <remarks>Will abandon any wrapped value if this is the first error encountered.</remarks>
-        /// <param name="error">Error to record.</param>
+        /// <param name="message">Error to record.</param>
         /// <returns>A new instance with the error included.</returns>
-        public abstract Errorable<T> AddError(string error);
+        public abstract Errorable<T> AddError(string message);
 
         /// <summary>
         /// Add a sequence of errors
@@ -108,6 +108,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         public abstract R Match<R>(Func<T, R> whenSuccessful, Func<IEnumerable<string>, R> whenFailure);
 
         /// <summary>
+        /// Executes a function returning an <see cref="Errorable{T}"/> conditionally, depending
+        /// on the result of this <see cref="Errorable{T}"/> instance.
+        /// </summary>
+        /// <typeparam name="TNew">The return type of <paramref name="whenSuccessful"/></typeparam>
+        /// <param name="whenSuccessful">A function to execute on the value of this instance if it
+        /// is successful</param>
+        /// <returns>
+        /// An <see cref="Errorable{T}"/> containing the result of executing <paramref name="whenSuccessful"/>
+        /// if the input was sucessful, or the errors from this instance otherwise.
+        /// </returns>
+        public abstract Errorable<TNew> Bind<TNew>(Func<T, Errorable<TNew>> whenSuccessful);
+
+        /// <summary>
         /// Private constructor to prevent other subclasses
         /// </summary>
         private Errorable()
@@ -130,9 +143,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 
             public override ImmutableHashSet<string> Errors => ImmutableHashSet<string>.Empty;
 
-            public override Errorable<T> AddError(string error)
+            public override Errorable<T> AddError(string message)
             {
-                var errors = ImmutableHashSet<string>.Empty.Add(error);
+                var errors = ImmutableHashSet<string>.Empty.Add(message);
                 return new FailureImplementation(errors);
             }
 
@@ -157,6 +170,24 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             {
                 return whenSuccessful(Value);
             }
+
+            /// <summary>
+            /// Executes the specified function returning an <see cref="Errorable{T}"/>.
+            /// </summary>
+            /// <typeparam name="TNew">The return type of <paramref name="whenSuccessful"/></typeparam>
+            /// <param name="whenSuccessful">A function to execute on the value of this instance</param>
+            /// <returns>
+            /// An <see cref="Errorable{T}"/> containing the result of executing <paramref name="whenSuccessful"/>.
+            /// </returns>
+            public override Errorable<TNew> Bind<TNew>(Func<T, Errorable<TNew>> whenSuccessful)
+            {
+                if (whenSuccessful == null)
+                {
+                    throw new ArgumentNullException(nameof(whenSuccessful));
+                }
+
+                return whenSuccessful(Value);
+            }
         }
 
         /// <summary>
@@ -176,9 +207,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 
             public override ImmutableHashSet<string> Errors { get; }
 
-            public override Errorable<T> AddError(string error)
+            public override Errorable<T> AddError(string message)
             {
-                return new FailureImplementation(Errors.Add(error));
+                return new FailureImplementation(Errors.Add(message));
             }
 
             /// <summary>
@@ -202,6 +233,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             {
                 return whenFailure(Errors);
             }
+
+            /// <summary>
+            /// Returns an <see cref="Errorable{T}"/> containing the existing errors.
+            /// </summary>
+            /// <typeparam name="TNew">The return type of <paramref name="whenSuccessful"/></typeparam>
+            /// <param name="whenSuccessful">A function that would be executed on the value of this instance
+            /// if it wasn't a failure.</param>
+            /// <returns>
+            /// The existing errors.
+            /// </returns>
+            public override Errorable<TNew> Bind<TNew>(Func<T, Errorable<TNew>> whenSuccessful)
+                => Errorable.Failure<TNew>(Errors);
         }
     }
 }

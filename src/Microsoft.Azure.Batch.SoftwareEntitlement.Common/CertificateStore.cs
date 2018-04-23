@@ -2,14 +2,34 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
-using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
     /// <summary>
     /// A simple abstraction over the framework supplied store classes
     /// </summary>
-    public sealed class CertificateStore
+    public interface ICertificateStore
+    {
+        /// <summary>
+        /// Find all available certificates
+        /// </summary>
+        /// <returns>Sequence of certificates (possibly empty).</returns>
+        IEnumerable<X509Certificate2> FindAll();
+
+        /// <summary>
+        /// Find a certificate based on the provided thumbprint
+        /// </summary>
+        /// <param name="purpose">A use for which the certificate is needed (for human consumption).</param>
+        /// <param name="thumbprint">Thumbprint of the certificate we need.</param>
+        /// <returns>An <see cref="Errorable{X509Certificate2}"/> containing a certificate if found, or an
+        /// error otherwise.</returns>
+        Errorable<X509Certificate2> FindByThumbprint(string purpose, CertificateThumbprint thumbprint);
+    }
+
+    /// <summary>
+    /// A simple abstraction over the framework supplied store classes
+    /// </summary>
+    public sealed class CertificateStore : ICertificateStore
     {
         // A list of StoreNames where we should look when finding certificates
         private readonly List<StoreName> _storeNames;
@@ -61,8 +81,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// </summary>
         /// <param name="storeName">Name of the store to search within.</param>
         /// <param name="storeLocation">Location within the store to check.</param>
-        /// <returns>Certificate, if found; null otherwise.</returns>
-        private IList<X509Certificate2> FindAll(StoreName storeName, StoreLocation storeLocation)
+        /// <returns>Sequence of certificates (possibly empty).</returns>
+        private static IList<X509Certificate2> FindAll(StoreName storeName, StoreLocation storeLocation)
         {
             using (var store = new X509Store(storeName, storeLocation))
             {
@@ -77,7 +97,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// </summary>
         /// <param name="purpose">A use for which the certificate is needed (for human consumption).</param>
         /// <param name="thumbprint">Thumbprint of the certificate we need.</param>
-        /// <returns>Certificate, if found; null otherwise.</returns>
+        /// <returns>An <see cref="Errorable{X509Certificate2}"/> containing a certificate if found, or an
+        /// error otherwise.</returns>
         public Errorable<X509Certificate2> FindByThumbprint(string purpose, CertificateThumbprint thumbprint)
         {
             var query =
@@ -112,7 +133,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="thumbprint">Thumbprint of the certificate we need.</param>
         /// <param name="storeName">Name of the store to search within.</param>
         /// <param name="storeLocation">Location within the store to check.</param>
-        /// <returns>Certificate, if found; null otherwise.</returns>
+        /// <returns>An <see cref="Errorable{X509Certificate2}"/> containing a certificate if found, or an
+        /// error otherwise.</returns>
         private static X509Certificate2 FindByThumbprint(CertificateThumbprint thumbprint, StoreName storeName, StoreLocation storeLocation)
         {
             try

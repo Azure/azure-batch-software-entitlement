@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
@@ -19,6 +20,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="name">Name to use for the value if there is an error.</param>
         /// <returns>A succesfully parsed <see cref="DateTimeOffset"/> or errors detailing what
         /// went wrong.</returns>
+        [SuppressMessage(
+            "Performance",
+            "CA1822:Mark members as static",
+            Justification = "This method should not be static.")]
         public Errorable<DateTimeOffset> TryParse(string value, string name)
         {
             if (DateTimeOffset.TryParseExact(

@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.IO;
 using Microsoft.Extensions.Logging;
 
@@ -8,7 +8,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
     /// A log provider that unpacks all of the diagnostics that may be in an exception
     /// </summary>
     /// <remarks>Works as a wrapper around an existing provider.</remarks>
-    public class UnpackingExceptionLogProvider : ILoggerProvider
+    public sealed class UnpackingExceptionLogProvider : ILoggerProvider
     {
         // Reference to our wrapped provider
         private readonly ILoggerProvider _innerProvider;

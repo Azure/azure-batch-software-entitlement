@@ -1,4 +1,6 @@
-﻿namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
+using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
+
+namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server
 {
     /// <summary>
     /// A response for a failed request for a software entitlement
