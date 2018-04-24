@@ -51,6 +51,7 @@ struct CertInfo
 {
     SHA256Thumbprint thumbprint;
     std::string common_name;
+    std::string allowed_dns_namespace;
 };
 
 //
@@ -86,13 +87,34 @@ CertInfo s_Microsoft_IT_TLS_CA_5 = {
     "Microsoft IT TLS CA 5"
 };
 
-std::array<CertInfo, 6> s_microsoftIntermediateCerts = {{
+CertInfo s_Batch_USGov_CloudAPI_CA = {
+    {{ 0x1f,0xb8,0x6b,0x11,0x68,0xec,0x74,0x31,0x54,0x06,0x2e,0x8c,0x9c,0xc5,0xb1,0x71,0xa4,0xb7,0xcc,0xb4 }},
+    "DigiCert SHA2 Secure Server CA",
+    ".batch.usgovcloudapi.net"
+};
+
+CertInfo s_Batch_China_CloudAPI_CA = {
+	{ { 0x1f,0xb8,0x6b,0x11,0x68,0xec,0x74,0x31,0x54,0x06,0x2e,0x8c,0x9c,0xc5,0xb1,0x71,0xa4,0xb7,0xcc,0xb4 } },
+	"DigiCert SHA2 Secure Server CA",
+	".batch.chinacloudapi.cn"
+};
+
+CertInfo s_Batch_Germany_CloudAPI_CA = {
+    {{ 0x2f,0xc5,0xde,0x65,0x28,0xcd,0xbe,0x50,0xa1,0x4c,0x38,0x2f,0xc1,0xde,0x52,0x4f,0xaa,0xbf,0x95,0xfc }},
+    "D-TRUST SSL Class 3 CA 1 2009",
+     ".batch.microsoftazure.de" 
+};
+
+std::array<CertInfo, 9> s_microsoftIntermediateCerts = {{
     s_Microsoft_IT_SSL_SHA2,
     s_Microsoft_IT_SSL_SHA2_2,
     s_Microsoft_IT_TLS_CA_1,
     s_Microsoft_IT_TLS_CA_2,
     s_Microsoft_IT_TLS_CA_4,
-    s_Microsoft_IT_TLS_CA_5
+    s_Microsoft_IT_TLS_CA_5,
+    s_Batch_USGov_CloudAPI_CA,
+    s_Batch_China_CloudAPI_CA,
+    s_Batch_Germany_CloudAPI_CA
 }};
 
 std::vector<CertInfo> s_sslCerts;
@@ -492,7 +514,7 @@ public:
     // - Find any one of the certificates in the s_sslCerts vector by thumbprint.
     // - Verify that such cetificate has the matching common name.
     //
-    void VerifyIntermediateCertificate()
+    void VerifyIntermediateCertificate(const std::string& url)
     {
         curl_certinfo* info;
         ThrowIfCurlError(curl_easy_getinfo(_curl.get(), CURLINFO_CERTINFO, &info));
@@ -522,7 +544,15 @@ public:
                         "'");
                 }
 
-                return;
+                if (validCert.allowed_dns_namespace.empty())
+                {
+                    return;
+                }
+
+                if (url.find(validCert.allowed_dns_namespace) != std::string::npos)
+                {
+                    return;
+                }
             }
         }
 
@@ -630,7 +660,7 @@ std::unique_ptr<Entitlement> GetEntitlement(
     Curl curl;
     curl.Post(url + "softwareEntitlements?api-version=2017-05-01.5.0", entitlement_token, requested_entitlement);
 
-    curl.VerifyIntermediateCertificate();
+    curl.VerifyIntermediateCertificate(url);
 
     return curl.GetEntitlement();
 }
@@ -642,7 +672,7 @@ void AddSslCertificate(
 {
     std::lock_guard<std::mutex> lock(s_lock);
 
-    CertInfo info = { ThumbprintToBinary(ssl_cert_thumbprint), ssl_cert_common_name };
+    CertInfo info = { ThumbprintToBinary(ssl_cert_thumbprint), ssl_cert_common_name, {} };
     s_sslCerts.push_back(info);
 }
 
