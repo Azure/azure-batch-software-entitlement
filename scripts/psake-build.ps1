@@ -17,10 +17,10 @@ Task Clean -Depends Clean.SourceFolder, Clean.OutFolder, Clean.PublishFolder
 Task Build.Xplat -Depends Clean, Build.SesTest, Unit.Tests
 
 # Publish distributable zip files for the each tool and platform
-Task Publish.Archives -Depends Clean, Request.Release, Publish.SesTest.Win64, Publish.SesTest.Linux64, Publish.SesClient
+Task Publish.Archives -Depends Clean, Request.Release, Publish.SesTest.Win64, Publish.SesTest.Linux64, Publish.SesClient.x64, Publish.SesClient.x86
 
 # Build all the components for use on Windows
-Task Build.Windows -Depends Clean, Build.SesLibrary, Build.SesClient, Build.SesTest
+Task Build.Windows -Depends Clean, Build.SesClient.x64, Build.SesTest
 
 ## --------------------------------------------------------------------------------
 ##   Preparation Targets
@@ -99,15 +99,27 @@ Task Build.SesTest -Depends Requires.DotNetExe, Restore.NuGetPackages, Generate.
     }
 }
 
-Task Build.SesLibrary -Depends Requires.MsBuild, Requires.Configuration, Requires.Platform, Generate.Version {
+Task Build.SesLibrary.x86 -Depends Requires.MsBuild, Requires.Configuration, Generate.Version {
     exec {
-        & $msbuildExe $srcDir\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native\ /p:Version=$version /property:Configuration=$configuration /property:Platform=$targetPlatform /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$outDir\seslibrary.msbuild.log
+        & $msbuildExe $srcDir\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native\ /p:Version=$version /property:Configuration=$configuration /property:Platform=x86 /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$outDir\seslibrary.x86.msbuild.log
     }
 }
 
-Task Build.SesClient -Depends Requires.MsBuild, Requires.Configuration, Requires.Platform, Generate.Version {
+Task Build.SesLibrary.x64 -Depends Requires.MsBuild, Requires.Configuration, Generate.Version {
     exec {
-        & $msbuildExe $srcDir\sesclient.native\ /property:Configuration=$configuration /p:Version=$version /property:Platform=$targetPlatform /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$outDir\sesclient.msbuild.log
+        & $msbuildExe $srcDir\Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native\ /p:Version=$version /property:Configuration=$configuration /property:Platform=x64 /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$outDir\seslibrary.msbuild.log
+    }
+}
+
+Task Build.SesClient.x86 -Depends Requires.MsBuild, Requires.Configuration, Build.SesLibrary.x86, Generate.Version {
+    exec {
+        & $msbuildExe $srcDir\sesclient.native\ /property:Configuration=$configuration /p:Version=$version /property:Platform=x86 /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$outDir\sesclient.msbuild.log
+    }
+}
+
+Task Build.SesClient.x64 -Depends Requires.MsBuild, Requires.Configuration, Build.SesLibrary.x64, Generate.Version {
+    exec {
+        & $msbuildExe $srcDir\sesclient.native\ /property:Configuration=$configuration /p:Version=$version /property:Platform=x64 /verbosity:minimal /fileLogger /flp:verbosity=detailed`;logfile=$outDir\sesclient.msbuild.log
     }
 }
 
@@ -175,9 +187,21 @@ Task Publish.SesTest.Linux64 -Depends Requires.DotNetExe, Restore.NuGetPackages,
     Write-Output "Created archive $archive"
 }
 
-Task Publish.SesClient -Depends Build.SesLibrary, Build.SesClient {
-    $clientDir = resolve-path $srcDir\sesclient.native\$targetPlatform\$configuration
-    $archive = "$publishDir\sesclient-$semanticVersion-$targetPlatform.zip"
+Task Publish.SesClient.x86 -Depends Build.SesLibrary.x86, Build.SesClient.x86 {
+    $clientDir = resolve-path $srcDir\sesclient.native\$configuration
+    $archive = "$publishDir\sesclient-$semanticVersion-x86.zip"
+    
+    exec {
+        compress-archive $clientDir\*.exe, $clientDir\*.dll $archive
+    }
+
+    Write-Output "Created archive $archive"
+}
+
+Task Publish.SesClient.x64 -Depends Build.SesLibrary.x64, Build.SesClient.x64 {
+    $clientDir = resolve-path $srcDir\sesclient.native\x64\$configuration
+    $archive = "$publishDir\sesclient-$semanticVersion-x64.zip"
+    
     exec {
         compress-archive $clientDir\*.exe, $clientDir\*.dll $archive
     }
@@ -189,16 +213,6 @@ Task Publish.SesClient -Depends Build.SesLibrary, Build.SesClient {
 ##   Configuration Targets
 ## --------------------------------------------------------------------------------
 ## Tasks used to configure the build
-
-Task Request.x64 {
-    Write-Output "64 bit build"
-    $script:targetPlatform = "x64"
-}
-
-Task Request.x86 {
-    Write-Output "32 bit build"
-    $script:targetPlatform = "x86"
-}
 
 Task Request.Debug {
     Write-Output "Debug build"
@@ -273,15 +287,6 @@ Task Requires.OutDir {
     }
 
     Write-Output "Output folder is $outDir"
-}
-
-Task Requires.Platform {
-
-    if ($targetPlatform -eq $null) {
-        $script:targetPlatform = "x64"
-    }
-
-    Write-Output "Target platform is $targetPlatform"
 }
 
 Task Requires.ReportGenerator {
