@@ -7,6 +7,7 @@ properties {
     $srcDir = resolve-path $baseDir\src
     $testsDir = resolve-path $baseDir\tests
     $outDir = join-path $baseDir out
+    $libDir = join-path $baseDir lib
     $publishDir = join-path $baseDir publish
 }
 
@@ -190,9 +191,18 @@ Task Publish.SesTest.Linux64 -Depends Requires.DotNetExe, Restore.NuGetPackages,
 Task Publish.SesClient.x86 -Depends Build.SesLibrary.x86, Build.SesClient.x86 {
     $clientDir = resolve-path $srcDir\sesclient.native\$configuration
     $archive = "$publishDir\sesclient-$semanticVersion-x86.zip"
+
+    $redist = "$libDir\vc_redist\vc_redist.x86.exe"
+    if (test-path $redist) {
+        copy-item $redist -Destination $clientDir 
+    } else {
+        Write-Output "Didn't find vc_redist.x86.exe to include in archive for distribution."
+        Write-Output "(Copy it to $redist to have it included.)"
+        Write-Output ""
+    }
     
     exec {
-        compress-archive $clientDir\*.exe, $clientDir\*.dll $archive
+        compress-archive $clientDir\*.exe, $clientDir\*.dll $archive 
     }
 
     Write-Output "Created archive $archive"
@@ -202,8 +212,17 @@ Task Publish.SesClient.x64 -Depends Build.SesLibrary.x64, Build.SesClient.x64 {
     $clientDir = resolve-path $srcDir\sesclient.native\x64\$configuration
     $archive = "$publishDir\sesclient-$semanticVersion-x64.zip"
     
+    $redist = "$libDir\vc_redist\vc_redist.x64.exe"
+    if (test-path $redist) {
+        copy-item $redist -Destination $clientDir 
+    } else {
+        Write-Output "Didn't find vc_redist.x64.exe to include in archive for distribution."
+        Write-Output "(Copy it to $redist to have it included.)"
+        Write-Output ""
+    }
+    
     exec {
-        compress-archive $clientDir\*.exe, $clientDir\*.dll $archive
+        compress-archive $clientDir\*.exe, $clientDir\*.dll $archive 
     }
 
     Write-Output "Created archive $archive"
