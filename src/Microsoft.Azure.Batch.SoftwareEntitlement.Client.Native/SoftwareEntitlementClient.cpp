@@ -34,7 +34,8 @@
 #endif
 
 #ifdef _WIN32
-#include "Wincrypt.h"
+#include <Wincrypt.h>
+#include <winhttp.h>
 #endif
 
 
@@ -102,7 +103,7 @@ CertInfo s_Batch_China_CloudAPI_CA = {
 CertInfo s_Batch_Germany_CloudAPI_CA = {
     {{ 0x2f,0xc5,0xde,0x65,0x28,0xcd,0xbe,0x50,0xa1,0x4c,0x38,0x2f,0xc1,0xde,0x52,0x4f,0xaa,0xbf,0x95,0xfc }},
     "D-TRUST SSL Class 3 CA 1 2009",
-     ".batch.microsoftazure.de" 
+     ".batch.microsoftazure.de"
 };
 
 std::array<CertInfo, 9> s_microsoftIntermediateCerts = {{
@@ -389,6 +390,82 @@ private:
 
         return CURLE_OK;
     }
+
+    struct WinHttpDeleter
+    {
+        void operator()(HINTERNET h)
+        {
+            WinHttpCloseHandle(h);
+        }
+    };
+
+    typedef std::unique_ptr<void, WinHttpDeleter> WinHttpHandle;
+
+    //
+    // OpenSSL does not hook into the Windows Automatic Root Certificates Update process.
+    // This results in certificate validation failures, so we perform a dummy connection
+    // using WinHTTP which will setup the root cert store correctly.
+    //
+    static void EnsureRootCertsArePopulated(const std::string& url)
+    {
+        std::string prefix("https://");
+        size_t start = url.rfind(prefix, 0);
+        if (start == std::string::npos)
+        {
+            throw Exception("Malformed URL: " + url);
+        }
+
+        start += prefix.length();
+        size_t end = url.find("/", start);
+        std::string temp;
+        if (end == std::string::npos)
+        {
+            temp = url.substr(start);
+        }
+        else
+        {
+            temp = url.substr(start, end - start);
+        }
+
+        std::wstring hostname(temp.cbegin(), temp.cend());
+
+        WinHttpHandle hSession(
+            WinHttpOpen(
+                L"Azure Batch Software Entitlement Service client",
+                WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
+                WINHTTP_NO_PROXY_NAME,
+                WINHTTP_NO_PROXY_BYPASS,
+                0)
+            );
+        ThrowIfWin32Error(hSession == nullptr);
+
+        WinHttpHandle hConn(
+            WinHttpConnect(hSession.get(), hostname.c_str(), INTERNET_DEFAULT_HTTPS_PORT, 0)
+            );
+        ThrowIfWin32Error(hConn == nullptr);
+
+        WinHttpHandle hRequest(
+            WinHttpOpenRequest(
+                hConn.get(),
+                nullptr,
+                nullptr,
+                nullptr,
+                WINHTTP_NO_REFERER,
+                WINHTTP_DEFAULT_ACCEPT_TYPES,
+                WINHTTP_FLAG_SECURE)
+            );
+        ThrowIfWin32Error(hRequest == nullptr);
+
+        ThrowIfWin32Error(TRUE != WinHttpSendRequest(
+            hRequest.get(),
+            WINHTTP_NO_ADDITIONAL_HEADERS,
+            0,
+            WINHTTP_NO_REQUEST_DATA,
+            0,
+            0,
+            0)
+        );
+    }
 #endif  // _WIN32
 
     X509 GetCertificate(const curl_slist* certinfo)
@@ -506,7 +583,15 @@ public:
         std::string body = j.dump();
         ThrowIfCurlError(curl_easy_setopt(_curl.get(), CURLOPT_POSTFIELDS, body.c_str()));
 
+#ifdef WIN32
+        if (curl_easy_perform(_curl.get()) != CURLE_OK)
+        {
+            EnsureRootCertsArePopulated(url);
+            ThrowIfCurlError(curl_easy_perform(_curl.get()));
+        }
+#else
         ThrowIfCurlError(curl_easy_perform(_curl.get()));
+#endif
     }
 
     //
