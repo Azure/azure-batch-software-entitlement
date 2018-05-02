@@ -197,7 +197,8 @@ Task Publish.SesClient.x86 -Depends Build.SesLibrary.x86, Build.SesClient.x86 {
         copy-item $redist -Destination $clientDir 
     } else {
         Write-Output "Didn't find vc_redist.x86.exe to include in archive for distribution."
-        Write-Output "(Copy it to $redist to have it included.)"
+        Write-Output "(Download vc_redist.x86.exe from https://www.microsoft.com/en-in/download/details.aspx?id=48145"
+        Write-Output " and copy it to $redist to have it included.)"
         Write-Output ""
     }
     
@@ -217,7 +218,8 @@ Task Publish.SesClient.x64 -Depends Build.SesLibrary.x64, Build.SesClient.x64 {
         copy-item $redist -Destination $clientDir 
     } else {
         Write-Output "Didn't find vc_redist.x64.exe to include in archive for distribution."
-        Write-Output "(Copy it to $redist to have it included.)"
+        Write-Output "(Download vc_redist.x64.exe from https://www.microsoft.com/en-in/download/details.aspx?id=48145"
+        Write-Output " and copy it to $redist to have it included.)"
         Write-Output ""
     }
     
