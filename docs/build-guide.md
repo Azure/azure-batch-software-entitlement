@@ -20,13 +20,11 @@ Preinstallation of Psake is optional; if it isn't already available, the build s
 
 ### Psake on Linux
 
-Support for running **psake** on Linux using PowerShell Core hasn't yet (as of September 2017) been released - the current release (v4.6.0, from March 2016) only runs on Windows.
+Support for running **psake** on Linux using PowerShell Core was released as a part of **v4.7.0** in November 2017, but you'll still need to manually install it for use.
 
-For builds of the software entitlement SDK to run on Linux, you'll need to [download](https://github.com/psake/psake/archive/master.zip) the current `master` branch of psake from GitHub. 
+For builds of the software entitlement SDK to run on Linux, you'll need to [download](https://github.com/psake/psake/releases/tag/v4.7.0) the release from GitHub. 
 
-Once downloaded, extract the zip file into the root of the repository as `./lib/psake` so that `bootstrap.ps1` will find the psake PowerShell module as `./lib/psake/psake.psm1`.
-
-This manual installation won't be necessary once a new release of Psake with official Linux support has been made.
+Once downloaded, extract the archive file into the root of the repository as `./lib/psake` so that `bootstrap.ps1` will find the psake PowerShell module as `./lib/psake/psake.psm1`.
 
 ## Building `sestest`
 
@@ -52,7 +50,7 @@ dotnet build .\src\sestest
 Run the `sestest` console utility to verify it is ready for use:
 
 ``` PowerShell
-.\sestest
+.\sestest.ps1
 ```
 
 If you are not running on PowerShell, you'll need to use the `dotnet` application to launch the application:
@@ -90,7 +88,7 @@ ERROR(S):
 To compile the native code on Windows:
 
 ``` PowerShell
-.\build-windows -platform x64 -configuration Debug
+.\build-windows.ps1 -platform x64 -configuration Debug
 ```
 
 or you can compile it manually:
@@ -130,6 +128,34 @@ Parameters:
     --token <software entitlement token to pass to the server>
     --application <name of the license ID being requested>
 ```
+
+## Packaging for Distribution
+
+As a convenience, you can run `.\publish-archives.ps1` to compile both `sestest` and `sesclient`, creating a series of zip files ready for distribution. 
+
+These files are placed in the folder `.\publish\`. The exact files names will vary, as they include key information to help you choose between multiple builds.
+
+For example, a build run from the `develop` branch with the HEAD at commit `b9eac49` would generate these files:
+
+* `sesclient-2.0.46-beta.develop.b9eac49-x64.zip`
+* `sesclient-2.0.46-beta.develop.b9eac49-x86.zip`
+* `sestest-2.0.46-beta.develop.b9eac49-linux-x64.zip`
+* `sestest-2.0.46-beta.develop.b9eac49-win10-x64.zip`
+
+These filenames break down as follows:
+
+* `sesclient` - a build of the native wrapper around the SES library (Windows only);
+* `sestest` - a standalone build of the test tool;
+* `2.0.46` - the version number of the release;
+* `beta` - signifies the build *did not* come from `master`;
+* `develop` - the name of the branch used for the build (omitted for builds on `master);
+* `b9eac49` - the **git** commit id of the current branch HEAD;
+* `linux` - built to run on Linux;
+* `win10` - built to run on Windows;
+* `x64` - 64 bit build;
+* `x86` - 32 bit build;
+
+If you copy the installation files `vc_redist.x64.exe` and `vc_redist.x86.exe` into `.\lib\vc_redist` then the `sesclient*.zip` files listed above will each include the correct version of the installer. This is done to make it easier to deploy `sesclient.native.exe` onto a new machine for testing.
 
 ## Troubleshooting
 
