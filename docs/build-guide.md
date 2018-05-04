@@ -155,7 +155,7 @@ These filenames break down as follows:
 * `x64` - 64 bit build;
 * `x86` - 32 bit build;
 
-If you copy the installation files `vc_redist.x64.exe` and `vc_redist.x86.exe` into `.\lib\vc_redist` then the `sesclient*.zip` files listed above will each include the correct version of the installer. This is done to make it easier to deploy `sesclient.native.exe` onto a new machne for testing.
+If you copy the installation files `vc_redist.x64.exe` and `vc_redist.x86.exe` into `.\lib\vc_redist` then the `sesclient*.zip` files listed above will each include the correct version of the installer. This is done to make it easier to deploy `sesclient.native.exe` onto a new machine for testing.
 
 ## Troubleshooting
 
