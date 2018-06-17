@@ -6,13 +6,19 @@ This *build guide* describes how to build the tools provided as a part of the *S
 
 You will need certain prerequisites installed on your system:
 
-The `sestest` command line utility and associated libraries are written in C# 7 and require version 2.0 or higher of [.NET Core](https://www.microsoft.com/net/core#windowsvs2017) to be installed. The tool was written with Visual Studio 2017; it will compile with just the .NET Core SDK installation. For more information see the [Sestest command line utility](../src/sestest/).
+The `sestest` command line utility and associated libraries are written in C# 7 and require version 2.0 or higher of [.NET Core](https://www.microsoft.com/net/core#windowsvs2017) to be installed. The tool was written with Visual Studio 2017; it will compile with just the .NET Core SDK installed. For more information see the [Sestest command line utility](../src/sestest/).
 
 The C++ source for the client library requires [libcurl](https://curl.haxx.se/libcurl/) and [OpenSSL](https://www.openssl.org/) libraries as installed by [vcpkg](https://blogs.msdn.microsoft.com/vcblog/2016/09/19/vcpkg-a-tool-to-acquire-and-build-c-open-source-libraries-on-windows/). The library was also written with Visual Studio 2017; it will compile with any modern C++ compiler. For more information (including details of configuration and use of `vcpkg`) see the [Software entitlement service native client library](../src/Microsoft.Azure.Batch.SoftwareEntitlement.Client.Native)
 
 Build scripts and other tooling are written in PowerShell using the [Psake](https://github.com/psake/psake) make tool. These build scripts work on both Windows and Linux, though initial setup differs.
 
-**Note:** By default, execution of PowerShell scripts is disabled on many Windows systems. If you get an error "*script.ps1* cannot be loaded because running scripts is disabled on this system", you will need to unblock scripts by running `set-executionpolicy remotesigned` from an elevated PowerShell window. 
+**Note:** By default, execution of PowerShell scripts is disabled Windows systems as a security measure. If you get the error "*script.ps1* cannot be loaded because running scripts is disabled on this system", you will need to unblock scripts by running the following command from an elevated PowerShell window:
+
+ ``` PowerShell
+ set-executionpolicy remotesigned
+ ```
+
+For more information see the documentation for [`set-executionpolicy`](https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.security/set-executionpolicy).
 
 ### Psake On Windows
 
@@ -38,7 +44,9 @@ Compile the cross-platform (.NET) tooling with the convenience PowerShell script
 .\build-xplat.ps1
 ```
 
-or compile it manually if you are not using PowerShell:
+Using the PowerShell script is recommended as it does more than just compile the application; for example, it restores NuGet packages and runs unit tests.
+
+If you cannot use PowerShell, you can compile it manually:
 
 ``` PowerShell
 dotnet restore .\src\sestest
@@ -56,17 +64,16 @@ Run the `sestest` console utility to verify it is ready for use:
 If you are not running on PowerShell, you'll need to use the `dotnet` application to launch the application:
 
 ``` bash
-dotnet ./out/sestest/Debug/netcoreapp1.1/sestest.dll
+dotnet ./out/sestest/netcoreapp2.0/sestest.dll
 ```
 
 Either way, you should get output similar to this:
 
 ``` 
-sestest 1.0.0
-Copyright (C) 2017 Microsoft
-
+sestest 2.0.50-beta.develop.eee6033
+Copyright (C) 2018 Microsoft
 ERROR(S):
-  No verb selected.
+No verb selected.
 
   generate             Generate a token with specified parameters
 
@@ -76,10 +83,14 @@ ERROR(S):
 
   find-certificate     Show the details of one particular certificate.
 
+  verify               Submit a token for verification
+
   help                 Display more information on a specific command.
 
   version              Display version information.
 ```
+
+The exact version number showin in the opening banner will vary depending on the exact source you're compiling.
 
 ## Build `sesclient.native`
 
@@ -121,12 +132,15 @@ You should get output similar to this:
 
 ``` 
 Contacts the specified Azure Batch software entitlement server to verify the provided token.
-Parameters:
+
+Mandatory parameters:
     --url <software entitlement server URL>
-    --thumbprint <thumbprint of a certificate expected in the server's SSL certificate chain>
-    --common-name <common name of the certificate with the specified thumbprint>
     --token <software entitlement token to pass to the server>
     --application <name of the license ID being requested>
+
+Optional parameters:
+    --thumbprint <thumbprint of a certificate expected in the server's SSL certificate chain>
+    --common-name <common name of the certificate with the specified thumbprint>
 ```
 
 ## Packaging for Distribution
@@ -148,8 +162,8 @@ These filenames break down as follows:
 * `sestest` - a standalone build of the test tool;
 * `2.0.46` - the version number of the release;
 * `beta` - signifies the build *did not* come from `master`;
-* `develop` - the name of the branch used for the build (omitted for builds on `master);
-* `b9eac49` - the **git** commit id of the current branch HEAD;
+* `develop` - the name of the branch used for the build (omitted for builds from `master`);
+* `b9eac49` - the **git** commit id of the current branch HEAD (also omitted for builds from `master`);
 * `linux` - built to run on Linux;
 * `win10` - built to run on Windows;
 * `x64` - 64 bit build;
