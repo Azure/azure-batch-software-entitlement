@@ -182,6 +182,44 @@ With the environment variables previously defined (`AZ_BATCH_SOFTWARE_ENTITLEMEN
 PS> .\sesclient --url $env:AZ_BATCH_ACCOUNT_URL --thumbprint $connectionThumbprint --common-name localhost --token $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN --application contosoapp
 ```
 
+If you are having difficulty running `sesclient`, you can do a partial verification using pure PowerShell:
+
+``` PowerShell
+PS> $result = Invoke-WebRequest -UseBasicParsing "${env:AZ_BATCH_ACCOUNT_URL}softwareEntitlements?api-version=2017-05-01.5.0" 
+        -ContentType 'application/json; odata=minimalmetadata' 
+        -Method POST 
+        -Body "{ 'applicationId':'contosoapp', 'token':'${env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN}'}"
+```
+(Note that this has been wrapped onto multiple lines for readability; you'll need to put everything on a single line to use this. Don't forget to replace `contosoapp` with the name of your application.)
+
+This will verify your token (from the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN` against the server, but doesn't do any of the required local checks that ensure you're talking to a genuine service.
+
+The `$result` variable will contain the answer from the server - for a successfully verified token, it would look similar to this:
+
+``` text
+PS> $result
+StatusCode        : 200
+StatusDescription : OK
+Content           : {
+                      "odata.metadata":"https://deadlinebatchcbs.westus2.batch.azure.com/$metadata#softwareentitlementresponses/@Element",
+                      "id":"entitlement-{C9C57956-D7A1-4103-B3CF-23D712F77C76}"...
+RawContent        : HTTP/1.1 200 OK
+                    Transfer-Encoding: chunked
+                    request-id: 68a1efd5-a919-4635-a93a-fe5510c2a983
+                    Strict-Transport-Security: max-age=31536000; includeSubDomains
+                    X-Content-Type-Options: nosniff
+                    DataServ...
+Forms             :
+Headers           : {[Transfer-Encoding, chunked], [request-id, 68a1efd5-a919-4635-a93a-fe5510c2a983], 
+                     [Strict-Transport-Security, max-age=31536000; includeSubDomains], [X-Content-Type-Options, nosniff]...}
+Images            : {}
+InputFields       : {}
+Links             : {}
+ParsedHtml        :
+RawContentLength  : 227
+```
+(Again there's been some light editing for presentation purposes.)
+
 ## Troubleshooting
 
 ### SSPI Errors
