@@ -54,7 +54,8 @@ public:
 std::unique_ptr<Entitlement> GetEntitlement(
     std::string url,
     const std::string& entitlement_token,
-    const std::string& requested_entitlement
+    const std::string& requested_entitlement,
+    unsigned int retries = 5
 );
 
 
