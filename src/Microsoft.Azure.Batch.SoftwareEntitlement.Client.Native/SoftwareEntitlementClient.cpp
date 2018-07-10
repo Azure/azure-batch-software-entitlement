@@ -1,9 +1,15 @@
+#if _MSC_VER
+// The use of std::getenv generates a warning on Windows.
+// Since the aim is to have portable code, suppress the warnings.
+#define _CRT_SECURE_NO_WARNINGS
+#endif
 #include "SoftwareEntitlementClient.h"
 #include <algorithm>
 #include <cstddef>
 #include <mutex>
 #include <sstream>
 #include <vector>
+#include <cstdlib>
 #include <cstdint>
 #include <cstring>
 #include <curl/curl.h>
@@ -477,7 +483,19 @@ public:
 #ifdef _WIN32
         ThrowIfCurlError(curl_easy_setopt(_curl.get(), CURLOPT_SSL_CTX_FUNCTION, OpenSSLContextCallback));
 #endif // _WIN32
-        ThrowIfCurlError(curl_easy_setopt(_curl.get(), CURLOPT_CONNECTTIMEOUT, 300L));
+
+        // Allow overriding the default connection timeout of 300 seconds.
+        const char* env = std::getenv("AZ_BATCH_SES_CURLOPT_CONNECTTIMEOUT");
+        long timeout = 0;
+        if (env != nullptr)
+        {
+            timeout = std::strtol(env, nullptr, 10);
+        }
+        if (timeout <= 0 || timeout == LONG_MAX)
+        {
+            timeout = 300L;
+        }
+        ThrowIfCurlError(curl_easy_setopt(_curl.get(), CURLOPT_CONNECTTIMEOUT, timeout));
     }
 
     void Post(
