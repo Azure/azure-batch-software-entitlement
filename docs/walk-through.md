@@ -182,7 +182,9 @@ With the environment variables previously defined (`AZ_BATCH_SOFTWARE_ENTITLEMEN
 PS> .\sesclient --url $env:AZ_BATCH_ACCOUNT_URL --thumbprint $connectionThumbprint --common-name localhost --token $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN --application contosoapp
 ```
 
-If you are having difficulty running `sesclient`, you can do a partial verification using pure PowerShell:
+If you are having difficulty running `sesclient`, you can do a partial verification using your shell.
+
+Using PowerShell:
 
 ``` PowerShell
 PS> $result = Invoke-WebRequest -UseBasicParsing "${env:AZ_BATCH_ACCOUNT_URL}softwareEntitlements?api-version=2017-05-01.5.0" 
@@ -190,9 +192,7 @@ PS> $result = Invoke-WebRequest -UseBasicParsing "${env:AZ_BATCH_ACCOUNT_URL}sof
         -Method POST 
         -Body "{ 'applicationId':'contosoapp', 'token':'${env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN}'}"
 ```
-(Note that this has been wrapped onto multiple lines for readability; you'll need to put everything on a single line to use this. Don't forget to replace `contosoapp` with the name of your application.)
-
-This will verify your token (from the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN` against the server, but doesn't do any of the required local checks that ensure you're talking to a genuine service.
+(Note that this commandline has been wrapped onto multiple lines for readability; you'll need to put everything on a single line to use this. Don't forget to replace `contosoapp` with the name of your application.)
 
 The `$result` variable will contain the answer from the server - for a successfully verified token, it would look similar to this:
 
@@ -219,6 +219,27 @@ ParsedHtml        :
 RawContentLength  : 227
 ```
 (Again there's been some light editing for presentation purposes.)
+
+If you're working with a Linux shell, you can achieve the same result with `curl` or `wget`:
+
+``` bash
+$ curl --request POST \
+       --header "Content-Type: application/json; odata=minimalmetadata" \
+       --data "{'applicationId':'contosoapp', 'token':'$AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN'}" \
+       ${AZ_BATCH_ACCOUNT_URL}softwareEntitlements?api-version=2017-05-01.5.0
+```
+
+``` bash
+$ wget -qO- \
+       --header "Content-Type: application/json; odata=minimalmetadata" \
+       --post-data "{'applicationId':'contosoapp', 'token':'$AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN'}" \
+       ${AZ_BATCH_ACCOUNT_URL}softwareEntitlements?api-version=2017-05-01.5.0```
+```
+(Note that these commandlines have also been wrapped onto multiple lines for readability; again, you'll need to put everything on a single line to use this. Don't forget to replace `contosoapp` with the name of your application.)
+
+Both of these will write the JSON response from the server to stdout.
+
+These will verify your token (from the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN` against the server, but won't do any of the required local checks that ensure you're talking to a genuine service.
 
 ## Troubleshooting
 
