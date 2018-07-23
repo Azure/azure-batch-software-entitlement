@@ -201,8 +201,8 @@ PS> $result
 StatusCode        : 200
 StatusDescription : OK
 Content           : {
-                      "odata.metadata":"https://deadlinebatchcbs.westus2.batch.azure.com/$metadata#softwareentitlementresponses/@Element",
-                      "id":"entitlement-{C9C57956-D7A1-4103-B3CF-23D712F77C76}"...
+                      "odata.metadata":"https://<batchaccount>.<region>.batch.azure.com/$metadata#softwareentitlementresponses/@Element",
+                      "id":"<entitlementtokenid>"...
 RawContent        : HTTP/1.1 200 OK
                     Transfer-Encoding: chunked
                     request-id: 68a1efd5-a919-4635-a93a-fe5510c2a983
