@@ -75,7 +75,7 @@ Task Generate.Version {
     $branch = git name-rev --name-only HEAD
     Write-Output "Branch   $branch"
 
-    $commit = git rev-parse --short head
+    $commit = git rev-parse --short HEAD
     Write-Output "Commit   $commit"
 
     $script:version = "$versionBase.$patchVersion"
