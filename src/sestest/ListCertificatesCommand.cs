@@ -31,25 +31,98 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             var now = DateTime.Now;
 
-            if (commandLine.ShowExpired)
+            var showCerts = TryParseShow(commandLine.Show);
+            if (!showCerts.HasValue)
             {
-                Logger.LogInformation("Including expired certificates.");
+                Logger.LogErrors(showCerts.Errors);
+                return Task.FromResult(-1);
             }
 
             var certificateStore = new CertificateStore();
             var allCertificates = certificateStore.FindAll();
-            var query = allCertificates.Where(c => c.HasPrivateKey)
-                .Where(c => now < c.NotAfter || commandLine.ShowExpired)
+            var query = allCertificates.Where(c => c.HasPrivateKey && c.RawData != null)
                 .ToList();
             Logger.LogInformation("Found {Count} certificates with private keys", query.Count);
 
-            var rows = query.Select(DescribeCertificate).ToList();
-            rows.Insert(0, new List<string> { "Name", "Friendly Name", "Thumbprint", "Not Before", "Not After" });
+            if (showCerts.Value == ShowCertificates.All
+                || showCerts.Value == ShowCertificates.ForEncrypting
+                || showCerts.Value == ShowCertificates.ForSigning
+                || showCerts.Value == ShowCertificates.NonExpired)
+            {
+                LogCertificates(
+                    "Found {0} non-expired certificates with private keys that allow both encryption and signing",
+                    query.Where(c => now < c.NotAfter
+                                     && c.SupportsUse(X509KeyUsageFlags.DigitalSignature)
+                                     && c.SupportsUse(X509KeyUsageFlags.DataEncipherment)));
+            }
 
-            Logger.LogInformationTable(rows);
+            if (showCerts.Value == ShowCertificates.All
+                || showCerts.Value == ShowCertificates.ForSigning
+                || showCerts.Value == ShowCertificates.NonExpired)
+            {
+                LogCertificates(
+                "Found {0} non-expired certificates with private keys that allow signing but not encryption",
+                query.Where(c => now < c.NotAfter
+                                 && c.SupportsUse(X509KeyUsageFlags.DigitalSignature)
+                                 && !c.SupportsUse(X509KeyUsageFlags.DataEncipherment)));
+            }
+
+            if (showCerts.Value == ShowCertificates.All
+                || showCerts.Value == ShowCertificates.ForEncrypting
+                || showCerts.Value == ShowCertificates.NonExpired)
+            {
+                LogCertificates(
+                "Found {0} non-expired certificates with private keys that allow encryption but not signing",
+                query.Where(c => now < c.NotAfter
+                                 && !c.SupportsUse(X509KeyUsageFlags.DigitalSignature)
+                                 && c.SupportsUse(X509KeyUsageFlags.DataEncipherment)));
+            }
+
+            if (showCerts.Value == ShowCertificates.All
+                || showCerts.Value == ShowCertificates.NonExpired)
+            {
+                LogCertificates(
+                  "Found {0} non-expired certificates with private keys that allow neither encryption nor signing",
+                  query.Where(c => now < c.NotAfter
+                                   && !c.SupportsUse(X509KeyUsageFlags.DigitalSignature)
+                                   && !c.SupportsUse(X509KeyUsageFlags.DataEncipherment)));
+            }
+
+            if (showCerts.Value == ShowCertificates.All)
+            {
+                LogCertificates(
+                    "Found {0} expired certificates",
+                    query.Where(c => now >= c.NotAfter));
+            }
 
             return Task.FromResult(0);
         }
+
+        private void LogCertificates(string title, IEnumerable<X509Certificate2> certificates)
+        {
+            var rows = certificates.Select(DescribeCertificate).ToList();
+
+            if (rows.Count == 0)
+            {
+                // Nothing to log
+                return;
+            }
+
+            rows.Insert(0, new List<string>
+            {
+                "Name",
+                "Friendly Name",
+                "Thumbprint",
+                "Not Before",
+                "Not After"
+            });
+
+            Logger.LogInformation("");
+            Logger.LogInformation(title, rows.Count - 1);
+            Logger.LogInformation("");
+            Logger.LogInformationTable(rows);
+        }
+
 
         private static IList<string> DescribeCertificate(X509Certificate2 cert)
         {
@@ -74,6 +147,33 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 cert.NotAfter.ToString(dateFormat, CultureInfo.InvariantCulture),
                 status
             };
+        }
+
+        private static Errorable<ShowCertificates> TryParseShow(string show)
+        {
+            if (string.IsNullOrEmpty(show))
+            {
+                return Errorable.Success(ShowCertificates.NonExpired);
+            }
+
+            if (Enum.TryParse<ShowCertificates>(show, true, out var result))
+            {
+                // Successfully parsed the string
+                return Errorable.Success(result);
+            }
+
+            return Errorable.Failure<ShowCertificates>(
+                $"Failed to recognize '{show}'; valid choices are: `nonexpired` (default), 'forsigning', 'forencrypting', 'expired', and 'all'.");
+        }
+
+        [Flags]
+        private enum ShowCertificates
+        {
+            NonExpired = 1,
+            ForSigning =2,
+            ForEncrypting = 4,
+            Expired = 8,
+            All = NonExpired | Expired | ForSigning | ForEncrypting
         }
     }
 }

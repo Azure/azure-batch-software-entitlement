@@ -5,7 +5,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     [Verb("list-certificates", HelpText = "List all available certificates.")]
     public sealed class ListCertificatesCommandLine : CommandLineBase
     {
-        [Option(HelpText = "Show expired certificates in list")]
-        public bool ShowExpired { get; set; }
+        [Option(HelpText = "Which certificates should be shown? (one of `nonexpired` (default), 'forsigning', 'forencrypting', 'expired', and 'all').")]
+        public string Show { get; set; }
     }
 }
