@@ -185,8 +185,6 @@ May indicate that you have Visual Studio 2015 Update 2 or earlier; **vcpkg** nee
 
 ### Assert: No .NET Framework installation directory found at \Microsoft.NET\Framework64\v4.0.30319\.
 
-This error occurs when attempting to build on Linux using Psake 4.6.0 (the current release as of September 2017).
+This error occurs when attempting to build on Linux using Psake version 4.6.0 or earlier. Upgrade your version of Psake to [v4.7.0](https://github.com/psake/psake/releases/tag/v4.7.0) or higher.
 
-Release 4.6.0 of Psake doesn't support Linux - but the current `master` branch does.
-
-[Download](https://github.com/psake/psake/archive/master.zip) the current `master` branch of psake and extract the archive into the root of the repository as `./lib/psake` so that `bootstrap.ps1` will find the psake PowerShell module as `./lib/psake/psake.psm1`.
+If you don't want to upgrade your system installation of Psake, extract the new version into the root of the repository as `./lib/psake` so that `bootstrap.ps1` will find the psake PowerShell module as `./lib/psake/psake.psm1`.
