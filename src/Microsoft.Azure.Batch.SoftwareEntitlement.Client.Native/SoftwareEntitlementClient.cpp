@@ -628,6 +628,7 @@ public:
     }
 };
 
+#ifdef _WIN32
 struct WinHttpDeleter
 {
     void operator()(HINTERNET h)
@@ -637,6 +638,7 @@ struct WinHttpDeleter
 };
 
 typedef std::unique_ptr<void, WinHttpDeleter> WinHttpHandle;
+#endif
 
 //
 // OpenSSL does not hook into the Windows Automatic Root Certificates Update process.
@@ -801,7 +803,7 @@ std::unique_ptr<Entitlement> GetEntitlement(
             {
                 std::this_thread::sleep_for(std::chrono::seconds(retry));
             }
-#ifdef WIN32
+#ifdef _WIN32
             else if (e.GetCode() == CURLE_SSL_CACERT)
             {
                 EnsureRootCertsArePopulated(url);
