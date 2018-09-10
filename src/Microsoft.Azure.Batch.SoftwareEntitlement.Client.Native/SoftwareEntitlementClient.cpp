@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <cstddef>
 #include <mutex>
+#include <thread>
+#include <chrono>
 #include <sstream>
 #include <vector>
 #include <cstdlib>
@@ -638,7 +640,6 @@ struct WinHttpDeleter
 };
 
 typedef std::unique_ptr<void, WinHttpDeleter> WinHttpHandle;
-#endif
 
 //
 // OpenSSL does not hook into the Windows Automatic Root Certificates Update process.
@@ -705,6 +706,7 @@ void EnsureRootCertsArePopulated(const std::string& url)
         0)
     );
 }
+#endif
 
 }   // anonymous namespace
 
