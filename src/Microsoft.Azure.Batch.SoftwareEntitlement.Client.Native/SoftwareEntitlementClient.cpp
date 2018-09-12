@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <cstddef>
 #include <mutex>
+#include <thread>
+#include <chrono>
 #include <sstream>
 #include <vector>
 #include <cstdlib>
@@ -628,6 +630,7 @@ public:
     }
 };
 
+#ifdef _WIN32
 struct WinHttpDeleter
 {
     void operator()(HINTERNET h)
@@ -703,6 +706,7 @@ void EnsureRootCertsArePopulated(const std::string& url)
         0)
     );
 }
+#endif
 
 }   // anonymous namespace
 
@@ -801,7 +805,7 @@ std::unique_ptr<Entitlement> GetEntitlement(
             {
                 std::this_thread::sleep_for(std::chrono::seconds(retry));
             }
-#ifdef WIN32
+#ifdef _WIN32
             else if (e.GetCode() == CURLE_SSL_CACERT)
             {
                 EnsureRootCertsArePopulated(url);
