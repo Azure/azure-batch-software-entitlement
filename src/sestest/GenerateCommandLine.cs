@@ -6,7 +6,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     [Verb("generate", HelpText = "Generate a token with specified parameters")]
     public sealed class GenerateCommandLine : CommandLineBase
     {
-        [Option("application-id", HelpText = "Unique identifier(s) for the applications(s) to include in the entitlement (comma separated).", Separator = ',')]
+        [Option("application-id", HelpText = "Unique identifier(s) for the applications(s) to include in the token (comma separated).", Separator = ',')]
         public IList<string> ApplicationIds { get; set; } = new List<string>();
 
         [Option("vmid", HelpText = "[Deprecated] Unique identifier for the Azure virtual machine.")]

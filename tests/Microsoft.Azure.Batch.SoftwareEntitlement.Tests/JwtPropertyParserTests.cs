@@ -7,7 +7,7 @@ using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 {
-    public class JwtEntitlementParserTests
+    public class JwtPropertyParserTests
     {
         // Credentials used for encryption
         private readonly EncryptingCredentials _encryptingCredentials;
@@ -16,9 +16,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         private readonly SigningCredentials _signingCredentials;
 
         // The entitlements used to generate the token
-        private readonly NodeEntitlements _sourceEntitlements;
+        private readonly EntitlementTokenProperties _sourceTokenProperties;
 
-        public JwtEntitlementParserTests()
+        public JwtPropertyParserTests()
         {
             // Hard coded key for unit testing only; actual operation will use a cert
             const string plainTextSigningKey = "This is my shared, not so secret, secret that needs to be very long!";
@@ -30,38 +30,38 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             var encryptingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(plainTextEncryptionKey));
             _encryptingCredentials = new EncryptingCredentials(encryptingKey, "dir", SecurityAlgorithms.Aes256CbcHmacSha512);
 
-            _sourceEntitlements = NodeEntitlements.Build(FakeEntitlementPropertyProvider.CreateValid()).Value;
+            _sourceTokenProperties = EntitlementTokenProperties.Build(FakeTokenPropertyProvider.CreateValid()).Value;
         }
 
-        private string GenerateToken(NodeEntitlements entitlements)
+        private string GenerateToken(EntitlementTokenProperties tokenProperties)
         {
             var generator = new TokenGenerator(NullLogger.Instance, _signingCredentials, _encryptingCredentials);
-            return generator.Generate(entitlements);
+            return generator.Generate(tokenProperties);
         }
 
-        private JwtEntitlementParser CreateParser(string expectedAudience, string expectedIssuer)
+        private JwtPropertyParser CreateParser(string expectedAudience, string expectedIssuer)
         {
-            return new JwtEntitlementParser(
+            return new JwtPropertyParser(
                 expectedAudience,
                 expectedIssuer,
                 _signingCredentials.Key,
                 _encryptingCredentials.Key);
         }
 
-        public class MalformedToken : JwtEntitlementParserTests
+        public class MalformedToken : JwtPropertyParserTests
         {
             [Fact]
             public void WhenTokenMalformed_ReturnsError()
             {
-                var entitlements = _sourceEntitlements;
-                var parser = CreateParser(entitlements.Audience, entitlements.Issuer);
+                var tokenProperties = _sourceTokenProperties;
+                var parser = CreateParser(tokenProperties.Audience, tokenProperties.Issuer);
                 var result = parser.Parse("notarealtoken");
                 result.HasValue.Should().BeFalse();
                 result.Errors.Should().Contain(e => e.Contains("not well formed"));
             }
         }
 
-        public class TokenTimeSpan : JwtEntitlementParserTests
+        public class TokenTimeSpan : JwtPropertyParserTests
         {
             private readonly TimeSpan _oneWeek = TimeSpan.FromDays(7);
 
@@ -73,11 +73,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WhenTokenHasExpired_ReturnsExpectedError()
             {
-                var entitlements = _sourceEntitlements
+                var tokenProperties = _sourceTokenProperties
                     .FromInstant(_now - _oneWeek)
                     .UntilInstant(_now - _oneDay);
-                var token = GenerateToken(entitlements);
-                var parser = CreateParser(entitlements.Audience, entitlements.Issuer);
+                var token = GenerateToken(tokenProperties);
+                var parser = CreateParser(tokenProperties.Audience, tokenProperties.Issuer);
                 var result = parser.Parse(token);
                 result.HasValue.Should().BeFalse();
                 result.Errors.Should().Contain(e => e.Contains("expired"));
@@ -86,18 +86,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WhenTokenHasNotYetStarted_ReturnsExpectedError()
             {
-                var entitlements = _sourceEntitlements
+                var tokenProperties = _sourceTokenProperties
                     .FromInstant(_now + _oneDay)
                     .UntilInstant(_now + _oneWeek);
-                var token = GenerateToken(entitlements);
-                var parser = CreateParser(entitlements.Audience, entitlements.Issuer);
+                var token = GenerateToken(tokenProperties);
+                var parser = CreateParser(tokenProperties.Audience, tokenProperties.Issuer);
                 var result = parser.Parse(token);
                 result.HasValue.Should().BeFalse();
                 result.Errors.Should().Contain(e => e.Contains("will not be valid"));
             }
         }
 
-        public class TokenIssuer : JwtEntitlementParserTests
+        public class TokenIssuer : JwtPropertyParserTests
         {
             private readonly string _expectedIssuer = "https://issuer.region.batch.azure.test";
             private readonly string _unexpectedIssuer = "https://not-the-expected-issuer.region.batch.azure.test";
@@ -105,16 +105,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WhenTokenContainsUnexpectedIssuer_ReturnsExpectedError()
             {
-                var entitlements = _sourceEntitlements.WithIssuer(_unexpectedIssuer);
-                var token = GenerateToken(entitlements);
-                var parser = CreateParser(entitlements.Audience, _expectedIssuer);
+                var tokenProperties = _sourceTokenProperties.WithIssuer(_unexpectedIssuer);
+                var token = GenerateToken(tokenProperties);
+                var parser = CreateParser(tokenProperties.Audience, _expectedIssuer);
                 var result = parser.Parse(token);
                 result.HasValue.Should().BeFalse();
                 result.Errors.Should().Contain(e => e.Contains("Invalid issuer"));
             }
         }
 
-        public class TokenAudience : JwtEntitlementParserTests
+        public class TokenAudience : JwtPropertyParserTests
         {
             private readonly string _expectedAudience = "https://audience.region.batch.azure.test";
             private readonly string _unexpectedAudience = "https://not-the-expected-audience.region.batch.azure.test";
@@ -122,9 +122,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WhenTokenContainsUnexpectedAudience_ReturnsExpectedError()
             {
-                var entitlements = _sourceEntitlements.WithAudience(_unexpectedAudience);
-                var token = GenerateToken(entitlements);
-                var parser = CreateParser(_expectedAudience, entitlements.Issuer);
+                var tokenProperties = _sourceTokenProperties.WithAudience(_unexpectedAudience);
+                var token = GenerateToken(tokenProperties);
+                var parser = CreateParser(_expectedAudience, tokenProperties.Issuer);
                 var result = parser.Parse(token);
                 result.HasValue.Should().BeFalse();
                 result.Errors.Should().Contain(e => e.Contains("Invalid audience"));

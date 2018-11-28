@@ -6,16 +6,16 @@ using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 {
-    public sealed class FakeEntitlementPropertyProvider : IEntitlementPropertyProvider
+    public sealed class FakeTokenPropertyProvider : ITokenPropertyProvider
     {
-        public static FakeEntitlementPropertyProvider CreateValid()
+        public static FakeTokenPropertyProvider CreateValid()
         {
             var now = DateTimeOffset.Now;
-            return new FakeEntitlementPropertyProvider
+            return new FakeTokenPropertyProvider
             {
                 ApplicationIds = Errorable.Success(new[] { "contosoapp" }.AsEnumerable()),
                 Audience = Errorable.Success("https://audience.region.batch.azure.test"),
-                EntitlementId = Errorable.Success("entitlement-fbacd5f2-0bce-46db-a374-2682c975d95d"),
+                TokenId = Errorable.Success("entitlement-fbacd5f2-0bce-46db-a374-2682c975d95d"),
                 IpAddresses = Errorable.Success(new List<IPAddress> { IPAddress.Parse("127.0.0.1") }.AsEnumerable()),
                 IssuedAt = Errorable.Success(now),
                 Issuer = Errorable.Success("https://issuer.region.batch.azure.test"),
@@ -29,7 +29,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
         public Errorable<string> Audience { get; set; }
 
-        public Errorable<string> EntitlementId { get; set; }
+        public Errorable<string> TokenId { get; set; }
 
         public Errorable<IEnumerable<IPAddress>> IpAddresses { get; set; }
 
@@ -43,22 +43,22 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
         public Errorable<string> VirtualMachineId { get; set; }
 
-        Errorable<IEnumerable<string>> IEntitlementPropertyProvider.ApplicationIds() => ApplicationIds;
+        Errorable<IEnumerable<string>> ITokenPropertyProvider.ApplicationIds() => ApplicationIds;
 
-        Errorable<string> IEntitlementPropertyProvider.Audience() => Audience;
+        Errorable<string> ITokenPropertyProvider.Audience() => Audience;
 
-        Errorable<string> IEntitlementPropertyProvider.EntitlementId() => EntitlementId;
+        Errorable<string> ITokenPropertyProvider.TokenId() => TokenId;
 
-        Errorable<IEnumerable<IPAddress>> IEntitlementPropertyProvider.IpAddresses() => IpAddresses;
+        Errorable<IEnumerable<IPAddress>> ITokenPropertyProvider.IpAddresses() => IpAddresses;
 
-        Errorable<DateTimeOffset> IEntitlementPropertyProvider.IssuedAt() => IssuedAt;
+        Errorable<DateTimeOffset> ITokenPropertyProvider.IssuedAt() => IssuedAt;
 
-        Errorable<string> IEntitlementPropertyProvider.Issuer() => Issuer;
+        Errorable<string> ITokenPropertyProvider.Issuer() => Issuer;
 
-        Errorable<DateTimeOffset> IEntitlementPropertyProvider.NotAfter() => NotAfter;
+        Errorable<DateTimeOffset> ITokenPropertyProvider.NotAfter() => NotAfter;
 
-        Errorable<DateTimeOffset> IEntitlementPropertyProvider.NotBefore() => NotBefore;
+        Errorable<DateTimeOffset> ITokenPropertyProvider.NotBefore() => NotBefore;
 
-        Errorable<string> IEntitlementPropertyProvider.VirtualMachineId() => VirtualMachineId;
+        Errorable<string> ITokenPropertyProvider.VirtualMachineId() => VirtualMachineId;
     }
 }

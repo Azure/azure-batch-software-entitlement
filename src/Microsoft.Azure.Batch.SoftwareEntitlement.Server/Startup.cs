@@ -36,16 +36,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server
         {
             services.AddMvc();
             services.TryAddSingleton<IHttpContextAccessor, HttpContextAccessor>();
-            services.TryAddSingleton<IEntitlementParser>(provider =>
+            services.TryAddSingleton<ITokenPropertyParser>(provider =>
             {
                 var serverOptions = provider.GetService<SoftwareEntitlementsController.ServerOptions>();
-                return new JwtEntitlementParser(
+                return new JwtPropertyParser(
                     serverOptions.Audience,
                     serverOptions.Issuer,
                     serverOptions.SigningKey,
                     serverOptions.EncryptionKey);
             });
-            services.TryAddSingleton<EntitlementVerifier>();
+            services.TryAddSingleton<TokenVerifier>();
         }
 
         [SuppressMessage(

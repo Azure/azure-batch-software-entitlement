@@ -64,12 +64,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
 
             [Fact]
-            public void GivenNullEntitlement_ThrowsArgumentNullException()
+            public void GivenNullTokenProperties_ThrowsArgumentNullException()
             {
                 var exception =
                     Assert.Throws<ArgumentNullException>(
                         () => _generator.Generate(null));
-                exception.ParamName.Should().Be("entitlements");
+                exception.ParamName.Should().Be("tokenProperties");
             }
         }
     }
