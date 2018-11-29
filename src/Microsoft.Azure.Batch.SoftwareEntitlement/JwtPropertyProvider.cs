@@ -62,8 +62,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public Errorable<string> Audience()
         {
             // We don't expect multiple audiences to appear in the token
-            var audiences = _jwt.Audiences.ToList();
-            if (!audiences.Any())
+            var audiences = _jwt.Audiences?.ToList();
+            if (audiences == null || !audiences.Any())
             {
                 return Errorable.Failure<string>("No audience claim found in token.");
             }
