@@ -143,7 +143,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         {
             var response = new SoftwareEntitlementSuccessfulResponse
             {
-                TokenId = tokenProperties.Identifier,
+                // Return a value unique to this entitlement request, not the token identifier
+                // (retaining the original format of having an 'entitlement-' prefix).
+                EntitlementId = $"entitlement-{Guid.NewGuid()}"
             };
 
             if (ApiSupportsVirtualMachineId(apiVersion))

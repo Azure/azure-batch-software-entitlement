@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server
         /// The identifier for the approved entitlement
         /// </summary>
         [JsonProperty(PropertyName = "id")]
-        public string TokenId { get; set; }
+        public string EntitlementId { get; set; }
 
         /// <summary>
         /// [Deprecated] The virtual machine identifier for the Azure VM entitled to run the software

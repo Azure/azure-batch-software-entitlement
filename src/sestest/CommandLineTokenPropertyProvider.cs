@@ -22,7 +22,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         // A steady reference for "now"
         private readonly DateTimeOffset _now = DateTimeOffset.Now;
 
-        private readonly string _tokenId = $"entitlement-{Guid.NewGuid():D}";
+        private readonly string _tokenId = $"token-{Guid.NewGuid():D}";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GenerateCommandLine"/> class

@@ -15,7 +15,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 ApplicationIds = Errorable.Success(new[] { "contosoapp" }.AsEnumerable()),
                 Audience = Errorable.Success("https://audience.region.batch.azure.test"),
-                TokenId = Errorable.Success("entitlement-fbacd5f2-0bce-46db-a374-2682c975d95d"),
+                TokenId = Errorable.Success("token-fbacd5f2-0bce-46db-a374-2682c975d95d"),
                 IpAddresses = Errorable.Success(new List<IPAddress> { IPAddress.Parse("127.0.0.1") }.AsEnumerable()),
                 IssuedAt = Errorable.Success(now),
                 Issuer = Errorable.Success("https://issuer.region.batch.azure.test"),
