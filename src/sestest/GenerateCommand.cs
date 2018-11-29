@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
@@ -32,11 +31,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public int Execute(GenerateCommandLine commandLine)
         {
             var provider = new CommandLineEntitlementPropertyProvider(commandLine);
-            Errorable<NodeEntitlements> entitlement = NodeEntitlements.Build(provider);
+            Errorable<EntitlementTokenProperties> tokenProperties = EntitlementTokenProperties.Build(provider);
             Errorable<X509Certificate2> signingCert = FindCertificate("signing", commandLine.SignatureThumbprint);
             Errorable<X509Certificate2> encryptionCert = FindCertificate("encryption", commandLine.EncryptionThumbprint);
 
-            Errorable<string> result = entitlement.With(signingCert).With(encryptionCert)
+            Errorable<string> result = tokenProperties.With(signingCert).With(encryptionCert)
                 .Map(GenerateToken);
 
             if (!result.HasValue)
@@ -69,12 +68,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Generate a token
         /// </summary>
-        /// <param name="entitlements">Details of the entitlements to encode into the token.</param>
+        /// <param name="tokenProperties">The properties to encode into the token.</param>
         /// <param name="signingCert">Certificate to use when signing the token (optional).</param>
         /// <param name="encryptionCert">Certificate to use when encrypting the token (optional).</param>
         /// <returns>Generated token, if any; otherwise all related errors.</returns>
         private string GenerateToken(
-            NodeEntitlements entitlements,
+            EntitlementTokenProperties tokenProperties,
             X509Certificate2 signingCert = null,
             X509Certificate2 encryptionCert = null)
         {
@@ -94,7 +93,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             var generator = new TokenGenerator(Logger, signingCredentials, encryptingCredentials);
-            return generator.Generate(entitlements);
+            return generator.Generate(tokenProperties);
         }
 
         private static Errorable<X509Certificate2> FindCertificate(string purpose, string thumbprint)

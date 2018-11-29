@@ -1,4 +1,4 @@
-﻿namespace Microsoft.Azure.Batch.SoftwareEntitlement
+namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
     /// <summary>
     /// Values used to define the claims used in our software entitlement token
@@ -6,7 +6,7 @@
     public static class Claims
     {
         /// <summary>
-        /// The identifier to use for application entitlement claims
+        /// The identifier to use for allowed application claims
         /// </summary>
         public const string Application = "app";
 
@@ -18,9 +18,9 @@
         public const string DefaultAudience = "https://batch.azure.test/software-entitlement";
 
         /// <summary>
-        /// The identifier to use for the actual entitlement id
+        /// The identifier to use for the token id
         /// </summary>
-        public const string EntitlementId = "id";
+        public const string TokenId = "id";
 
         /// <summary>
         /// The identifier to use for the ip address of the entitled machine

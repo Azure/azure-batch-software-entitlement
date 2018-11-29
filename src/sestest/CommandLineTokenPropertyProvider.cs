@@ -8,10 +8,10 @@ using System.Net.NetworkInformation;
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
     /// <summary>
-    /// A factory object that tries to create a <see cref="NodeEntitlements"/> instance when given 
+    /// A factory object that tries to create a <see cref="EntitlementTokenProperties"/> instance when given 
     /// the <see cref="GenerateCommandLine"/> specified by the user.
     /// </summary>
-    public class CommandLineEntitlementPropertyProvider : IEntitlementPropertyProvider
+    public class CommandLineEntitlementPropertyProvider : ITokenPropertyProvider
     {
         // Reference to the generate command line we wrap
         private readonly GenerateCommandLine _commandLine;
@@ -22,7 +22,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         // A steady reference for "now"
         private readonly DateTimeOffset _now = DateTimeOffset.Now;
 
-        private readonly string _entitlementId = $"entitlement-{Guid.NewGuid():D}";
+        private readonly string _tokenId = $"token-{Guid.NewGuid():D}";
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GenerateCommandLine"/> class
@@ -145,7 +145,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public Errorable<string> VirtualMachineId()
             => Errorable.Success(_commandLine.VirtualMachineId);
 
-        public Errorable<string> EntitlementId()
-            => Errorable.Success(_entitlementId);
+        public Errorable<string> TokenId()
+            => Errorable.Success(_tokenId);
     }
 }

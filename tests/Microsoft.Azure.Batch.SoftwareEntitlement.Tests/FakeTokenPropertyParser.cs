@@ -5,20 +5,20 @@ using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 {
-    public class FakeEntitlementParser : IEntitlementParser
+    public class FakeTokenPropertyParser : ITokenPropertyParser
     {
-        private readonly Dictionary<string, Errorable<NodeEntitlements>> _outputLookup;
+        private readonly Dictionary<string, Errorable<EntitlementTokenProperties>> _outputLookup;
 
-        public FakeEntitlementParser(string token, NodeEntitlements result) : this((token, Errorable.Success(result)))
+        public FakeTokenPropertyParser(string token, EntitlementTokenProperties result) : this((token, Errorable.Success(result)))
         {
         }
 
-        public FakeEntitlementParser(params (string Token, Errorable<NodeEntitlements> Result)[] output)
+        public FakeTokenPropertyParser(params (string Token, Errorable<EntitlementTokenProperties> Result)[] output)
         {
             _outputLookup = output.ToDictionary(x => x.Token, x => x.Result);
         }
 
-        public Errorable<NodeEntitlements> Parse(string token)
+        public Errorable<EntitlementTokenProperties> Parse(string token)
         {
             if (!_outputLookup.TryGetValue(token, out var entitlementResult))
             {

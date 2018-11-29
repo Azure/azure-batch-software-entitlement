@@ -19,8 +19,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         private readonly ILogger _logger;
         private readonly IApplicationLifetime _lifetime;
 
-        // Verifier used to check entitlement
-        private readonly EntitlementVerifier _verifier;
+        // Verifier used to check token
+        private readonly TokenVerifier _verifier;
 
         private const string ApiVersion201705 = "2017-05-01.5.0";
         private const string ApiVersion201709 = "2017-09-01.6.0";
@@ -37,7 +37,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             ServerOptions serverOptions,
             ILogger logger,
             IApplicationLifetime lifetime,
-            EntitlementVerifier verifier)
+            TokenVerifier verifier)
         {
             _serverOptions = serverOptions;
             _logger = logger;
@@ -77,8 +77,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
                     "Selected api-version is {ApiVersion}",
                     apiVersion);
 
-                return ExtractParameters(apiVersion, HttpContext, entitlementRequestBody).Match(
-                    whenSuccessful: r => IssueEntitlement(r.Request, r.Token, apiVersion),
+                return ExtractApprovalRequestParameters(HttpContext, entitlementRequestBody).Match(
+                    whenSuccessful: r => CreateApprovalResponse(r.Request, r.Token, apiVersion),
                     whenFailure: errors => CreateBadRequestResponse(errors));
             }
             finally
@@ -90,72 +90,72 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             }
         }
 
-        private IActionResult IssueEntitlement(EntitlementVerificationRequest request, string token, string apiVersion)
+        private IActionResult CreateApprovalResponse(TokenVerificationRequest request, string token, string apiVersion)
         {
             var verificationResult = _verifier.Verify(request, token);
 
             return verificationResult.Match(
-                whenSuccessful: entitlement => CreateEntitlementApprovedResponse(apiVersion, entitlement),
+                whenSuccessful: tokenProperties => CreateApprovalSuccessResponse(apiVersion, tokenProperties),
                 whenFailure: errors => CreateEntitlementDeniedResponse(request.ApplicationId, errors));
         }
 
         /// <summary>
-        /// Attempts to extracts all the parameters required for validating an entitlement request.
+        /// Attempts to extracts all the parameters required for validating an entitlement approval request.
         /// Any error here reflects a badly formed request.
         /// </summary>
-        /// <param name="apiVersion">The API version from the query string</param>
         /// <param name="httpContext">The HTTP context of the request</param>
         /// <param name="requestBody">The information in the request body</param>
         /// <returns>
-        /// A tuple in which either the <see cref="EntitlementVerificationRequest"/> and token values
+        /// A tuple in which either the <see cref="TokenVerificationRequest"/> and token values
         /// are present if the request was well formed, or an informative error otherwise.
         /// </returns>
-        private Errorable<(EntitlementVerificationRequest Request, string Token)> ExtractParameters(
-            string apiVersion,
+        private Errorable<(TokenVerificationRequest Request, string Token)> ExtractApprovalRequestParameters(
             HttpContext httpContext,
             SoftwareEntitlementRequestBody requestBody)
         {
             if (requestBody == null)
             {
-                return Errorable.Failure<(EntitlementVerificationRequest, string)>(
+                return Errorable.Failure<(TokenVerificationRequest, string)>(
                     "Missing request body from software entitlement request.");
             }
 
             if (string.IsNullOrEmpty(requestBody.Token))
             {
-                return Errorable.Failure<(EntitlementVerificationRequest, string)>(
+                return Errorable.Failure<(TokenVerificationRequest, string)>(
                     "Missing token from software entitlement request.");
             }
 
             if (string.IsNullOrEmpty(requestBody.ApplicationId))
             {
-                return Errorable.Failure<(EntitlementVerificationRequest, string)>(
+                return Errorable.Failure<(TokenVerificationRequest, string)>(
                     "Missing applicationId value from software entitlement request.");
             }
 
             var remoteAddress = httpContext.Connection.RemoteIpAddress;
             _logger.LogDebug("Remote Address: {Address}", remoteAddress);
 
-            var request = new EntitlementVerificationRequest(requestBody.ApplicationId, remoteAddress);
+            var request = new TokenVerificationRequest(requestBody.ApplicationId, remoteAddress);
 
             return Errorable.Success((Request: request, Token: requestBody.Token));
         }
 
-        private ObjectResult CreateEntitlementApprovedResponse(string apiVersion, NodeEntitlements entitlement)
+        private ObjectResult CreateApprovalSuccessResponse(string apiVersion, EntitlementTokenProperties tokenProperties)
         {
             var response = new SoftwareEntitlementSuccessfulResponse
             {
-                EntitlementId = entitlement.Identifier,
+                // Return a value unique to this entitlement request, not the token identifier
+                // (retaining the original format of having an 'entitlement-' prefix).
+                EntitlementId = $"entitlement-{Guid.NewGuid()}"
             };
 
             if (ApiSupportsVirtualMachineId(apiVersion))
             {
-                response.VirtualMachineId = entitlement.VirtualMachineId;
+                response.VirtualMachineId = tokenProperties.VirtualMachineId;
             }
 
             if (ApiSupportsExpiryTimestamp(apiVersion))
             {
-                response.Expiry = entitlement.NotAfter;
+                response.Expiry = tokenProperties.NotAfter;
             }
 
             return Ok(response);

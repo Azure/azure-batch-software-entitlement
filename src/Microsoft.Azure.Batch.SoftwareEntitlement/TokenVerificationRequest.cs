@@ -10,14 +10,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     /// provided by Batch and passed on untouched by the application. This is the data that is compared
     /// against the token's claims to determine whether the request is allowed.
     /// </remarks>
-    public class EntitlementVerificationRequest
+    public class TokenVerificationRequest
     {
         /// <summary>
-        /// Initializes a new instance of an entitlement verification request
+        /// Initializes a new instance of an token verification request
         /// </summary>
         /// <param name="applicationId">The identifier for the application the entitlement is being requested for</param>
         /// <param name="ipAddress">The observed IP address of the machine requesting the entitlement</param>
-        public EntitlementVerificationRequest(string applicationId, IPAddress ipAddress)
+        public TokenVerificationRequest(string applicationId, IPAddress ipAddress)
         {
             ApplicationId = applicationId;
             IpAddress = ipAddress;
