@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
-using Microsoft.Azure.Batch.SoftwareEntitlement.Server;
+using Microsoft.Azure.Batch.SoftwareEntitlement.Server.Model;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -76,7 +76,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             {
                 using (var client = new HttpClient(handler))
                 {
-                    var requestBody = new SoftwareEntitlementRequestBody
+                    var requestBody = new ApproveRequestBody
                     {
                         Token = token,
                         ApplicationId = app

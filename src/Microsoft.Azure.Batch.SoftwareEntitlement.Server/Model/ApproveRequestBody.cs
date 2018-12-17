@@ -1,10 +1,10 @@
-namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server
+namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Model
 {
     /// <summary>
     /// A request for a software entitlement
     /// </summary>
     /// <remarks>Used to rehydrate the JSON body included with the POST requesting an entitlement.</remarks>
-    public class SoftwareEntitlementRequestBody
+    public class ApproveRequestBody : IVerificationRequestBody
     {
         /// <summary>
         /// The actual software entitlement token
