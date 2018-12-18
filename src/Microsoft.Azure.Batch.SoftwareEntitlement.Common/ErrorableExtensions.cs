@@ -385,6 +385,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 e => Task.FromResult(Errorable.Failure<R>(e)));
         }
 
+        public static T WhenFailure<T>(this Errorable<T> errorable, Func<IEnumerable<string>, T> errorHandler)
+            => errorable.Match(whenSuccessful: t => t, whenFailure: errorHandler);
+
         /// <summary>
         /// Convert a collection of <see cref="Errorable{T}"/> into an <see cref="Errorable{IEnumerable{T}}"/>
         /// which contains all the items if they were all successful, or all the errors if any weren't.

@@ -11,6 +11,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server
         public const string Sept012017 = "2017-09-01.6.0";
         public const string March012018 = "2018-03-01.6.1";
         public const string August012018 = "2018-08-01.7.0";
+        public const string ApiVersionLatest = "9999-09-09.99.99";
 
         private static readonly HashSet<string> ValidApiVersions = new HashSet<string>
         {
@@ -18,7 +19,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server
             June012017,
             Sept012017,
             March012018,
-            August012018
+            August012018,
+            ApiVersionLatest
         };
 
         /// <summary>

@@ -1,11 +1,13 @@
+using System;
 using System.Net;
+using System.Xml;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server.Model;
 using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
 {
-    public static class VerificationRequestExtensions
+    public static class RequestExtensions
     {
         public static Errorable<(TokenVerificationRequest Request, string Token)> ExtractVerificationRequest(
             this IVerificationRequestBody requestBody,
@@ -34,7 +36,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
 
             var request = new TokenVerificationRequest(requestBody.ApplicationId, remoteAddress);
 
-            return Errorable.Success((Request: request, Token: requestBody.Token));
+            return Errorable.Success((Request: request, requestBody.Token));
+        }
+
+        public static Errorable<TimeSpan> ParseDuration(this string duration)
+        {
+            if (string.IsNullOrEmpty(duration))
+            {
+                return Errorable.Failure<TimeSpan>("Value for duration was not specified.");
+            }
+
+            try
+            {
+                var timeSpan = XmlConvert.ToTimeSpan(duration);
+                return Errorable.Success(timeSpan);
+            }
+            catch (FormatException e)
+            {
+                return Errorable.Failure<TimeSpan>($"Unable to parse duration {duration}: {e.Message}");
+            }
         }
     }
 }

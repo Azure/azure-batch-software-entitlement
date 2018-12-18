@@ -46,6 +46,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server
                     serverOptions.EncryptionKey);
             });
             services.TryAddSingleton<TokenVerifier>();
+            services.TryAddSingleton<EntitlementStore>();
         }
 
         [SuppressMessage(

@@ -30,5 +30,29 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
             var value = new FailureResponse("EntitlementDenied", new ErrorMessage(message));
             return new Response(StatusCodes.Status403Forbidden, value);
         }
+
+        public static Response CreateNotFoundResponse(
+            this IEnumerable<string> errors,
+            string entitlementId,
+            ILogger logger)
+        {
+            logger.LogErrors(errors);
+
+            var message = $"Entitlement {entitlementId} was not found.";
+            var value = new FailureResponse("NotFound", new ErrorMessage(message));
+            return new Response(StatusCodes.Status404NotFound, value);
+        }
+
+        public static Response CreateConflictResponse(
+            this IEnumerable<string> errors,
+            string failureCode,
+            ILogger logger)
+        {
+            logger.LogErrors(errors);
+
+            var message = string.Join("; ", errors);
+            var value = new FailureResponse(failureCode, new ErrorMessage(message));
+            return new Response(StatusCodes.Status409Conflict, value);
+        }
     }
 }

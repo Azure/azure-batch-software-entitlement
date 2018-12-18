@@ -1,5 +1,6 @@
 using System;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server.Model;
 using Microsoft.Extensions.Logging;
 
@@ -20,22 +21,17 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
 
         public Response Handle(
             HttpContext httpContext,
-            ApproveRequestBody requestBody)
+            ApproveRequestBody requestContext)
         {
             var remoteIpAddress = httpContext.Connection.RemoteIpAddress;
-            return requestBody.ExtractVerificationRequest(remoteIpAddress, _logger).Match(
-                whenSuccessful: r => CreateVerificationResponse(r.Request, r.Token),
+            return requestContext.ExtractVerificationRequest(remoteIpAddress, _logger).Match(
+                whenSuccessful: extracted => _verifier.Verify(extracted.Request, extracted.Token)
+                    .Bind(CreateSuccessResponse)
+                    .WhenFailure(errors => errors.CreateDeniedResponse(extracted.Request.ApplicationId, _logger)),
                 whenFailure: errors => errors.CreateBadRequestResponse(_logger));
         }
 
-        private Response CreateVerificationResponse(TokenVerificationRequest request, string token)
-        {
-            return _verifier.Verify(request, token).Match(
-                whenSuccessful: CreateSuccessResponse,
-                whenFailure: errors => errors.CreateDeniedResponse(request.ApplicationId, _logger));
-        }
-
-        private Response CreateSuccessResponse(EntitlementTokenProperties tokenProperties)
+        private static Response CreateSuccessResponse(EntitlementTokenProperties tokenProperties)
         {
             var value = new ApproveV2SuccessResponse
             {

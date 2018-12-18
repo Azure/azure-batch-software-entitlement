@@ -3,8 +3,8 @@ using Microsoft.Azure.Batch.SoftwareEntitlement.Server.Model;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
 {
-    public interface IRequestHandler<in TRequestBody>
+    public interface IRequestHandler<in TRequestContext>
     {
-        Response Handle(HttpContext httpContext, TRequestBody requestBody);
+        Response Handle(HttpContext httpContext, TRequestContext requestContext);
     }
 }

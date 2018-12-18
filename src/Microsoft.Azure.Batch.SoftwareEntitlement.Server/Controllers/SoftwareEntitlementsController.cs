@@ -23,6 +23,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
 
         private readonly ApproveV1RequestHandler _approveV1RequestHandler;
         private readonly ApproveV2RequestHandler _approveV2RequestHandler;
+        private readonly AcquireRequestHandler _acquireRequestHandler;
+        private readonly RenewRequestHandler _renewRequestHandler;
+        private readonly ReleaseRequestHandler _releaseRequestHandler;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SoftwareEntitlementsController"/> class
@@ -32,17 +35,23 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         /// <param name="lifetime">Lifetime instance to allow us to automatically shut down if requested.</param>
         /// <param name="verifier">A component responsible for checking data in the request against the claims
         /// in the token</param>
+        /// <param name="entitlementStore">A component responsible for tracking existing entitlements</param>
         public SoftwareEntitlementsController(
             ServerOptions serverOptions,
             ILogger logger,
             IApplicationLifetime lifetime,
-            TokenVerifier verifier)
+            TokenVerifier verifier,
+            EntitlementStore entitlementStore)
         {
             _serverOptions = serverOptions;
             _logger = logger;
             _lifetime = lifetime;
+
             _approveV1RequestHandler = new ApproveV1RequestHandler(_logger, verifier);
             _approveV2RequestHandler = new ApproveV2RequestHandler(_logger, verifier);
+            _acquireRequestHandler = new AcquireRequestHandler(_logger, verifier, entitlementStore);
+            _renewRequestHandler = new RenewRequestHandler(_logger, entitlementStore);
+            _releaseRequestHandler = new ReleaseRequestHandler(_logger, entitlementStore);
 
             if (_serverOptions.SigningKey != null)
             {
@@ -87,7 +96,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             [FromQuery(Name = ApiVersions.ParameterName)] string apiVersion)
         {
             _logger.LogInformation(
-                "Selected api-version is {ApiVersion}",
+                "[Approve] Selected api-version is {ApiVersion}",
                 apiVersion);
 
             return HandleRequest(_approveV1RequestHandler, requestBody);
@@ -101,10 +110,55 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             [FromQuery(Name = ApiVersions.ParameterName)] string apiVersion)
         {
             _logger.LogInformation(
-                "Selected api-version is {ApiVersion}",
+                "[Approve] Selected api-version is {ApiVersion}",
                 apiVersion);
 
             return HandleRequest(_approveV2RequestHandler, requestBody);
+        }
+
+        [HttpPost]
+        [VersionRangeConstraint(minVersion: ApiVersions.ApiVersionLatest)]
+        [Produces("application/json")]
+        public IActionResult Acquire(
+            [FromBody] AcquireRequestBody requestBody,
+            [FromQuery(Name = ApiVersions.ParameterName)] string apiVersion)
+        {
+            _logger.LogInformation(
+                "[Acquire] Selected api-version is {ApiVersion}",
+                apiVersion);
+
+            return HandleRequest(_acquireRequestHandler, requestBody);
+        }
+
+        [Route("{entitlementId}")]
+        [HttpPost]
+        [VersionRangeConstraint(minVersion: ApiVersions.ApiVersionLatest)]
+        [Produces("application/json")]
+        public IActionResult Renew(
+            string entitlementId,
+            [FromBody] RenewRequestBody requestBody,
+            [FromQuery(Name = ApiVersions.ParameterName)] string apiVersion)
+        {
+            _logger.LogInformation(
+                "[Renew] Selected api-version is {ApiVersion}",
+                apiVersion);
+
+            return HandleRequest(_renewRequestHandler, (requestBody, entitlementId));
+        }
+
+        [Route("{entitlementId}")]
+        [HttpDelete]
+        [VersionRangeConstraint(minVersion: ApiVersions.ApiVersionLatest)]
+        [Produces("application/json")]
+        public IActionResult Release(
+            string entitlementId,
+            [FromQuery(Name = ApiVersions.ParameterName)] string apiVersion)
+        {
+            _logger.LogInformation(
+                "[Release] Selected api-version is {ApiVersion}",
+                apiVersion);
+
+            return HandleRequest(_releaseRequestHandler, entitlementId);
         }
 
         private IActionResult HandleApiVersionError(string errorMessage)
@@ -114,13 +168,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             return this.CreateActionResult(response);
         }
 
-        private IActionResult HandleRequest<TRequestBody>(
-            IRequestHandler<TRequestBody> requestHandler,
-            TRequestBody requestBody)
+        private IActionResult HandleRequest<TRequestContext>(
+            IRequestHandler<TRequestContext> requestHandler,
+            TRequestContext requestContext)
         {
             try
             {
-                var response = requestHandler.Handle(HttpContext, requestBody);
+                var response = requestHandler.Handle(HttpContext, requestContext);
                 return this.CreateActionResult(response);
             }
             finally
