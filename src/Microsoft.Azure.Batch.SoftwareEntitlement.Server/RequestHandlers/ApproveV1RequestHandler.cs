@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server.Model;
@@ -24,12 +25,22 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
             ApproveRequestBody requestContext)
         {
             var remoteIpAddress = httpContext.Connection.RemoteIpAddress;
-            return requestContext.ExtractVerificationRequest(remoteIpAddress, _logger).Match(
-                whenSuccessful: extracted => _verifier.Verify(extracted.Request, extracted.Token)
-                    .Bind(CreateSuccessResponse)
-                    .WhenFailure(errors => errors.CreateDeniedResponse(extracted.Request.ApplicationId, _logger)),
-                whenFailure: errors => errors.CreateBadRequestResponse(_logger));
+
+            var responseOrBadRequest =
+                from extracted in requestContext.ExtractVerificationRequest(remoteIpAddress, _logger)
+                let responseOrDenied =
+                    from props in _verifier.Verify(extracted.Request, extracted.Token)
+                    select CreateSuccessResponse(props)
+                select responseOrDenied.OnFailure(GetDeniedResponder(extracted.Request.ApplicationId));
+
+            return responseOrBadRequest.OnFailure(GetBadRequestResponder());
         }
+
+        private Func<IEnumerable<string>, Response> GetDeniedResponder(string applicationId)
+            => errors => errors.CreateDeniedResponse(applicationId, _logger);
+
+        private Func<IEnumerable<string>, Response> GetBadRequestResponder()
+            => errors => errors.CreateBadRequestResponse(_logger);
 
         private static Response CreateSuccessResponse(EntitlementTokenProperties tokenProperties)
         {

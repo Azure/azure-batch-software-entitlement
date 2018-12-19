@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server.Model;
@@ -25,37 +26,38 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
         {
             var entitlementId = requestContext.EntitlementId;
 
-            return requestContext.Body.Duration.ParseDuration().Match(
-                whenSuccessful: duration => CheckEntitlementExists(entitlementId).Match(
-                    whenSuccessful: existing => CheckNotReleased(entitlementId).Match(
-                        whenSuccessful: notReleased =>
-                        {
-                            var expiry = StoreRenewal(entitlementId, duration);
-                            return CreateSuccessResponse(expiry);
-                        },
-                        whenFailure: errors => errors.CreateConflictResponse("AlreadyReleased", _logger)),
-                    whenFailure: errors => errors.CreateNotFoundResponse(entitlementId, _logger)),
-                whenFailure: errors => errors.CreateBadRequestResponse(_logger));
+            var responseOrBadRequest =
+                from duration in requestContext.Body.Duration.ParseDuration()
+                let responseOrNotFound =
+                    from exists in CheckEntitlementExists(entitlementId)
+                    let responseOrConflict =
+                        from notReleased in CheckNotReleased(entitlementId)
+                        let expiry = StoreRenewal(entitlementId, duration)
+                        select CreateSuccessResponse(expiry)
+                    select responseOrConflict.OnFailure(GetAlreadyReleasedResponder())
+                select responseOrNotFound.OnFailure(GetNotFoundResponder(entitlementId));
+
+            return responseOrBadRequest.OnFailure(GetBadRequestResponder());
         }
 
-        private Errorable<object> CheckEntitlementExists(string entitlementId)
+        private Errorable<bool> CheckEntitlementExists(string entitlementId)
         {
             if (!_entitlementStore.ContainsEntitlementId(entitlementId))
             {
-                return Errorable.Failure<object>($"Entitlement {entitlementId} not found");
+                return Errorable.Failure<bool>($"Entitlement {entitlementId} not found");
             }
 
-            return Errorable.Success<object>(null);
+            return Errorable.Success(true);
         }
 
-        private Errorable<object> CheckNotReleased(string entitlementId)
+        private Errorable<bool> CheckNotReleased(string entitlementId)
         {
             if (_entitlementStore.IsReleased(entitlementId))
             {
-                return Errorable.Failure<object>($"Entitlement {entitlementId} is already released");
+                return Errorable.Failure<bool>($"Entitlement {entitlementId} is already released");
             }
 
-            return Errorable.Success<object>(null);
+            return Errorable.Success(true);
         }
 
         private DateTime StoreRenewal(string entitlementId, TimeSpan duration)
@@ -64,6 +66,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
             _entitlementStore.RenewEntitlement(entitlementId);
             return expiryTime;
         }
+
+        private Func<IEnumerable<string>, Response> GetAlreadyReleasedResponder()
+            => errors => errors.CreateConflictResponse("AlreadyReleased", _logger);
+
+        private Func<IEnumerable<string>, Response> GetNotFoundResponder(string entitlementId)
+            => errors => errors.CreateNotFoundResponse(entitlementId, _logger);
+
+        private Func<IEnumerable<string>, Response> GetBadRequestResponder()
+            => errors => errors.CreateBadRequestResponse(_logger);
 
         private static Response CreateSuccessResponse(DateTime expiryTime)
         {

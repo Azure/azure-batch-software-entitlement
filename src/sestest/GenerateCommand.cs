@@ -31,20 +31,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public int Execute(GenerateCommandLine commandLine)
         {
             var provider = new CommandLineEntitlementPropertyProvider(commandLine);
-            Errorable<EntitlementTokenProperties> tokenProperties = EntitlementTokenProperties.Build(provider);
-            Errorable<X509Certificate2> signingCert = FindCertificate("signing", commandLine.SignatureThumbprint);
-            Errorable<X509Certificate2> encryptionCert = FindCertificate("encryption", commandLine.EncryptionThumbprint);
 
-            Errorable<string> result = tokenProperties.With(signingCert).With(encryptionCert)
-                .Map(GenerateToken);
+            var resultCodeOrFailure =
+                from props in EntitlementTokenProperties.Build(provider)
+                join signingCert in FindCertificate("signing", commandLine.SignatureThumbprint) on true equals true
+                join encryptionCert in FindCertificate("encryption", commandLine.EncryptionThumbprint) on true equals true
+                let token = GenerateToken(props, signingCert, encryptionCert)
+                let resultCode = ReturnToken(token, commandLine)
+                select resultCode;
 
-            if (!result.HasValue)
-            {
-                Logger.LogErrors(result.Errors);
-                return ResultCodes.Failed;
-            }
+            return resultCodeOrFailure.LogIfFailed(Logger, ResultCodes.Failed);
+        }
 
-            var token = result.Value;
+        private int ReturnToken(string token, GenerateCommandLine commandLine)
+        {
             if (string.IsNullOrEmpty(commandLine.TokenFile))
             {
                 Logger.LogInformation("Token: {JWT}", token);

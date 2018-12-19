@@ -45,15 +45,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// An <see cref="Errorable{NodeEntitlements}"/> containing the result, or an
         /// error if it failed to validate correctly.
         /// </returns>
-        public Errorable<EntitlementTokenProperties> Parse(string token)
-        {
-            return ExtractJwt(token).Map(CreateEntitlementPropertyProvider).Bind(EntitlementTokenProperties.Build);
-        }
-
-        private static ITokenPropertyProvider CreateEntitlementPropertyProvider(ClaimsPrincipal principal, JwtSecurityToken jwt)
-        {
-            return new JwtPropertyProvider(principal, jwt);
-        }
+        public Errorable<EntitlementTokenProperties> Parse(string token) =>
+            from pair in ExtractJwt(token)
+            let provider = new JwtPropertyProvider(pair.Principal, pair.Token)
+            from entitlements in EntitlementTokenProperties.Build(provider)
+            select entitlements;
 
         private Errorable<(ClaimsPrincipal Principal, JwtSecurityToken Token)> ExtractJwt(string tokenString)
         {

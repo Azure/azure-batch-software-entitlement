@@ -209,7 +209,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 // (above) correctly specifies a valid token; If this constraint is violated, most 
                 // all of the tests later in this file might fail with spurious errors.
                 var tokenProperties = EntitlementTokenProperties.Build(_validProvider);
-                tokenProperties.Errors.Should()
+                tokenProperties.GetErrors().Should()
                     .BeEmpty(because: $"the command line represented by {nameof(_validProvider)} should result in a valid token");
             }
 
@@ -217,63 +217,63 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void GivenValidReader_ApplicationIdsAreSet()
             {
                 var tokenProperties = EntitlementTokenProperties.Build(_validProvider);
-                tokenProperties.Value.Applications.Should().BeEquivalentTo(_validProvider.ApplicationIds.Value);
+                tokenProperties.GetValue().Applications.Should().BeEquivalentTo(_validProvider.ApplicationIds.GetValue());
             }
 
             [Fact]
             public void GivenValidReader_AudienceIsSet()
             {
                 var tokenProperties = EntitlementTokenProperties.Build(_validProvider);
-                tokenProperties.Value.Audience.Should().Be(_validProvider.Audience.Value);
+                tokenProperties.GetValue().Audience.Should().Be(_validProvider.Audience.GetValue());
             }
 
             [Fact]
             public void GivenValidReader_IdentifierIsSet()
             {
                 var tokenProperties = EntitlementTokenProperties.Build(_validProvider);
-                tokenProperties.Value.Identifier.Should().Be(_validProvider.TokenId.Value);
+                tokenProperties.GetValue().Identifier.Should().Be(_validProvider.TokenId.GetValue());
             }
 
             [Fact]
             public void GivenValidReader_IpAddressesAreSet()
             {
                 var tokenProperties = EntitlementTokenProperties.Build(_validProvider);
-                tokenProperties.Value.IpAddresses.Should().BeEquivalentTo(_validProvider.IpAddresses.Value);
+                tokenProperties.GetValue().IpAddresses.Should().BeEquivalentTo(_validProvider.IpAddresses.GetValue());
             }
 
             [Fact]
             public void GivenValidReader_IssuedAtIsSet()
             {
                 var tokenProperties = EntitlementTokenProperties.Build(_validProvider);
-                tokenProperties.Value.IssuedAt.Should().Be(_validProvider.IssuedAt.Value);
+                tokenProperties.GetValue().IssuedAt.Should().Be(_validProvider.IssuedAt.GetValue());
             }
 
             [Fact]
             public void GivenValidReader_IssuerIsSet()
             {
                 var tokenProperties = EntitlementTokenProperties.Build(_validProvider);
-                tokenProperties.Value.Issuer.Should().Be(_validProvider.Issuer.Value);
+                tokenProperties.GetValue().Issuer.Should().Be(_validProvider.Issuer.GetValue());
             }
 
             [Fact]
             public void GivenValidReader_NotAfterIsSet()
             {
                 var tokenProperties = EntitlementTokenProperties.Build(_validProvider);
-                tokenProperties.Value.NotAfter.Should().Be(_validProvider.NotAfter.Value);
+                tokenProperties.GetValue().NotAfter.Should().Be(_validProvider.NotAfter.GetValue());
             }
 
             [Fact]
             public void GivenValidReader_NotBeforeIsSet()
             {
                 var tokenProperties = EntitlementTokenProperties.Build(_validProvider);
-                tokenProperties.Value.NotBefore.Should().Be(_validProvider.NotBefore.Value);
+                tokenProperties.GetValue().NotBefore.Should().Be(_validProvider.NotBefore.GetValue());
             }
 
             [Fact]
             public void GivenValidReader_VirtualMachineIdIsSet()
             {
                 var tokenProperties = EntitlementTokenProperties.Build(_validProvider);
-                tokenProperties.Value.VirtualMachineId.Should().Be(_validProvider.VirtualMachineId.Value);
+                tokenProperties.GetValue().VirtualMachineId.Should().Be(_validProvider.VirtualMachineId.GetValue());
             }
         }
     }

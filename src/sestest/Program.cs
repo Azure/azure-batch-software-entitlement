@@ -70,15 +70,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public static async Task<int> Serve(ServerCommandLine commandLine)
         {
             var builder = new ServerOptionBuilder(commandLine, _certificateStore);
-            var options = builder.Build();
-            return await options.Match(
-                RunServer,
-                errors =>
-                {
-                    _logger.LogErrors(errors);
-                    return Task.FromResult(ResultCodes.Failed);
-                })
-                .ConfigureAwait(false);
+
+            var resultCodeOrFailure = await builder.Build()
+                .Select(RunServer)
+                .AsTask().ConfigureAwait(false);
+
+            return resultCodeOrFailure.LogIfFailed(_logger, ResultCodes.Failed);
         }
 
         private static Task<int> RunServer(ServerOptions options)
@@ -125,33 +122,31 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var logSetup = new LoggerSetup();
 
             var consoleLevel = TryParseLogLevel(commandLine.LogLevel, "console", LogLevel.Information);
-            var actualLevel = consoleLevel.HasValue ? consoleLevel.Value : LogLevel.Information;
+            var actualLevel = consoleLevel.OnFailure(errors => LogLevel.Information);
 
             logSetup.SendToConsole(actualLevel);
 
             var fileLevel = TryParseLogLevel(commandLine.LogFileLevel, "file", actualLevel);
             if (!string.IsNullOrEmpty(commandLine.LogFile))
             {
-                if (fileLevel.HasValue)
+                fileLevel.OnSuccess(level =>
                 {
                     var file = new FileInfo(commandLine.LogFile);
-                    logSetup.SendToFile(file, fileLevel.Value);
-                }
+                    logSetup.SendToFile(file, level);
+                });
             }
 
             var logger = logSetup.Logger;
             logger.LogHeader("Software Entitlement Service Test Utility");
-            logger.LogErrors(consoleLevel.Errors);
-            logger.LogErrors(fileLevel.Errors);
+            consoleLevel.OnFailure(logger.LogErrors);
+            fileLevel.OnFailure(logger.LogErrors);
 
-            if (!consoleLevel.HasValue || !fileLevel.HasValue)
+            // Only share our config if there were no problems during setup.
+            consoleLevel.With(fileLevel).OnSuccess(_ =>
             {
-                // A problem during setup, don't share our config
-                return;
-            }
-
-            _logger = logger;
-            _provider = logSetup.Provider;
+                _logger = logger;
+                _provider = logSetup.Provider;
+            });
         }
 
         /// <summary>

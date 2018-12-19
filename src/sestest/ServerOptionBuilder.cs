@@ -35,19 +35,23 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <returns>Either a usable (and completely valid) <see cref="ServerOptions"/> or a set 
         /// of errors.</returns>
-        public Errorable<ServerOptions> Build()
-        {
-            var result = Errorable.Success(new ServerOptions())
-                .With(ServerUrl()).Map((opt, url) => opt.WithServerUrl(url))
-                .With(ConnectionCertificate()).Map((opt, cert) => opt.WithConnectionCertificate(cert))
-                .With(SigningCertificate()).Map((opt, cert) => opt.WithSigningCertificate(cert))
-                .With(EncryptingCertificate()).Map((opt, cert) => opt.WithEncryptionCertificate(cert))
-                .With(Audience()).Map((opt, audience) => opt.WithAudience(audience))
-                .With(Issuer()).Map((opt, issuer) => opt.WithIssuer(issuer))
-                .With(ExitAfterRequest()).Map((opt, exit) => opt.WithAutomaticExitAfterOneRequest(exit));
-
-            return result;
-        }
+        public Errorable<ServerOptions> Build() =>
+            from options in Errorable.Success(new ServerOptions())
+            join url in ServerUrl() on true equals true
+            join connCert in ConnectionCertificate() on true equals true
+            join signCert in SigningCertificate() on true equals true
+            join encryptCert in EncryptingCertificate() on true equals true
+            join audience in Audience() on true equals true
+            join issuer in Issuer() on true equals true
+            join exit in ExitAfterRequest() on true equals true
+            select options
+                .WithServerUrl(url)
+                .WithConnectionCertificate(connCert)
+                .WithSigningCertificate(signCert)
+                .WithEncryptionCertificate(encryptCert)
+                .WithAudience(audience)
+                .WithIssuer(issuer)
+                .WithAutomaticExitAfterOneRequest(exit);
 
         /// <summary>
         /// Find the server URL for our hosting

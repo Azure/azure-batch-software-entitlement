@@ -32,15 +32,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void WhenMissing_HasNoErrors()
             {
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.VirtualMachineId().Errors.Should().BeEmpty();
+                provider.VirtualMachineId().GetErrors().Should().BeEmpty();
             }
 
             [Fact]
             public void WhenMissing_ValueIsNull()
             {
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.VirtualMachineId().HasValue.Should().BeTrue();
-                provider.VirtualMachineId().Value.Should().BeNull();
+                provider.VirtualMachineId().HasValue().Should().BeTrue();
+                provider.VirtualMachineId().GetValue().Should().BeNull();
             }
 
             [Fact]
@@ -48,7 +48,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.VirtualMachineId = virtualMachineId;
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.VirtualMachineId().Errors.Should().BeEmpty();
+                provider.VirtualMachineId().GetErrors().Should().BeEmpty();
             }
 
             [Fact]
@@ -56,8 +56,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.VirtualMachineId = virtualMachineId;
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.VirtualMachineId().HasValue.Should().BeTrue();
-                provider.VirtualMachineId().Value.Should().Be(virtualMachineId);
+                provider.VirtualMachineId().HasValue().Should().BeTrue();
+                provider.VirtualMachineId().GetValue().Should().Be(virtualMachineId);
             }
         }
 
@@ -71,7 +71,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.NotBefore = string.Empty;
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.NotBefore().HasValue.Should().BeTrue();
+                provider.NotBefore().HasValue().Should().BeTrue();
             }
 
             [Fact]
@@ -79,7 +79,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.NotBefore = "Not a timestamp";
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.NotBefore().Errors.Should().Contain(e => e.Contains("NotBefore"));
+                provider.NotBefore().GetErrors().Should().Contain(e => e.Contains("NotBefore"));
             }
 
             [Fact]
@@ -87,7 +87,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.NotBefore = _validNotBefore;
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.NotBefore().Errors.Should().BeEmpty();
+                provider.NotBefore().GetErrors().Should().BeEmpty();
             }
 
             [Fact]
@@ -96,7 +96,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 _commandLine.NotBefore = _validNotBefore;
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
                 // Compare as formatted strings to avoid issues with extra seconds we don't care about
-                provider.NotBefore().Value.ToString(TimestampParser.ExpectedFormat, CultureInfo.InvariantCulture)
+                provider.NotBefore().GetValue().ToString(TimestampParser.ExpectedFormat, CultureInfo.InvariantCulture)
                     .Should().Be(_validNotBefore);
             }
         }
@@ -111,7 +111,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.NotAfter = string.Empty;
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.NotAfter().HasValue.Should().BeTrue();
+                provider.NotAfter().HasValue().Should().BeTrue();
             }
 
             [Fact]
@@ -119,7 +119,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.NotAfter = "Not a timestamp";
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.NotAfter().Errors.Should().Contain(e => e.Contains("NotAfter"));
+                provider.NotAfter().GetErrors().Should().Contain(e => e.Contains("NotAfter"));
             }
 
             [Fact]
@@ -127,7 +127,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.NotAfter = _validNotAfter;
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.NotAfter().Errors.Should().BeEmpty();
+                provider.NotAfter().GetErrors().Should().BeEmpty();
             }
 
             [Fact]
@@ -136,7 +136,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 _commandLine.NotAfter = _validNotAfter;
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
                 // Compare as formatted strings to avoid issues with extra seconds we don't care about
-                provider.NotAfter().Value.ToString(TimestampParser.ExpectedFormat, CultureInfo.InvariantCulture)
+                provider.NotAfter().GetValue().ToString(TimestampParser.ExpectedFormat, CultureInfo.InvariantCulture)
                     .Should().Be(_validNotAfter);
             }
         }
@@ -150,7 +150,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.Audience = string.Empty;
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.Audience().Value.Should().Be(Claims.DefaultAudience);
+                provider.Audience().GetValue().Should().Be(Claims.DefaultAudience);
             }
 
             [Fact]
@@ -158,7 +158,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.Audience = _audience;
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.Audience().Value.Should().Be(_audience);
+                provider.Audience().GetValue().Should().Be(_audience);
             }
         }
 
@@ -172,7 +172,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.ApplicationIds.Clear();
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.ApplicationIds().HasValue.Should().BeFalse();
+                provider.ApplicationIds().HasValue().Should().BeFalse();
             }
 
             [Fact]
@@ -180,7 +180,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.ApplicationIds.Clear();
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.ApplicationIds().Errors.Should().Contain(e => e.Contains("application"));
+                provider.ApplicationIds().GetErrors().Should().Contain(e => e.Contains("application"));
             }
 
             [Fact]
@@ -188,7 +188,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.ApplicationIds = new[] { ContosoHrApp };
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.ApplicationIds().Value.Should().BeEquivalentTo(_commandLine.ApplicationIds);
+                provider.ApplicationIds().GetValue().Should().BeEquivalentTo(_commandLine.ApplicationIds);
             }
 
             [Fact]
@@ -196,7 +196,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.ApplicationIds = new[] { ContosoHrApp };
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.ApplicationIds().Errors.Should().BeEmpty();
+                provider.ApplicationIds().GetErrors().Should().BeEmpty();
             }
 
             [Fact]
@@ -204,7 +204,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.ApplicationIds = new[] { ContosoHrApp, ContosoItApp };
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.ApplicationIds().Value.Should().BeEquivalentTo(_commandLine.ApplicationIds);
+                provider.ApplicationIds().GetValue().Should().BeEquivalentTo(_commandLine.ApplicationIds);
             }
         }
 
@@ -219,7 +219,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.Addresses.Clear();
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.IpAddresses().HasValue.Should().BeTrue();
+                provider.IpAddresses().HasValue().Should().BeTrue();
             }
 
             [Fact]
@@ -227,7 +227,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.Addresses.Clear();
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.IpAddresses().Value.Should().NotBeEmpty();
+                provider.IpAddresses().GetValue().Should().NotBeEmpty();
             }
 
             [Fact]
@@ -235,7 +235,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.Addresses = new[] { _addressA.ToString() };
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.IpAddresses().Value.Should().HaveCount(1);
+                provider.IpAddresses().GetValue().Should().HaveCount(1);
             }
 
             [Fact]
@@ -243,7 +243,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.Addresses = new[] { _addressA.ToString(), _addressB.ToString() };
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.IpAddresses().Value.Should().HaveCount(2);
+                provider.IpAddresses().GetValue().Should().HaveCount(2);
             }
 
             [Fact]
@@ -251,8 +251,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.Addresses.Add("Not.An.IP.Address");
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.IpAddresses().HasValue.Should().BeFalse();
-                provider.IpAddresses().Errors.Should().Contain(e => e.Contains("address"));
+                provider.IpAddresses().HasValue().Should().BeFalse();
+                provider.IpAddresses().GetErrors().Should().Contain(e => e.Contains("address"));
             }
         }
 
@@ -265,7 +265,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.Issuer = string.Empty;
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.Issuer().Value.Should().Be(Claims.DefaultIssuer);
+                provider.Issuer().GetValue().Should().Be(Claims.DefaultIssuer);
             }
 
             [Fact]
@@ -273,7 +273,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.Issuer = _issuer;
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.Issuer().Value.Should().Be(_issuer);
+                provider.Issuer().GetValue().Should().Be(_issuer);
             }
         }
     }

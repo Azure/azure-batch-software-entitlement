@@ -17,13 +17,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// Works as a logical <c>AND</c> - if both inputs are successful, the output is successful; 
         /// if either input is a failure, the output is a failure. All error messages are preserved.
         /// </remarks>
-        /// <typeparam name="A">Type of value held by <paramref name="left"/>.</typeparam>
-        /// <typeparam name="B">Type of value held by <paramref name="right"/>.</typeparam>
-        /// <param name="left">First <see cref="Errorable{T}"/> to combine.</param>
-        /// <param name="right">Second <see cref="Errorable{T}"/> to combine.</param>
+        /// <typeparam name="TLeft">Type of value held by <paramref name="left"/>.</typeparam>
+        /// <typeparam name="TRight">Type of value held by <paramref name="right"/>.</typeparam>
+        /// <param name="left">First <see cref="Errorable{TLeft}"/> to combine.</param>
+        /// <param name="right">Second <see cref="Errorable{TRight}"/> to combine.</param>
         /// <returns>An <see cref="Errorable{T}"/> containing either both values or a combined 
         /// set of error messages.</returns>
-        public static Errorable<(A, B)> With<A, B>(this Errorable<A> left, Errorable<B> right)
+        public static Errorable<(TLeft Left, TRight Right)> With<TLeft, TRight>(
+            this Errorable<TLeft> left,
+            Errorable<TRight> right)
         {
             if (left == null)
             {
@@ -35,358 +37,204 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 throw new ArgumentNullException(nameof(right));
             }
 
-            return left.Match(
-                whenSuccessful: leftValue => right.Match(
-                    whenSuccessful: rightValue => Errorable.Success((leftValue, rightValue)),
-                    whenFailure: errors => Errorable.Failure<(A, B)>(errors)),
-                whenFailure: leftErrors => right.Match(
-                    whenSuccessful: _ => Errorable.Failure<(A, B)>(leftErrors),
-                    whenFailure: errors => Errorable.Failure<(A, B)>(leftErrors).AddErrors(errors)));
+            return left.With(right, (l, r) => (l, r));
         }
 
         /// <summary>
-        /// Combine two <see cref="Errorable{T}"/> values into a single value containing a tuple 
-        /// of three values
+        /// Combine two <see cref="Errorable{T}"/> values using the <see cref="Errorable{T}.With{TOther,TResult}"/>
+        /// method, which combines their errors if either/both are in a failure state.
         /// </summary>
         /// <remarks>
-        /// Works as a logical <c>AND</c> - if both inputs are successful, the output is successful; 
-        /// if either input is a failure, the output is a failure. All error messages are preserved.
+        /// Intended to be used in LINQ query syntax, with a join clause equating to true. E.g.
+        /// <code>
+        ///     from left in leftErrorable
+        ///     join right in rightErrorable on true equals true
+        ///     select (left, right)
+        /// </code>
         /// </remarks>
-        /// <typeparam name="A">Type of the first value held by <paramref name="left"/>.</typeparam>
-        /// <typeparam name="B">Type of the second value held by <paramref name="left"/>.</typeparam>
-        /// <typeparam name="C">Type of value held by <paramref name="right"/>.</typeparam>
-        /// <param name="left">First <see cref="Errorable{T}"/> to combine.</param>
-        /// <param name="right">Second <see cref="Errorable{T}"/> to combine.</param>
-        /// <returns>An <see cref="Errorable{T}"/> containing either all three values or a 
-        /// combined set of error messages.</returns>
-        public static Errorable<(A, B, C)> With<A, B, C>(this Errorable<(A, B)> left, Errorable<C> right)
-        {
-            if (left == null)
-            {
-                throw new ArgumentNullException(nameof(left));
-            }
-
-            if (right == null)
-            {
-                throw new ArgumentNullException(nameof(right));
-            }
-
-            return left.Match(
-                whenSuccessful: leftValue => right.Match(
-                    whenSuccessful: rightValue => Errorable.Success((leftValue.Item1, leftValue.Item2, rightValue)),
-                    whenFailure: errors => Errorable.Failure<(A, B, C)>(errors)),
-                whenFailure: leftErrors => right.Match(
-                    whenSuccessful: _ => Errorable.Failure<(A, B, C)>(leftErrors),
-                    whenFailure: errors => Errorable.Failure<(A, B, C)>(leftErrors).AddErrors(errors)));
-        }
+        public static Errorable<TResult> Join<TOuter, TInner, TKey, TResult>(
+            this Errorable<TOuter> outer,
+            Errorable<TInner> inner,
+            Func<TOuter, TKey> outerKeySelector,
+            Func<TInner, TKey> innerKeySelector,
+            Func<TOuter, TInner, TResult> resultSelector)
+            => outer.With(inner, resultSelector);
 
         /// <summary>
-        /// Combine two <see cref="Errorable{T}"/> values into a single value containing a tuple 
-        /// of three values
+        /// Combine two <see cref="Errorable{T}"/> values using the <see cref="Errorable{T}.With{TOther,TResult}"/>
+        /// method, which combines their errors if either/both are in a failure state.
+        /// This overload allows an error to be specified if the join fails (if the join criteria evaluate to false).
         /// </summary>
         /// <remarks>
-        /// Works as a logical <c>AND</c> - if both inputs are successful, the output is successful; 
-        /// if either input is a failure, the output is a failure. All error messages are preserved.
+        /// Intended to be used in LINQ query syntax, where the "joined to" <see cref="Errorable{T}"/> is specified as
+        /// a Tuple containing the error if the join fails. E.g.
+        /// <code>
+        ///     from expected in expectedErrorable
+        ///     join supplied in (suppliedErrorable, "unexpected value supplied")
+        ///         on expected equals supplied
+        ///     select GetResult(supplied)
+        /// </code>
         /// </remarks>
-        /// <typeparam name="A">Type of the value held by <paramref name="left"/>.</typeparam>
-        /// <typeparam name="B">Type of the first value held by <paramref name="right"/>.</typeparam>
-        /// <typeparam name="C">Type of the second value held by <paramref name="right"/>.</typeparam>
-        /// <param name="left">First <see cref="Errorable{T}"/> to combine.</param>
-        /// <param name="right">Second <see cref="Errorable{T}"/> to combine.</param>
-        /// <returns>An <see cref="Errorable{T}"/> containing either all three values or a 
-        /// combined set of error messages.</returns>
-        public static Errorable<(A, B, C)> With<A, B, C>(this Errorable<A> left, Errorable<(B, C)> right)
+        public static Errorable<TResult> Join<TOuter, TInner, TKey, TResult>(
+            this Errorable<TOuter> outer,
+            (Errorable<TInner>, string) inner,
+            Func<TOuter, TKey> outerKeySelector,
+            Func<TInner, TKey> innerKeySelector,
+            Func<TOuter, TInner, TResult> resultSelector)
+            => outer.Join(inner, outerKeySelector, innerKeySelector, resultSelector, EqualityComparer<TKey>.Default);
+
+        /// <summary>
+        /// Combine two <see cref="Errorable{T}"/> values using the <see cref="Errorable{T}.With{TOther,TResult}"/>
+        /// method, which combines their errors if either/both are in a failure state.
+        /// This overload allows an error to be specified if the join fails (if the join criteria evaluate to false),
+        /// as well as a custom comparer for the join keys.
+        /// </summary>
+        public static Errorable<TResult> Join<T, TOther, TKey, TResult>(
+            this Errorable<T> errorable,
+            (Errorable<TOther> Errorable, string JoinError) joinTo,
+            Func<T, TKey> localKeySelector,
+            Func<TOther, TKey> otherKeySelector,
+            Func<T, TOther, TResult> resultSelector,
+            IEqualityComparer<TKey> comparer)
         {
-            if (left == null)
+            if (errorable == null)
             {
-                throw new ArgumentNullException(nameof(left));
+                throw new ArgumentNullException(nameof(errorable));
             }
 
-            if (right == null)
+            if (joinTo.Errorable == null || string.IsNullOrEmpty(joinTo.JoinError))
             {
-                throw new ArgumentNullException(nameof(right));
+                throw new ArgumentNullException(nameof(joinTo));
             }
 
-            return left.Match(
-                whenSuccessful: leftValue => right.Match(
-                    whenSuccessful: rightValue => Errorable.Success((leftValue, rightValue.Item1, rightValue.Item2)),
-                    whenFailure: errors => Errorable.Failure<(A, B, C)>(errors)),
-                whenFailure: leftErrors => right.Match(
-                    whenSuccessful: _ => Errorable.Failure<(A, B, C)>(leftErrors),
-                    whenFailure: errors => Errorable.Failure<(A, B, C)>(leftErrors).AddErrors(errors)));
+            if (localKeySelector == null)
+            {
+                throw new ArgumentNullException(nameof(localKeySelector));
+            }
+
+            if (otherKeySelector == null)
+            {
+                throw new ArgumentNullException(nameof(otherKeySelector));
+            }
+
+            if (resultSelector == null)
+            {
+                throw new ArgumentNullException(nameof(resultSelector));
+            }
+
+            if (comparer == null)
+            {
+                throw new ArgumentNullException(nameof(comparer));
+            }
+
+            return
+                from combined in errorable.With(
+                    joinTo.Errorable,
+                    (local, other) => new
+                    {
+                        LocalKey = localKeySelector(local),
+                        OtherKey = otherKeySelector(other),
+                        Result = resultSelector(local, other)
+                    })
+                // Overloaded 'where' which allows an error to be specified if it evaluates to false.
+                where (comparer.Equals(combined.LocalKey, combined.OtherKey), joinTo.JoinError)
+                select combined.Result;
         }
 
         /// <summary>
-        /// Combine two <see cref="Errorable{T}"/> values into a single value containing a tuple 
-        /// of three values
+        /// Converts an <see cref="Errorable{T}"/> to a failure state if it doesn't match the specified
+        /// predicate.
         /// </summary>
         /// <remarks>
-        /// Works as a logical <c>AND</c> - if both inputs are successful, the output is successful; 
-        /// if either input is a failure, the output is a failure. All error messages are preserved.
+        /// Can be used in LINQ query syntax, e.g.
+        /// <code>
+        ///     from value in errorable
+        ///     where (value > 10, "Value must be greater than 10")
+        ///     select value
+        /// </code>
         /// </remarks>
-        /// <typeparam name="A">Type of the first value held by <paramref name="left"/>.</typeparam>
-        /// <typeparam name="B">Type of the second value held by <paramref name="left"/>.</typeparam>
-        /// <typeparam name="C">Type of the third value held by <paramref name="left"/>.</typeparam>
-        /// <typeparam name="D">Type of value held by <paramref name="right"/>.</typeparam>
-        /// <param name="left">First <see cref="Errorable{T}"/> to combine.</param>
-        /// <param name="right">Second <see cref="Errorable{T}"/> to combine.</param>
-        /// <returns>An <see cref="Errorable{T}"/> containing either all three values or a 
-        /// combined set of error messages.</returns>
-        public static Errorable<(A, B, C, D)> With<A, B, C, D>(this Errorable<(A, B, C)> left, Errorable<D> right)
+        public static Errorable<TSource> Where<TSource>(
+            this Errorable<TSource> source,
+            Func<TSource, (bool Result, string Error)> predicate)
         {
-            if (left == null)
+            if (source == null)
             {
-                throw new ArgumentNullException(nameof(left));
+                throw new ArgumentNullException(nameof(source));
             }
 
-            if (right == null)
+            if (predicate == null)
             {
-                throw new ArgumentNullException(nameof(right));
+                throw new ArgumentNullException(nameof(predicate));
             }
 
-            return left.Match(
-                whenSuccessful: leftValue => right.Match(
-                    whenSuccessful: rightValue => Errorable.Success((leftValue.Item1, leftValue.Item2, leftValue.Item3, rightValue)),
-                    whenFailure: errors => Errorable.Failure<(A, B, C, D)>(errors)),
-                whenFailure: leftErrors => right.Match(
-                    whenSuccessful: _ => Errorable.Failure<(A, B, C, D)>(leftErrors),
-                    whenFailure: errors => Errorable.Failure<(A, B, C, D)>(leftErrors).AddErrors(errors)));
+            return source.OnSuccess(t =>
+            {
+                var result = predicate(t);
+                return result.Result ? Errorable.Success(t) : Errorable.Failure<TSource>(result.Error);
+            });
         }
 
         /// <summary>
-        /// Performs an action on the combined results of two <see cref="Errorable{T}"/> objects, if and
-        /// only if both inputs were successful.
+        /// An alias for <see cref="Errorable{T}.OnSuccess{TNext}(Func{T, TNext})"/>.
         /// </summary>
-        /// <typeparam name="A">Type of the first value held by <paramref name="errorable"/>.</typeparam>
-        /// <typeparam name="B">Type of the second value held by <paramref name="errorable"/>.</typeparam>
-        /// <param name="errorable">The combination of two <see cref="Errorable{T}"/> objects.</param>
-        /// <param name="whenSuccessful">Action to execute if both inputs were successful.</param>
-        /// <param name="whenFailure">Action to execute if either input produced an error.</param>
-        public static void Do<A, B>(
-            this Errorable<(A, B)> errorable,
-            Action<A, B> whenSuccessful,
-            Action<IEnumerable<string>> whenFailure)
+        /// <remarks>
+        /// Allows LINQ query syntax for working with values inside <see cref="Errorable{T}"/>, e.g.
+        /// <code>
+        ///     from value in errorable
+        ///     select value
+        /// </code>
+        /// </remarks>
+        public static Errorable<TResult> Select<TSource, TResult>(
+            this Errorable<TSource> source,
+            Func<TSource, TResult> selector)
+            => source.OnSuccess(selector);
+
+        /// <summary>
+        /// An alias for <see cref="Errorable{T}.OnSuccess{TNext}(Func{T, Errorable{TNext}})"/>.
+        /// </summary>
+        public static Errorable<TResult> SelectMany<TSource, TResult>(
+            this Errorable<TSource> source,
+            Func<TSource, Errorable<TResult>> selector)
+            => source.OnSuccess(selector);
+
+        /// <summary>
+        /// Chains calls to <see cref="Errorable{T}.OnSuccess{TNext}(Func{T, Errorable{TNext}})"/>
+        /// so that the value of <see cref="source"/> becomes the input to <see cref="otherSelector"/>
+        /// and <see cref="resultSelector"/> can combine the values of each.
+        /// </summary>
+        /// <remarks>
+        /// Allows LINQ query syntax for chaining functions on <see cref="Errorable{T}"/>, e.g.
+        /// <code>
+        ///     from a in errorable
+        ///     from b in GetErrorableB(a)
+        ///     select b
+        /// </code>
+        /// </remarks>
+        public static Errorable<TResult> SelectMany<TSource, TOther, TResult>(
+            this Errorable<TSource> source,
+            Func<TSource, Errorable<TOther>> otherSelector,
+            Func<TSource, TOther, TResult> resultSelector)
+            => source.SelectMany(s => otherSelector(s).OnSuccess(o => resultSelector(s, o)));
+
+        /// <summary>
+        /// Pulls a <see cref="Task"/> out from inside an <see cref="Errorable"/> so that the
+        /// result is awaitable.
+        /// </summary>
+        public static Task<Errorable<T>> AsTask<T>(this Errorable<Task<T>> errorable)
         {
             if (errorable == null)
             {
                 throw new ArgumentNullException(nameof(errorable));
             }
 
-            if (whenSuccessful == null)
-            {
-                throw new ArgumentNullException(nameof(whenSuccessful));
-            }
-
-            if (whenFailure == null)
-            {
-                throw new ArgumentNullException(nameof(whenFailure));
-            }
-
-            errorable.Match(t => whenSuccessful(t.Item1, t.Item2), whenFailure);
+            return errorable
+                .OnSuccess(async t =>
+                {
+                    var result = await t.ConfigureAwait(false);
+                    return Errorable.Success(result);
+                })
+                .OnFailure(errors => Task.FromResult(Errorable.Failure<T>(errors)));
         }
-
-        /// <summary>
-        /// Performs an action on the combined results of three <see cref="Errorable{T}"/> objects, if and
-        /// only if all inputs were successful.
-        /// </summary>
-        /// <typeparam name="A">Type of the first value held by <paramref name="errorable"/>.</typeparam>
-        /// <typeparam name="B">Type of the second value held by <paramref name="errorable"/>.</typeparam>
-        /// <typeparam name="C">Type of the third value held by <paramref name="errorable"/>.</typeparam>
-        /// <param name="errorable">The combination of three <see cref="Errorable{T}"/> objects.</param>
-        /// <param name="whenSuccessful">Action to execute if all inputs were successful.</param>
-        /// <param name="whenFailure">Action to execute if any input produced an error.</param>
-        public static void Do<A, B, C>(
-            this Errorable<(A, B, C)> errorable,
-            Action<A, B, C> whenSuccessful,
-            Action<IEnumerable<string>> whenFailure)
-        {
-            if (errorable == null)
-            {
-                throw new ArgumentNullException(nameof(errorable));
-            }
-
-            if (whenSuccessful == null)
-            {
-                throw new ArgumentNullException(nameof(whenSuccessful));
-            }
-
-            if (whenFailure == null)
-            {
-                throw new ArgumentNullException(nameof(whenFailure));
-            }
-
-            errorable.Match(t => whenSuccessful(t.Item1, t.Item2, t.Item3), whenFailure);
-        }
-
-        /// <summary>
-        /// Performs an action on the combined results of four <see cref="Errorable{T}"/> objects, if and
-        /// only if all inputs were successful.
-        /// </summary>
-        /// <typeparam name="A">Type of the first value held by <paramref name="errorable"/>.</typeparam>
-        /// <typeparam name="B">Type of the second value held by <paramref name="errorable"/>.</typeparam>
-        /// <typeparam name="C">Type of the third value held by <paramref name="errorable"/>.</typeparam>
-        /// <typeparam name="D">Type of the fourth value held by <paramref name="errorable"/>.</typeparam>
-        /// <param name="errorable">The combination of four <see cref="Errorable{T}"/> objects.</param>
-        /// <param name="whenSuccessful">Action to execute if all inputs were successful.</param>
-        /// <param name="whenFailure">Action to execute if any input produced an error.</param>
-        public static void Do<A, B, C, D>(
-            this Errorable<(A, B, C, D)> errorable,
-            Action<A, B, C, D> whenSuccessful,
-            Action<IEnumerable<string>> whenFailure)
-        {
-            if (errorable == null)
-            {
-                throw new ArgumentNullException(nameof(errorable));
-            }
-
-            if (whenSuccessful == null)
-            {
-                throw new ArgumentNullException(nameof(whenSuccessful));
-            }
-
-            if (whenFailure == null)
-            {
-                throw new ArgumentNullException(nameof(whenFailure));
-            }
-
-            errorable.Match(t => whenSuccessful(t.Item1, t.Item2, t.Item3, t.Item4), whenFailure);
-        }
-
-        /// <summary>
-        /// Transforms the combined results of two <see cref="Errorable{T}"/> objects into a single
-        /// <see cref="Errorable{T}"/> type.
-        /// </summary>
-        /// <typeparam name="A">Type of the first value held by <paramref name="errorable"/>.</typeparam>
-        /// <typeparam name="B">Type of the second value held by <paramref name="errorable"/>.</typeparam>
-        /// <typeparam name="R">Type of the result of the transformation.</typeparam>
-        /// <param name="errorable">The combination of two <see cref="Errorable{T}"/> objects.</param>
-        /// <param name="transform">Transformation to apply if both inputs were successful.</param>
-        /// <returns>
-        /// The result of applying the transformation to the inputs, if both inputs were successful,
-        /// or the combination of errors from the inputs otherwise.
-        /// </returns>
-        public static Errorable<R> Map<A, B, R>(
-            this Errorable<(A, B)> errorable,
-            Func<A, B, R> transform)
-        {
-            if (errorable == null)
-            {
-                throw new ArgumentNullException(nameof(errorable));
-            }
-
-            if (transform == null)
-            {
-                throw new ArgumentNullException(nameof(transform));
-            }
-
-            return errorable.Match(
-                t => Errorable.Success(transform(t.Item1, t.Item2)),
-                e => Errorable.Failure<R>(e));
-        }
-
-        /// <summary>
-        /// Transforms the combined results of three <see cref="Errorable{T}"/> objects into a single
-        /// <see cref="Errorable{T}"/> type.
-        /// </summary>
-        /// <typeparam name="A">Type of the first value held by <paramref name="errorable"/>.</typeparam>
-        /// <typeparam name="B">Type of the second value held by <paramref name="errorable"/>.</typeparam>
-        /// <typeparam name="C">Type of the third value held by <paramref name="errorable"/>.</typeparam>
-        /// <typeparam name="R">Type of the result of the transformation.</typeparam>
-        /// <param name="errorable">The combination of three <see cref="Errorable{T}"/> objects.</param>
-        /// <param name="transform">Transformation to apply if all inputs were successful.</param>
-        /// <returns>
-        /// The result of applying the transformation to the inputs, if all inputs were successful,
-        /// or the combination of errors from the inputs otherwise.
-        /// </returns>
-        public static Errorable<R> Map<A, B, C, R>(
-            this Errorable<(A, B, C)> errorable,
-            Func<A, B, C, R> transform)
-        {
-            if (errorable == null)
-            {
-                throw new ArgumentNullException(nameof(errorable));
-            }
-
-            if (transform == null)
-            {
-                throw new ArgumentNullException(nameof(transform));
-            }
-
-            return errorable.Match(
-                t => Errorable.Success(transform(t.Item1, t.Item2, t.Item3)),
-                e => Errorable.Failure<R>(e));
-        }
-
-        /// <summary>
-        /// Transforms the combined results of four <see cref="Errorable{T}"/> objects into a single
-        /// <see cref="Errorable{T}"/> type.
-        /// </summary>
-        /// <typeparam name="A">Type of the first value held by <paramref name="errorable"/>.</typeparam>
-        /// <typeparam name="B">Type of the second value held by <paramref name="errorable"/>.</typeparam>
-        /// <typeparam name="C">Type of the third value held by <paramref name="errorable"/>.</typeparam>
-        /// <typeparam name="D">Type of the fourth value held by <paramref name="errorable"/>.</typeparam>
-        /// <typeparam name="R">Type of the result of the transformation.</typeparam>
-        /// <param name="errorable">The combination of four <see cref="Errorable{T}"/> objects.</param>
-        /// <param name="transform">Transformation to apply if all inputs were successful.</param>
-        /// <returns>
-        /// The result of applying the transformation to the inputs, if all inputs were successful,
-        /// or the combination of errors from the inputs otherwise.
-        /// </returns>
-        public static Errorable<R> Map<A, B, C, D, R>(
-            this Errorable<(A, B, C, D)> errorable,
-            Func<A, B, C, D, R> transform)
-        {
-            if (errorable == null)
-            {
-                throw new ArgumentNullException(nameof(errorable));
-            }
-
-            if (transform == null)
-            {
-                throw new ArgumentNullException(nameof(transform));
-            }
-
-            return errorable.Match(
-                t => Errorable.Success(transform(t.Item1, t.Item2, t.Item3, t.Item4)),
-                e => Errorable.Failure<R>(e));
-        }
-
-        /// <summary>
-        /// Asynchronously transforms the combined results of four <see cref="Errorable{T}"/> objects into a single
-        /// <see cref="Errorable{T}"/> type.
-        /// </summary>
-        /// <typeparam name="A">Type of the first value held by <paramref name="errorable"/>.</typeparam>
-        /// <typeparam name="B">Type of the second value held by <paramref name="errorable"/>.</typeparam>
-        /// <typeparam name="C">Type of the third value held by <paramref name="errorable"/>.</typeparam>
-        /// <typeparam name="D">Type of the fourth value held by <paramref name="errorable"/>.</typeparam>
-        /// <typeparam name="R">Type of the result of the transformation.</typeparam>
-        /// <param name="errorable">The combination of four <see cref="Errorable{T}"/> objects.</param>
-        /// <param name="transform">Asynchronous transformation to apply if all inputs were successful.</param>
-        /// <returns>
-        /// The result of applying the transformation to the inputs, if all inputs were successful,
-        /// or the combination of errors from the inputs otherwise.
-        /// </returns>
-        public static Task<Errorable<R>> MapAsync<A, B, C, D, R>(
-            this Errorable<(A, B, C, D)> errorable,
-            Func<A, B, C, D, Task<R>> transform)
-        {
-            if (errorable == null)
-            {
-                throw new ArgumentNullException(nameof(errorable));
-            }
-
-            if (transform == null)
-            {
-                throw new ArgumentNullException(nameof(transform));
-            }
-
-            return errorable.Match(
-                async t => Errorable.Success(await transform(t.Item1, t.Item2, t.Item3, t.Item4).ConfigureAwait(false)),
-                e => Task.FromResult(Errorable.Failure<R>(e)));
-        }
-
-        public static T WhenFailure<T>(this Errorable<T> errorable, Func<IEnumerable<string>, T> errorHandler)
-            => errorable.Match(whenSuccessful: t => t, whenFailure: errorHandler);
 
         /// <summary>
         /// Convert a collection of <see cref="Errorable{T}"/> into an <see cref="Errorable{IEnumerable{T}}"/>
@@ -402,7 +250,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         {
             return errorables.Aggregate(
                 Errorable.Success(Enumerable.Empty<T>()),
-                (result, errorable) => result.With(errorable).Map((items, item) => items.Append(item)));
+                (result, errorable) =>
+                    from combined in result.With(errorable)
+                    select combined.Left.Append(combined.Right));
         }
     }
 }

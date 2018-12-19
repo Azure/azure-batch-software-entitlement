@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server.Model;
@@ -24,24 +26,32 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
         {
             var entitlementId = requestContext;
 
-            return CheckEntitlementExists(entitlementId).Match(
-                whenSuccessful: existing =>
-                {
-                    _entitlementStore.ReleaseEntitlement(entitlementId);
-                    return CreateSuccessResponse();
-                },
-                whenFailure: errors => errors.CreateNotFoundResponse(entitlementId, _logger));
+            var responseOrNotFound =
+                from exists in CheckEntitlementExists(entitlementId)
+                let released = ReleaseEntitlement(entitlementId)
+                select CreateSuccessResponse();
+
+            return responseOrNotFound.OnFailure(GetNotFoundResponder(entitlementId));
         }
 
-        private Errorable<object> CheckEntitlementExists(string entitlementId)
+        private Errorable<bool> CheckEntitlementExists(string entitlementId)
         {
             if (!_entitlementStore.ContainsEntitlementId(entitlementId))
             {
-                return Errorable.Failure<object>($"Entitlement {entitlementId} not found");
+                return Errorable.Failure<bool>($"Entitlement {entitlementId} not found");
             }
 
-            return Errorable.Success<object>(null);
+            return Errorable.Success(true);
         }
+
+        private bool ReleaseEntitlement(string entitlementId)
+        {
+            _entitlementStore.ReleaseEntitlement(entitlementId);
+            return true;
+        }
+
+        private Func<IEnumerable<string>, Response> GetNotFoundResponder(string entitlementId)
+            => errors => errors.CreateNotFoundResponse(entitlementId, _logger);
 
         private static Response CreateSuccessResponse() =>
             new Response(StatusCodes.Status204NoContent);

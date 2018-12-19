@@ -32,14 +32,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             public void GivenEmptyValue_ReturnsError()
             {
                 var result = _parser.TryParse(string.Empty, "name");
-                result.HasValue.Should().BeFalse();
+                result.HasValue().Should().BeFalse();
             }
 
             [Fact]
             public void GivenEmptyName_ReturnsError()
             {
                 var result = _parser.TryParse("value", string.Empty);
-                result.HasValue.Should().BeFalse();
+                result.HasValue().Should().BeFalse();
             }
 
             [Fact]
@@ -47,8 +47,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             {
                 var valueToParse = _timestamp.ToString(TimestampParser.ExpectedFormat, CultureInfo.InvariantCulture);
                 var result = _parser.TryParse(valueToParse, _name);
-                result.HasValue.Should().BeTrue();
-                result.Value.Should().Be(_timestamp);
+                result.HasValue().Should().BeTrue();
+                result.GetValue().Should().Be(_timestamp);
             }
 
             [Fact]
@@ -56,22 +56,22 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             {
                 var valueToParse = _timestamp.ToString("G", CultureInfo.InvariantCulture);
                 var result = _parser.TryParse(valueToParse, _name);
-                result.HasValue.Should().BeTrue();
-                result.Value.Should().Be(_timestamp);
+                result.HasValue().Should().BeTrue();
+                result.GetValue().Should().Be(_timestamp);
             }
 
             [Fact]
             public void GivenInvalidTimestamp_ReturnsError()
             {
                 var result = _parser.TryParse(_invalidTimestamp, _name);
-                result.HasValue.Should().BeFalse();
+                result.HasValue().Should().BeFalse();
             }
 
             [Fact]
             public void GivenInvalidTimestamp_ReturnsErrorIncludingName()
             {
                 var result = _parser.TryParse(_invalidTimestamp, _name);
-                result.Errors.Should().Contain(e => e.Contains(_name));
+                result.GetErrors().Should().Contain(e => e.Contains(_name));
             }
         }
     }

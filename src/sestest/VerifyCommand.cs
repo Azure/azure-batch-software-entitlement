@@ -38,24 +38,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>Results of execution (0 = success).</returns>
         public async Task<int> Execute(VerifyCommandLine commandLine)
         {
-            Errorable<Uri> server = FindServer(commandLine);
-            Errorable<string> token = FindToken(commandLine);
-            Errorable<string> app = FindApplication(commandLine);
-            Errorable<string> api = FindApiVersion(commandLine);
+            var exitCodeResult = await
+                (
+                from server in FindServer(commandLine)
+                join token in FindToken(commandLine) on true equals true
+                join app in FindApplication(commandLine) on true equals true
+                join api in FindApiVersion(commandLine) on true equals true
+                select SubmitToken(server, token, app, api)
+                ).AsTask().ConfigureAwait(false);
 
-            Errorable<int> result = await server.With(token)
-                .With(app)
-                .With(api)
-                .MapAsync(SubmitToken)
-                .ConfigureAwait(false);
-
-            return result.Match(
-                exitCode => exitCode,
-                errors =>
-                {
-                    Logger.LogErrors(errors);
-                    return ResultCodes.Failed;
-                });
+            return exitCodeResult.LogIfFailed(Logger, ResultCodes.Failed);
         }
 
         private async Task<int> SubmitToken(Uri server, string token, string app, string api)
