@@ -8,12 +8,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
     public static class ErrorableTestingExtensions
     {
         public static IEnumerable<string> GetErrors<T>(this Errorable<T> errorable) =>
-            errorable.OnSuccess(t => Enumerable.Empty<string>()).OnFailure(errors => errors);
+            errorable.OnOk(t => Enumerable.Empty<string>()).Merge(errors => errors);
 
         public static T GetValue<T>(this Errorable<T> errorable) =>
-            errorable.OnFailure(errors => throw new AssertionFailedException("Errorable was in a failure state"));
+            errorable.Merge(errors => throw new AssertionFailedException("Errorable was in a failure state"));
 
         public static bool HasValue<T>(this Errorable<T> errorable) =>
-            errorable.OnSuccess(t => true).OnFailure(_ => false);
+            errorable.OnOk(t => true).Merge(_ => false);
     }
 }

@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server.Model;
@@ -7,16 +7,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
 {
-    public class ApproveV2RequestHandler : IRequestHandler<ApproveRequestBody>
+    public class ApproveV2RequestHandler : RequestHandlerBase, IRequestHandler<ApproveRequestBody>
     {
-        private readonly ILogger _logger;
         private readonly TokenVerifier _verifier;
 
         public ApproveV2RequestHandler(
             ILogger logger,
-            TokenVerifier tokenVerifier)
+            TokenVerifier tokenVerifier) : base(logger)
         {
-            _logger = logger;
             _verifier = tokenVerifier;
         }
 
@@ -26,21 +24,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
         {
             var remoteIpAddress = httpContext.Connection.RemoteIpAddress;
 
-            var responseOrBadRequest =
-                from extracted in requestContext.ExtractVerificationRequest(remoteIpAddress, _logger)
-                let responseOrDenied =
-                    from props in _verifier.Verify(extracted.Request, extracted.Token)
-                    select CreateSuccessResponse(props)
-                select responseOrDenied.OnFailure(GetDeniedResponder(extracted.Request.ApplicationId));
-
-            return responseOrBadRequest.OnFailure(GetBadRequestResponder());
+            return
+            (
+                from extracted in ExtractVerificationRequest(requestContext, remoteIpAddress)
+                from props in Verify(extracted.Request, extracted.Token)
+                select CreateSuccessResponse(props)
+            ).Merge();
         }
 
-        private Func<IEnumerable<string>, Response> GetDeniedResponder(string applicationId)
-            => errors => errors.CreateDeniedResponse(applicationId, _logger);
+        private Result<(TokenVerificationRequest Request, string Token), Response> ExtractVerificationRequest(
+            IVerificationRequestBody body,
+            IPAddress remoteIpAddress) =>
+            body.ExtractVerificationRequest(remoteIpAddress, Logger)
+                .OnError(CreateBadRequestResponse);
 
-        private Func<IEnumerable<string>, Response> GetBadRequestResponder()
-            => errors => errors.CreateBadRequestResponse(_logger);
+        private Result<EntitlementTokenProperties, Response> Verify(
+            TokenVerificationRequest request,
+            string token) =>
+            _verifier.Verify(request, token)
+                .OnError(errors => CreateDeniedResponse(errors, request.ApplicationId));
 
         private static Response CreateSuccessResponse(EntitlementTokenProperties tokenProperties)
         {

@@ -122,14 +122,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var logSetup = new LoggerSetup();
 
             var consoleLevel = TryParseLogLevel(commandLine.LogLevel, "console", LogLevel.Information);
-            var actualLevel = consoleLevel.OnFailure(errors => LogLevel.Information);
+            var actualLevel = consoleLevel.Merge(errors => LogLevel.Information);
 
             logSetup.SendToConsole(actualLevel);
 
             var fileLevel = TryParseLogLevel(commandLine.LogFileLevel, "file", actualLevel);
             if (!string.IsNullOrEmpty(commandLine.LogFile))
             {
-                fileLevel.OnSuccess(level =>
+                fileLevel.OnOk(level =>
                 {
                     var file = new FileInfo(commandLine.LogFile);
                     logSetup.SendToFile(file, level);
@@ -138,11 +138,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             var logger = logSetup.Logger;
             logger.LogHeader("Software Entitlement Service Test Utility");
-            consoleLevel.OnFailure(logger.LogErrors);
-            fileLevel.OnFailure(logger.LogErrors);
+            consoleLevel.OnError(logger.LogErrors);
+            fileLevel.OnError(logger.LogErrors);
 
             // Only share our config if there were no problems during setup.
-            consoleLevel.With(fileLevel).OnSuccess(_ =>
+            consoleLevel.With(fileLevel).OnOk(_ =>
             {
                 _logger = logger;
                 _provider = logSetup.Provider;

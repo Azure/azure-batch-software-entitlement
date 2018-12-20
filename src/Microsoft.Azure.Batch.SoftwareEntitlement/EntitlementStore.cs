@@ -1,30 +1,67 @@
+using System;
 using System.Collections.Concurrent;
+using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
     public class EntitlementStore
     {
-        private readonly ConcurrentDictionary<string, EntitlementStatus> _entitlements =
-            new ConcurrentDictionary<string, EntitlementStatus>();
+        private readonly ConcurrentDictionary<string, EntitlementProperties> _entitlements =
+            new ConcurrentDictionary<string, EntitlementProperties>();
 
-        public void StoreEntitlementId(string entitlementId) =>
-            _entitlements.AddOrUpdate(entitlementId, EntitlementStatus.Acquired, (e, s) => s);
+        public EntitlementProperties StoreEntitlement(
+            string entitlementId,
+            EntitlementTokenProperties tokenProperties,
+            DateTime acquisitionTime) =>
+            _entitlements.AddOrUpdate(
+                entitlementId,
+                EntitlementProperties.CreateNew(entitlementId, tokenProperties, acquisitionTime),
+                (e, props) => props);
 
-        public bool ContainsEntitlementId(string entitlementId) =>
-            _entitlements.ContainsKey(entitlementId);
-
-        public void RenewEntitlement(string entitlementId) { }
-
-        public void ReleaseEntitlement(string entitlementId) =>
-            _entitlements.TryUpdate(entitlementId, EntitlementStatus.Released, EntitlementStatus.Acquired);
-
-        public bool IsReleased(string entitlementId) =>
-            _entitlements.TryGetValue(entitlementId, out var status) && status == EntitlementStatus.Released;
-
-        private enum EntitlementStatus
+        public Errorable<EntitlementProperties> FindEntitlement(string entitlementId)
         {
-            Acquired,
-            Released
+            if (!_entitlements.TryGetValue(entitlementId, out var entitlementProperties))
+            {
+                return Errorable.Failure<EntitlementProperties>($"Entitlement {entitlementId} not found.");
+            }
+
+            return Errorable.Success(entitlementProperties);
+        }
+
+        public Errorable<EntitlementProperties> RenewEntitlement(
+            string entitlementId,
+            DateTime renewalTime) =>
+            TryUpdate(
+                entitlementId,
+                props => props.WithRenewal(renewalTime),
+                $"Unable to store renewal event for {entitlementId}");
+
+        public Errorable<EntitlementProperties> ReleaseEntitlement(
+            string entitlementId,
+            DateTime releaseTime) =>
+            TryUpdate(
+                entitlementId,
+                props => props.WithRelease(releaseTime),
+                $"Unable to store release event for {entitlementId}");
+
+        private Errorable<EntitlementProperties> TryUpdate(
+            string entitlementId,
+            Func<EntitlementProperties, EntitlementProperties> updater,
+            string errorMessage)
+        {
+            if (_entitlements.TryGetValue(entitlementId, out var currentEntitlementProperties))
+            {
+                var updatedEntitlementProperties = updater(currentEntitlementProperties);
+                if (_entitlements.TryUpdate(
+                    entitlementId,
+                    updatedEntitlementProperties,
+                    currentEntitlementProperties))
+                {
+                    return Errorable.Success(updatedEntitlementProperties);
+                }
+            }
+
+            return Errorable.Failure<EntitlementProperties>(errorMessage);
         }
     }
 }

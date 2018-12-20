@@ -67,6 +67,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         public static Errorable<EntitlementTokenProperties> Build(ITokenPropertyProvider provider) =>
+            (
             from props in Errorable.Success(new EntitlementTokenProperties())
             join notBefore in provider.NotBefore() on true equals true
             join notAfter in provider.NotAfter() on true equals true
@@ -86,7 +87,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 .WithApplications(applicationIds)
                 .WithIpAddresses(ipAddresses)
                 .WithVirtualMachineId(vmid)
-                .WithIdentifier(tokenId);
+                .WithIdentifier(tokenId)
+            ).AsErrorable();
 
         /// <summary>
         /// Specify the virtual machine Id of the machine

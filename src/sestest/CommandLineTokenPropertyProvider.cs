@@ -96,7 +96,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 result.AddRange(ListMachineIpAddresses());
             }
 
-            return result.Reduce();
+            return result.Reduce().AsErrorable();
         }
 
         private static IEnumerable<Errorable<IPAddress>> ListMachineIpAddresses()

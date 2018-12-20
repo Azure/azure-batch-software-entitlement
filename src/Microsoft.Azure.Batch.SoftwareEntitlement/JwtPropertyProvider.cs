@@ -100,7 +100,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Gets the IP addresses of the machine authorized to use this token from the claims in the principal.
         /// </summary>
         public Errorable<IEnumerable<IPAddress>> IpAddresses()
-            => ReadAll(Claims.IpAddress).Select(ParseIpAddress).Reduce();
+            => ReadAll(Claims.IpAddress).Select(ParseIpAddress).Reduce().AsErrorable();
 
         /// <summary>
         /// Gets the virtual machine identifier for the machine entitled to use the specified packages from a claim

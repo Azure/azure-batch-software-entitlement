@@ -3,10 +3,10 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
-    public static class ErrorableExtensions
+    public static class ResultExtensions
     {
-        public static T LogIfFailed<T>(this Errorable<T> errorable, ILogger logger, T valueIfFailed) =>
-            errorable.OnFailure(errors =>
+        public static T LogIfFailed<T>(this Result<T, ErrorCollection> result, ILogger logger, T valueIfFailed) =>
+            result.Merge(errors =>
             {
                 logger.LogErrors(errors);
                 return valueIfFailed;

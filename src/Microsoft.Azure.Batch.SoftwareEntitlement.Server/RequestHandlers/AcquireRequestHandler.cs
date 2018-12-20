@@ -1,5 +1,5 @@
 using System;
-using System.Collections.Generic;
+using System.Net;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server.Model;
@@ -7,18 +7,16 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
 {
-    public class AcquireRequestHandler : IRequestHandler<AcquireRequestBody>
+    public class AcquireRequestHandler : RequestHandlerBase, IRequestHandler<AcquireRequestBody>
     {
-        private readonly ILogger _logger;
         private readonly TokenVerifier _verifier;
         private readonly EntitlementStore _entitlementStore;
 
         public AcquireRequestHandler(
             ILogger logger,
             TokenVerifier tokenVerifier,
-            EntitlementStore entitlementStore)
+            EntitlementStore entitlementStore) : base(logger)
         {
-            _logger = logger;
             _verifier = tokenVerifier;
             _entitlementStore = entitlementStore;
         }
@@ -29,37 +27,49 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
         {
             var remoteIpAddress = httpContext.Connection.RemoteIpAddress;
 
-            var responseOrBadRequest =
-                from duration in requestContext.Duration.ParseDuration()
-                from extracted in requestContext.ExtractVerificationRequest(remoteIpAddress, _logger)
-                let responseOrDenied =
-                    from props in _verifier.Verify(extracted.Request, extracted.Token)
-                    let stored = StoreEntitlement(duration)
-                    select CreateSuccessResponse(stored.EntitlementId, stored.InitialExpiryTime)
-                select responseOrDenied.OnFailure(GetDeniedResponder(extracted.Request.ApplicationId));
-
-            return responseOrBadRequest.OnFailure(GetBadRequestResponder());
+            return
+            (
+                from duration in ParseDuration(requestContext)
+                from extracted in ExtractVerificationRequest(requestContext, remoteIpAddress)
+                from tokenProperties in Verify(extracted.Request, extracted.Token)
+                let entitlementId = CreateEntitlementId()
+                let acquisitionTime = DateTime.UtcNow
+                let expiry = acquisitionTime.Add(duration)
+                let entitlementProperties = StoreEntitlement(entitlementId, tokenProperties, acquisitionTime)
+                select CreateSuccessResponse(entitlementId, expiry)
+            ).Merge();
         }
 
-        private (string EntitlementId, DateTime InitialExpiryTime) StoreEntitlement(TimeSpan duration)
+        private Result<TimeSpan, Response> ParseDuration(AcquireRequestBody body) =>
+            body.Duration
+                .ParseDuration()
+                .OnError(CreateBadRequestResponse);
+
+        private Result<(TokenVerificationRequest Request, string Token), Response> ExtractVerificationRequest(
+            IVerificationRequestBody body,
+            IPAddress remoteIpAddress) =>
+            body.ExtractVerificationRequest(remoteIpAddress, Logger)
+                .OnError(CreateBadRequestResponse);
+
+        private Result<EntitlementTokenProperties, Response> Verify(
+            TokenVerificationRequest request,
+            string token) =>
+            _verifier.Verify(request, token)
+                .OnError(errors => CreateDeniedResponse(errors, request.ApplicationId));
+
+        private static string CreateEntitlementId() => Guid.NewGuid().ToString("N");
+
+        private EntitlementProperties StoreEntitlement(
+            string entitlementId,
+            EntitlementTokenProperties tokenProperties,
+            DateTime acquisitionTime) =>
+            _entitlementStore.StoreEntitlement(entitlementId, tokenProperties, acquisitionTime);
+
+        private static Response CreateSuccessResponse(
+            string entitlementId,
+            DateTime expiryTime)
         {
-            var entitlementId = Guid.NewGuid().ToString("N");
-            var now = DateTime.UtcNow;
-
-            _entitlementStore.StoreEntitlementId(entitlementId);
-
-            return (entitlementId, now.Add(duration));
-        }
-
-        private Func<IEnumerable<string>, Response> GetDeniedResponder(string applicationId)
-            => errors => errors.CreateDeniedResponse(applicationId, _logger);
-
-        private Func<IEnumerable<string>, Response> GetBadRequestResponder()
-            => errors => errors.CreateBadRequestResponse(_logger);
-
-        private static Response CreateSuccessResponse(string entitlementId, DateTime initialExpiryTime)
-        {
-            var value = new AcquireSuccessResponse(entitlementId, initialExpiryTime);
+            var value = new AcquireSuccessResponse(entitlementId, expiryTime);
             return Response.CreateSuccess(value);
         }
     }

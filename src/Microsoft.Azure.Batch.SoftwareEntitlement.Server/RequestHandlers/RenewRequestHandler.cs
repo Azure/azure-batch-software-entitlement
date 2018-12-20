@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server.Model;
@@ -7,16 +6,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
 {
-    public class RenewRequestHandler : IRequestHandler<(RenewRequestBody Body, string EntitlementId)>
+    public class RenewRequestHandler : RequestHandlerBase, IRequestHandler<(RenewRequestBody Body, string EntitlementId)>
     {
-        private readonly ILogger _logger;
         private readonly EntitlementStore _entitlementStore;
 
         public RenewRequestHandler(
             ILogger logger,
-            EntitlementStore entitlementStore)
+            EntitlementStore entitlementStore) : base(logger)
         {
-            _logger = logger;
             _entitlementStore = entitlementStore;
         }
 
@@ -26,55 +23,34 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
         {
             var entitlementId = requestContext.EntitlementId;
 
-            var responseOrBadRequest =
-                from duration in requestContext.Body.Duration.ParseDuration()
-                let responseOrNotFound =
-                    from exists in CheckEntitlementExists(entitlementId)
-                    let responseOrConflict =
-                        from notReleased in CheckNotReleased(entitlementId)
-                        let expiry = StoreRenewal(entitlementId, duration)
-                        select CreateSuccessResponse(expiry)
-                    select responseOrConflict.OnFailure(GetAlreadyReleasedResponder())
-                select responseOrNotFound.OnFailure(GetNotFoundResponder(entitlementId));
-
-            return responseOrBadRequest.OnFailure(GetBadRequestResponder());
+            return
+            (
+                from duration in ParseDuration(requestContext.Body)
+                from foundEntitlement in FindEntitlement(entitlementId)
+                where NotReleased(foundEntitlement)
+                let renewalTime = DateTime.UtcNow
+                let expiry = renewalTime.Add(duration)
+                from renewedEntitlement in StoreRenewal(entitlementId, renewalTime)
+                select CreateSuccessResponse(expiry)
+            ).Merge();
         }
 
-        private Errorable<bool> CheckEntitlementExists(string entitlementId)
-        {
-            if (!_entitlementStore.ContainsEntitlementId(entitlementId))
-            {
-                return Errorable.Failure<bool>($"Entitlement {entitlementId} not found");
-            }
+        private Result<TimeSpan, Response> ParseDuration(RenewRequestBody body) =>
+            body.Duration
+                .ParseDuration()
+                .OnError(CreateBadRequestResponse);
 
-            return Errorable.Success(true);
-        }
+        private Result<EntitlementProperties, Response> FindEntitlement(string entitlementId) =>
+            _entitlementStore.FindEntitlement(entitlementId)
+                .OnError(errors => CreateNotFoundResponse(entitlementId));
 
-        private Errorable<bool> CheckNotReleased(string entitlementId)
-        {
-            if (_entitlementStore.IsReleased(entitlementId))
-            {
-                return Errorable.Failure<bool>($"Entitlement {entitlementId} is already released");
-            }
+        private PredicateResult<Response> NotReleased(EntitlementProperties entitlementProperties) =>
+            entitlementProperties.IsReleased.AsPredicateFailure(
+                () => CreateAlreadyReleasedResponse(entitlementProperties.EntitlementId));
 
-            return Errorable.Success(true);
-        }
-
-        private DateTime StoreRenewal(string entitlementId, TimeSpan duration)
-        {
-            var expiryTime = DateTime.UtcNow.Add(duration);
-            _entitlementStore.RenewEntitlement(entitlementId);
-            return expiryTime;
-        }
-
-        private Func<IEnumerable<string>, Response> GetAlreadyReleasedResponder()
-            => errors => errors.CreateConflictResponse("AlreadyReleased", _logger);
-
-        private Func<IEnumerable<string>, Response> GetNotFoundResponder(string entitlementId)
-            => errors => errors.CreateNotFoundResponse(entitlementId, _logger);
-
-        private Func<IEnumerable<string>, Response> GetBadRequestResponder()
-            => errors => errors.CreateBadRequestResponse(_logger);
+        private Result<EntitlementProperties, Response> StoreRenewal(string entitlementId, DateTime renewalTime) =>
+            _entitlementStore.RenewEntitlement(entitlementId, renewalTime)
+                .OnError(CreateInternalErrorResponse);
 
         private static Response CreateSuccessResponse(DateTime expiryTime)
         {

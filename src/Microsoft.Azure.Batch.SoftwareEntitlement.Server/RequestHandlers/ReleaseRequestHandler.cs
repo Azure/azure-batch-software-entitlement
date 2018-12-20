@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Server.Model;
@@ -7,16 +6,14 @@ using Microsoft.Extensions.Logging;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
 {
-    public class ReleaseRequestHandler : IRequestHandler<string>
+    public class ReleaseRequestHandler : RequestHandlerBase, IRequestHandler<string>
     {
-        private readonly ILogger _logger;
         private readonly EntitlementStore _entitlementStore;
 
         public ReleaseRequestHandler(
             ILogger logger,
-            EntitlementStore entitlementStore)
+            EntitlementStore entitlementStore) : base(logger)
         {
-            _logger = logger;
             _entitlementStore = entitlementStore;
         }
 
@@ -26,32 +23,22 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
         {
             var entitlementId = requestContext;
 
-            var responseOrNotFound =
-                from exists in CheckEntitlementExists(entitlementId)
-                let released = ReleaseEntitlement(entitlementId)
-                select CreateSuccessResponse();
-
-            return responseOrNotFound.OnFailure(GetNotFoundResponder(entitlementId));
+            return
+            (
+                from found in FindEntitlement(entitlementId)
+                let releaseTime = DateTime.UtcNow
+                from released in StoreRelease(entitlementId, releaseTime)
+                select CreateSuccessResponse()
+            ).Merge();
         }
 
-        private Errorable<bool> CheckEntitlementExists(string entitlementId)
-        {
-            if (!_entitlementStore.ContainsEntitlementId(entitlementId))
-            {
-                return Errorable.Failure<bool>($"Entitlement {entitlementId} not found");
-            }
+        private Result<EntitlementProperties, Response> FindEntitlement(string entitlementId) =>
+            _entitlementStore.FindEntitlement(entitlementId)
+                .OnError(errors => CreateNotFoundResponse(entitlementId));
 
-            return Errorable.Success(true);
-        }
-
-        private bool ReleaseEntitlement(string entitlementId)
-        {
-            _entitlementStore.ReleaseEntitlement(entitlementId);
-            return true;
-        }
-
-        private Func<IEnumerable<string>, Response> GetNotFoundResponder(string entitlementId)
-            => errors => errors.CreateNotFoundResponse(entitlementId, _logger);
+        private Result<EntitlementProperties, Response> StoreRelease(string entitlementId, DateTime releaseTime) =>
+            _entitlementStore.ReleaseEntitlement(entitlementId, releaseTime)
+                .OnError(CreateInternalErrorResponse);
 
         private static Response CreateSuccessResponse() =>
             new Response(StatusCodes.Status204NoContent);

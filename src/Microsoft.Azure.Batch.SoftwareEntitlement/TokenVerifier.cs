@@ -37,9 +37,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 throw new ArgumentNullException(nameof(token));
             }
 
-            return _tokenPropertyParser
-                .Parse(token)
-                .OnSuccess(e => Verify(request, e));
+            var result =
+                from parsedProps in _tokenPropertyParser.Parse(token)
+                from verifiedProps in Verify(request, parsedProps)
+                select verifiedProps;
+
+            return result.AsErrorable();
         }
 
         private static Errorable<EntitlementTokenProperties> Verify(

@@ -36,6 +36,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>Either a usable (and completely valid) <see cref="ServerOptions"/> or a set 
         /// of errors.</returns>
         public Errorable<ServerOptions> Build() =>
+        (
             from options in Errorable.Success(new ServerOptions())
             join url in ServerUrl() on true equals true
             join connCert in ConnectionCertificate() on true equals true
@@ -51,7 +52,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 .WithEncryptionCertificate(encryptCert)
                 .WithAudience(audience)
                 .WithIssuer(issuer)
-                .WithAutomaticExitAfterOneRequest(exit);
+                .WithAutomaticExitAfterOneRequest(exit)
+        ).AsErrorable();
 
         /// <summary>
         /// Find the server URL for our hosting
