@@ -108,7 +108,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 return Failure(UnexpectedAudienceError(exception.InvalidAudience));
             }
             catch (ArgumentException exception)
-                when (exception.Message.StartsWith("IDX", StringComparison.InvariantCulture))
+                when (exception.Message.StartsWith("IDX", StringComparison.Ordinal))
             {
                 // This covers a number of cases, including:
                 //  - Unexpected number of parts (base-64 strings separated by period characters)
