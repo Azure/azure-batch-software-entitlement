@@ -68,7 +68,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 RequireSignedTokens = _signingKey != null,
                 ClockSkew = TimeSpan.FromSeconds(60),
                 IssuerSigningKey = _signingKey,
-                ValidateIssuerSigningKey = true,
+                ValidateIssuerSigningKey = _signingKey != null,
                 TokenDecryptionKey = _encryptionKey
             };
 
@@ -106,6 +106,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             catch (SecurityTokenInvalidAudienceException exception)
             {
                 return Failure(UnexpectedAudienceError(exception.InvalidAudience));
+            }
+            catch (ArgumentException exception)
+                when (exception.Message.StartsWith("IDX", StringComparison.Ordinal))
+            {
+                // This covers a number of cases, including:
+                //  - Unexpected number of parts (base-64 strings separated by period characters)
+                //  - Invalid characters (not base-64)
+                //  - Invalid base-64 strings (not decodable)
+                //  - base-64 strings that decode to invalid JWT parts
+                return Failure("Token is not well formed");
             }
             catch (Exception exception)
             {

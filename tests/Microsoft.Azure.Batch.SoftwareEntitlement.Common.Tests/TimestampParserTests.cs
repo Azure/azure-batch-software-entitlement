@@ -1,6 +1,7 @@
 using System;
 using System.Globalization;
 using FluentAssertions;
+using FluentAssertions.Extensions;
 using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests

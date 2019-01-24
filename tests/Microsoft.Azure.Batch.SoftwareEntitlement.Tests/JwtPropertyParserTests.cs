@@ -51,11 +51,71 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         public class MalformedToken : JwtPropertyParserTests
         {
             [Fact]
-            public void WhenTokenMalformed_ReturnsError()
+            public void WhenTokenContainsOnlyOnePart_ReturnsError()
             {
                 var tokenProperties = _sourceTokenProperties;
                 var parser = CreateParser(tokenProperties.Audience, tokenProperties.Issuer);
-                var result = parser.Parse("notarealtoken");
+                var result = parser.Parse("nodots");
+                result.HasValue.Should().BeFalse();
+                result.Errors.Should().Contain(e => e.Contains("not well formed"));
+            }
+
+            [Fact]
+            public void WhenTokenContainsTooManyParts_ReturnsError()
+            {
+                var tokenProperties = _sourceTokenProperties;
+                var parser = CreateParser(tokenProperties.Audience, tokenProperties.Issuer);
+                var result = parser.Parse("e30=.e30=.e30=.e30=");
+                result.HasValue.Should().BeFalse();
+                result.Errors.Should().Contain(e => e.Contains("not well formed"));
+            }
+
+            [Fact]
+            public void WhenTokenContainsInvalidCharacters_ReturnsError()
+            {
+                var tokenProperties = _sourceTokenProperties;
+                var parser = CreateParser(tokenProperties.Audience, tokenProperties.Issuer);
+                var result = parser.Parse("🤘.🤙.🤚");
+                result.HasValue.Should().BeFalse();
+                result.Errors.Should().Contain(e => e.Contains("not well formed"));
+            }
+
+            [Fact]
+            public void WhenTokenContainsInvalidBase64_ReturnsError()
+            {
+                var tokenProperties = _sourceTokenProperties;
+                var parser = CreateParser(tokenProperties.Audience, tokenProperties.Issuer);
+                var result = parser.Parse("a.a.a");
+                result.HasValue.Should().BeFalse();
+                result.Errors.Should().Contain(e => e.Contains("not well formed"));
+            }
+
+            [Fact]
+            public void WhenTokenContainsInvalidContent_ReturnsError()
+            {
+                var tokenProperties = _sourceTokenProperties;
+                var parser = CreateParser(tokenProperties.Audience, tokenProperties.Issuer);
+                var result = parser.Parse("bm90.Z29vZA==.YmFzZTY0");
+                result.HasValue.Should().BeFalse();
+                result.Errors.Should().Contain(e => e.Contains("not well formed"));
+            }
+
+            [Fact]
+            public void WhenTokenMissingHeader_ReturnsError()
+            {
+                var tokenProperties = _sourceTokenProperties;
+                var parser = CreateParser(tokenProperties.Audience, tokenProperties.Issuer);
+                var result = parser.Parse(".e30=.e30=");
+                result.HasValue.Should().BeFalse();
+                result.Errors.Should().Contain(e => e.Contains("not well formed"));
+            }
+
+            [Fact]
+            public void WhenTokenMissingPayload_ReturnsError()
+            {
+                var tokenProperties = _sourceTokenProperties;
+                var parser = CreateParser(tokenProperties.Audience, tokenProperties.Issuer);
+                var result = parser.Parse("e30=..e30=");
                 result.HasValue.Should().BeFalse();
                 result.Errors.Should().Contain(e => e.Contains("not well formed"));
             }
