@@ -7,12 +7,12 @@ using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 {
-    public class CommandLineEntitlementPropertyProviderTests
+    public class CommandLineTokenPropertyProviderTests
     {
         // An empty set of command line arguments for testing
         private readonly GenerateCommandLine _commandLine = new GenerateCommandLine();
 
-        public class Constructor : CommandLineEntitlementPropertyProviderTests
+        public class Constructor : CommandLineTokenPropertyProviderTests
         {
             [Fact]
             public void GivenNullCommandLine_ThrowsArgumentNullException()
@@ -24,7 +24,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
         }
 
-        public class VirtualMachineIdProperty : CommandLineEntitlementPropertyProviderTests
+        public class VirtualMachineIdProperty : CommandLineTokenPropertyProviderTests
         {
             const string virtualMachineId = "virtualMachine";
 
@@ -61,7 +61,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
         }
 
-        public class NotBeforeProperty : CommandLineEntitlementPropertyProviderTests
+        public class NotBeforeProperty : CommandLineTokenPropertyProviderTests
         {
             private readonly string _validNotBefore =
                 DateTimeOffset.Now.ToString(TimestampParser.ExpectedFormat, CultureInfo.InvariantCulture);
@@ -101,7 +101,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
         }
 
-        public class NotAfterProperty : CommandLineEntitlementPropertyProviderTests
+        public class NotAfterProperty : CommandLineTokenPropertyProviderTests
         {
             private readonly string _validNotAfter =
                 DateTimeOffset.Now.AddDays(7).ToString(TimestampParser.ExpectedFormat, CultureInfo.InvariantCulture);
@@ -141,7 +141,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
         }
 
-        public class AudienceProperty : CommandLineEntitlementPropertyProviderTests
+        public class AudienceProperty : CommandLineTokenPropertyProviderTests
         {
             private readonly string _audience = "https://account.region.batch.azure.test";
 
@@ -162,7 +162,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
         }
 
-        public class ApplicationsProperty : CommandLineEntitlementPropertyProviderTests
+        public class ApplicationsProperty : CommandLineTokenPropertyProviderTests
         {
             private const string ContosoHrApp = "contosoHR";
             private const string ContosoItApp = "contosoIT";
@@ -208,7 +208,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
         }
 
-        public class AddressesProperty : CommandLineEntitlementPropertyProviderTests
+        public class AddressesProperty : CommandLineTokenPropertyProviderTests
         {
             // sample IPAddresses to use for testing (sample addresses as per RFC5735)
             private readonly IPAddress _addressA = IPAddress.Parse("203.0.113.46");
@@ -256,7 +256,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
         }
 
-        public class IssuerProperty : CommandLineEntitlementPropertyProviderTests
+        public class IssuerProperty : CommandLineTokenPropertyProviderTests
         {
             private readonly string _issuer = "https://account.region.batch.azure.test";
 

@@ -8,10 +8,10 @@ using Microsoft.IdentityModel.Tokens;
 namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
     /// <summary>
-    /// An <see cref="IEntitlementParser"/> implementation for extracting <see cref="NodeEntitlements"/>
+    /// An <see cref="ITokenPropertyParser"/> implementation for extracting <see cref="EntitlementTokenProperties"/>
     /// objects from JWT tokens.
     /// </summary>
-    public class JwtEntitlementParser : IEntitlementParser
+    public class JwtPropertyParser : ITokenPropertyParser
     {
         private readonly string _expectedAudience;
         private readonly string _expectedIssuer;
@@ -19,13 +19,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         private readonly SecurityKey _encryptionKey;
 
         /// <summary>
-        /// Creates a <see cref="JwtEntitlementParser"/> instance.
+        /// Creates a <see cref="JwtPropertyParser"/> instance.
         /// </summary>
         /// <param name="expectedAudience">The audience value expected to be found in the tokens to be parsed.</param>
         /// <param name="expectedIssuer">The issuer value expected to be found in the tokens to be parsed.</param>
         /// <param name="signingKey">The key that the tokens are expected to be signed with, or null if not signed.</param>
         /// <param name="encryptingKey">The key that the tokens are expected to be encrypted with, or null if not encrypted.</param>
-        public JwtEntitlementParser(
+        public JwtPropertyParser(
             string expectedAudience,
             string expectedIssuer,
             SecurityKey signingKey = null,
@@ -38,21 +38,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         /// <summary>
-        /// Builds a <see cref="NodeEntitlements"/> from a JWT token string.
+        /// Builds a <see cref="EntitlementTokenProperties"/> from a JWT token string.
         /// </summary>
         /// <param name="token">The JWT token string</param>
         /// <returns>
         /// An <see cref="Errorable{NodeEntitlements}"/> containing the result, or an
-        /// <see cref="Errorable.Failure{NodeEntitlements}"/> if it failed to validate correctly.
+        /// error if it failed to validate correctly.
         /// </returns>
-        public Errorable<NodeEntitlements> Parse(string token)
+        public Errorable<EntitlementTokenProperties> Parse(string token)
         {
-            return ExtractJwt(token).Map(CreateEntitlementPropertyProvider).Bind(NodeEntitlements.Build);
+            return ExtractJwt(token).Map(CreateEntitlementPropertyProvider).Bind(EntitlementTokenProperties.Build);
         }
 
-        private static IEntitlementPropertyProvider CreateEntitlementPropertyProvider(ClaimsPrincipal principal, JwtSecurityToken jwt)
+        private static ITokenPropertyProvider CreateEntitlementPropertyProvider(ClaimsPrincipal principal, JwtSecurityToken jwt)
         {
-            return new JwtEntitlementPropertyProvider(principal, jwt);
+            return new JwtPropertyProvider(principal, jwt);
         }
 
         private Errorable<(ClaimsPrincipal Principal, JwtSecurityToken Token)> ExtractJwt(string tokenString)

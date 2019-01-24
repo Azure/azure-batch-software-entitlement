@@ -14,13 +14,13 @@ using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 {
-    public class EntitlementVerifierTests
+    public class TokenVerifierTests
     {
-        // An entitlements object representing a complete set of claims
-        private readonly NodeEntitlements _completeEntitlement;
+        // An token properties object representing a complete set of claims
+        private readonly EntitlementTokenProperties _completeTokenProperties;
 
         // An entitlement verification request which is valid for the above entitlement
-        private readonly EntitlementVerificationRequest _validEntitlementRequest;
+        private readonly TokenVerificationRequest _validVerificationRequest;
 
         // Logger that does nothing
         private readonly ILogger _nullLogger = NullLogger.Instance;
@@ -34,7 +34,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         // Used to look up values in a fake entitlement parser
         private readonly string _testToken = "testtoken";
 
-        public EntitlementVerifierTests()
+        public TokenVerifierTests()
         {
             // Hard coded key for unit testing only; actual operation will use a cert
             const string plainTextSigningKey = "This is my shared, not so secret, secret that needs to be very long!";
@@ -46,51 +46,51 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             var encryptingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(plainTextEncryptionKey));
             _encryptingCredentials = new EncryptingCredentials(encryptingKey, "dir", SecurityAlgorithms.Aes256CbcHmacSha512);
 
-            _completeEntitlement = NodeEntitlements.Build(FakeEntitlementPropertyProvider.CreateValid()).Value;
-            _validEntitlementRequest = new EntitlementVerificationRequest(
-                _completeEntitlement.Applications.First(),
-                _completeEntitlement.IpAddresses.First());
+            _completeTokenProperties = EntitlementTokenProperties.Build(FakeTokenPropertyProvider.CreateValid()).Value;
+            _validVerificationRequest = new TokenVerificationRequest(
+                _completeTokenProperties.Applications.First(),
+                _completeTokenProperties.IpAddresses.First());
         }
 
-        private string CreateSignedEncryptedJwtToken(NodeEntitlements entitlement)
-            => CreateJwtToken(entitlement, _signingCredentials, _encryptingCredentials);
+        private string CreateSignedEncryptedJwtToken(EntitlementTokenProperties tokenProperties)
+            => CreateJwtToken(tokenProperties, _signingCredentials, _encryptingCredentials);
 
         private string CreateJwtToken(
-            NodeEntitlements entitlement,
+            EntitlementTokenProperties tokenProperties,
             SigningCredentials signingCredentials,
             EncryptingCredentials encryptingCredentials)
         {
             var generator = new TokenGenerator(_nullLogger, signingCredentials, encryptingCredentials);
-            return generator.Generate(entitlement);
+            return generator.Generate(tokenProperties);
         }
 
-        private EntitlementVerifier CreateSignedEncryptedJwtEntitlementVerifier(
+        private TokenVerifier CreateSignedEncryptedJwtTokenVerifier(
             string expectedAudience,
             string expectedIssuer)
-            => CreateJwtEntitlementVerifier(expectedAudience, expectedIssuer, _signingCredentials.Key, _encryptingCredentials.Key);
+            => CreateJwtTokenVerifier(expectedAudience, expectedIssuer, _signingCredentials.Key, _encryptingCredentials.Key);
 
-        private EntitlementVerifier CreateJwtEntitlementVerifier(
+        private TokenVerifier CreateJwtTokenVerifier(
             string expectedAudience,
             string expectedIssuer,
             SecurityKey signingKey,
             SecurityKey encryptingKey)
         {
-            var parser = new JwtEntitlementParser(expectedAudience, expectedIssuer, signingKey, encryptingKey);
-            return new EntitlementVerifier(parser);
+            var parser = new JwtPropertyParser(expectedAudience, expectedIssuer, signingKey, encryptingKey);
+            return new TokenVerifier(parser);
         }
 
-        public class Verify : EntitlementVerifierTests
+        public class Verify : TokenVerifierTests
         {
             [Fact]
             public void WhenTokenIsNull_ThrowsException()
             {
-                var verifier = new EntitlementVerifier(new FakeEntitlementParser());
+                var verifier = new TokenVerifier(new FakeTokenPropertyParser());
                 Assert.Throws<ArgumentNullException>(
-                    () => verifier.Verify(_validEntitlementRequest, null));
+                    () => verifier.Verify(_validVerificationRequest, null));
             }
         }
 
-        public class VerifyApplication : EntitlementVerifierTests
+        public class VerifyApplication : TokenVerifierTests
         {
             private readonly string _otherApp1 = "contosoit";
             private readonly string _otherApp2 = "contosohr";
@@ -98,59 +98,59 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WhenEntitlementContainsNoApplications_ReturnsError()
             {
-                var entitlement = _completeEntitlement.WithApplications();
-                var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
-                var result = verifier.Verify(_validEntitlementRequest, _testToken);
+                var tokenProperties = _completeTokenProperties.WithApplications();
+                var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
+                var verifier = new TokenVerifier(parser);
+                var result = verifier.Verify(_validVerificationRequest, _testToken);
                 result.HasValue.Should().BeFalse();
-                result.Errors.Should().Contain(e => e.Contains(_validEntitlementRequest.ApplicationId));
+                result.Errors.Should().Contain(e => e.Contains(_validVerificationRequest.ApplicationId));
             }
 
             [Fact]
             public void WhenEntitlementContainsOnlyTheRequestedApplication_ReturnsSuccess()
             {
-                var entitlement = _completeEntitlement.WithApplications(_validEntitlementRequest.ApplicationId);
-                var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
-                var result = verifier.Verify(_validEntitlementRequest, _testToken);
+                var tokenProperties = _completeTokenProperties.WithApplications(_validVerificationRequest.ApplicationId);
+                var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
+                var verifier = new TokenVerifier(parser);
+                var result = verifier.Verify(_validVerificationRequest, _testToken);
                 result.HasValue.Should().BeTrue();
             }
 
             [Fact]
             public void WhenEntitlementContainsOnlyADifferentApplication_ReturnsError()
             {
-                var entitlement = _completeEntitlement.WithApplications(_otherApp1);
-                var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
-                var result = verifier.Verify(_validEntitlementRequest, _testToken);
+                var tokenProperties = _completeTokenProperties.WithApplications(_otherApp1);
+                var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
+                var verifier = new TokenVerifier(parser);
+                var result = verifier.Verify(_validVerificationRequest, _testToken);
                 result.HasValue.Should().BeFalse();
-                result.Errors.Should().Contain(e => e.Contains(_validEntitlementRequest.ApplicationId));
+                result.Errors.Should().Contain(e => e.Contains(_validVerificationRequest.ApplicationId));
             }
 
             [Fact]
             public void WhenEntitlementContainsMultipleApplicationsButNotTheRequestedApplication_ReturnsError()
             {
-                var entitlement = _completeEntitlement.WithApplications(_otherApp1, _otherApp2);
-                var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
-                var result = verifier.Verify(_validEntitlementRequest, _testToken);
+                var tokenProperties = _completeTokenProperties.WithApplications(_otherApp1, _otherApp2);
+                var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
+                var verifier = new TokenVerifier(parser);
+                var result = verifier.Verify(_validVerificationRequest, _testToken);
                 result.HasValue.Should().BeFalse();
-                result.Errors.Should().Contain(e => e.Contains(_validEntitlementRequest.ApplicationId));
+                result.Errors.Should().Contain(e => e.Contains(_validVerificationRequest.ApplicationId));
             }
 
             [Fact]
             public void WhenEntitlementContainsMultipleApplicationsIncludingTheRequestedApplication_ReturnsSuccess()
             {
-                var entitlement = _completeEntitlement.WithApplications(
-                    _validEntitlementRequest.ApplicationId, _otherApp1, _otherApp2);
-                var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
-                var result = verifier.Verify(_validEntitlementRequest, _testToken);
+                var tokenProperties = _completeTokenProperties.WithApplications(
+                    _validVerificationRequest.ApplicationId, _otherApp1, _otherApp2);
+                var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
+                var verifier = new TokenVerifier(parser);
+                var result = verifier.Verify(_validVerificationRequest, _testToken);
                 result.HasValue.Should().BeTrue();
             }
         }
 
-        public class VerifyIpAddress : EntitlementVerifierTests
+        public class VerifyIpAddress : TokenVerifierTests
         {
             private readonly IPAddress _otherAddress1 = IPAddress.Parse("203.0.113.42");
             private readonly IPAddress _otherAddress2 = IPAddress.Parse("203.0.113.43");
@@ -158,54 +158,54 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             [Fact]
             public void WhenEntitlementContainsNoIpAddresses_ReturnsError()
             {
-                var entitlement = _completeEntitlement.WithIpAddresses();
-                var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
-                var result = verifier.Verify(_validEntitlementRequest, _testToken);
+                var tokenProperties = _completeTokenProperties.WithIpAddresses();
+                var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
+                var verifier = new TokenVerifier(parser);
+                var result = verifier.Verify(_validVerificationRequest, _testToken);
                 result.HasValue.Should().BeFalse();
-                result.Errors.Should().Contain(e => e.Contains(_validEntitlementRequest.IpAddress.ToString()));
+                result.Errors.Should().Contain(e => e.Contains(_validVerificationRequest.IpAddress.ToString()));
             }
 
             [Fact]
             public void WhenEntitlementContainsOnlyTheRequestedIpAddress_ReturnsSuccess()
             {
-                var entitlement = _completeEntitlement.WithIpAddresses(_validEntitlementRequest.IpAddress);
-                var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
-                var result = verifier.Verify(_validEntitlementRequest, _testToken);
+                var tokenProperties = _completeTokenProperties.WithIpAddresses(_validVerificationRequest.IpAddress);
+                var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
+                var verifier = new TokenVerifier(parser);
+                var result = verifier.Verify(_validVerificationRequest, _testToken);
                 result.HasValue.Should().BeTrue();
             }
 
             [Fact]
             public void WhenEntitlementContainsOnlyADifferentIpAddress_ReturnsError()
             {
-                var entitlement = _completeEntitlement.WithIpAddresses(_otherAddress1);
-                var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
-                var result = verifier.Verify(_validEntitlementRequest, _testToken);
+                var tokenProperties = _completeTokenProperties.WithIpAddresses(_otherAddress1);
+                var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
+                var verifier = new TokenVerifier(parser);
+                var result = verifier.Verify(_validVerificationRequest, _testToken);
                 result.HasValue.Should().BeFalse();
-                result.Errors.Should().Contain(e => e.Contains(_validEntitlementRequest.IpAddress.ToString()));
+                result.Errors.Should().Contain(e => e.Contains(_validVerificationRequest.IpAddress.ToString()));
             }
 
             [Fact]
             public void WhenEntitlementContainsMultipleIpAddressesButNotTheRequestedOne_ReturnsError()
             {
-                var entitlement = _completeEntitlement.WithIpAddresses(_otherAddress1, _otherAddress2);
-                var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
-                var result = verifier.Verify(_validEntitlementRequest, _testToken);
+                var tokenProperties = _completeTokenProperties.WithIpAddresses(_otherAddress1, _otherAddress2);
+                var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
+                var verifier = new TokenVerifier(parser);
+                var result = verifier.Verify(_validVerificationRequest, _testToken);
                 result.HasValue.Should().BeFalse();
-                result.Errors.Should().Contain(e => e.Contains(_validEntitlementRequest.IpAddress.ToString()));
+                result.Errors.Should().Contain(e => e.Contains(_validVerificationRequest.IpAddress.ToString()));
             }
 
             [Fact]
             public void WhenEntitlementContainsMultipleIpAddressesIncludingTheRequestedOne_ReturnsSuccess()
             {
-                var entitlement = _completeEntitlement.WithIpAddresses(
-                    _validEntitlementRequest.IpAddress, _otherAddress1, _otherAddress2);
-                var parser = new FakeEntitlementParser(_testToken, entitlement);
-                var verifier = new EntitlementVerifier(parser);
-                var result = verifier.Verify(_validEntitlementRequest, _testToken);
+                var tokenProperties = _completeTokenProperties.WithIpAddresses(
+                    _validVerificationRequest.IpAddress, _otherAddress1, _otherAddress2);
+                var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
+                var verifier = new TokenVerifier(parser);
+                var result = verifier.Verify(_validVerificationRequest, _testToken);
                 result.HasValue.Should().BeTrue();
             }
         }
@@ -213,14 +213,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         /// <summary>
         /// Tests to check that enforcement works end to end with both signing and encryption
         /// </summary>
-        public class WithSigningAndEncryption : EntitlementVerifierTests
+        public class WithSigningAndEncryption : TokenVerifierTests
         {
             [Fact]
             public void GivenValidEntitlement_ReturnsSuccess()
             {
-                var verifier = CreateSignedEncryptedJwtEntitlementVerifier(_completeEntitlement.Audience, _completeEntitlement.Issuer);
-                var token = CreateSignedEncryptedJwtToken(_completeEntitlement);
-                var result = verifier.Verify(_validEntitlementRequest, token);
+                var verifier = CreateSignedEncryptedJwtTokenVerifier(_completeTokenProperties.Audience, _completeTokenProperties.Issuer);
+                var token = CreateSignedEncryptedJwtToken(_completeTokenProperties);
+                var result = verifier.Verify(_validVerificationRequest, token);
                 result.HasValue.Should().BeTrue();
             }
         }
@@ -228,20 +228,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         /// <summary>
         /// Tests to check that enforcement works end to end with no signing key 
         /// </summary>
-        public class WithEncryptionOnly : EntitlementVerifierTests
+        public class WithEncryptionOnly : TokenVerifierTests
         {
             [Fact]
             public void GivenValidEntitlement_ReturnsSuccess()
             {
-                var verifier = CreateJwtEntitlementVerifier(
-                    _completeEntitlement.Audience,
-                    _completeEntitlement.Issuer,
+                var verifier = CreateJwtTokenVerifier(
+                    _completeTokenProperties.Audience,
+                    _completeTokenProperties.Issuer,
                     signingKey: null,
                     encryptingKey: _encryptingCredentials.Key);
 
-                var token = CreateJwtToken(_completeEntitlement, signingCredentials: null, encryptingCredentials: _encryptingCredentials);
+                var token = CreateJwtToken(_completeTokenProperties, signingCredentials: null, encryptingCredentials: _encryptingCredentials);
 
-                var result = verifier.Verify(_validEntitlementRequest, token);
+                var result = verifier.Verify(_validVerificationRequest, token);
                 result.HasValue.Should().BeTrue();
             }
         }
@@ -249,20 +249,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         /// <summary>
         /// Tests to check that enforcement works end to end with no encryption key 
         /// </summary>
-        public class WithSigningOnly : EntitlementVerifierTests
+        public class WithSigningOnly : TokenVerifierTests
         {
             [Fact]
             public void GivenValidEntitlement_ReturnsSuccess()
             {
-                var verifier = CreateJwtEntitlementVerifier(
-                    _completeEntitlement.Audience,
-                    _completeEntitlement.Issuer,
+                var verifier = CreateJwtTokenVerifier(
+                    _completeTokenProperties.Audience,
+                    _completeTokenProperties.Issuer,
                     signingKey: _signingCredentials.Key,
                     encryptingKey: null);
 
-                var token = CreateJwtToken(_completeEntitlement, signingCredentials: _signingCredentials, encryptingCredentials: null);
+                var token = CreateJwtToken(_completeTokenProperties, signingCredentials: _signingCredentials, encryptingCredentials: null);
 
-                var result = verifier.Verify(_validEntitlementRequest, token);
+                var result = verifier.Verify(_validVerificationRequest, token);
                 result.HasValue.Should().BeTrue();
             }
         }
@@ -270,25 +270,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         /// <summary>
         /// Tests to check that enforcement works end to end without signing or encryption
         /// </summary>
-        public class WithoutSigningOrEncryption : EntitlementVerifierTests
+        public class WithoutSigningOrEncryption : TokenVerifierTests
         {
             [Fact]
             public void GivenValidEntitlement_ReturnsSuccess()
             {
-                var verifier = CreateJwtEntitlementVerifier(
-                    _completeEntitlement.Audience,
-                    _completeEntitlement.Issuer,
+                var verifier = CreateJwtTokenVerifier(
+                    _completeTokenProperties.Audience,
+                    _completeTokenProperties.Issuer,
                     signingKey: null,
                     encryptingKey: null);
 
-                var token = CreateJwtToken(_completeEntitlement, signingCredentials: null, encryptingCredentials: null);
+                var token = CreateJwtToken(_completeTokenProperties, signingCredentials: null, encryptingCredentials: null);
 
-                var result = verifier.Verify(_validEntitlementRequest, token);
+                var result = verifier.Verify(_validVerificationRequest, token);
                 result.HasValue.Should().BeTrue();
             }
         }
 
-        public class WithCertificates : EntitlementVerifierTests
+        public class WithCertificates : TokenVerifierTests
         {
             [Theory(Skip = "Specify a certificate thumbprint in TestCaseKeys() to enable this test.")]
             [MemberData(nameof(TestCaseKeys))]
@@ -297,14 +297,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 // Arrange
                 var signingCredentials = new SigningCredentials(key, SecurityAlgorithms.RsaSha512Signature);
                 var generator = new TokenGenerator(_nullLogger, signingCredentials, encryptingCredentials: null);
-                var verifier = CreateJwtEntitlementVerifier(
-                    _completeEntitlement.Audience,
-                    _completeEntitlement.Issuer,
+                var verifier = CreateJwtTokenVerifier(
+                    _completeTokenProperties.Audience,
+                    _completeTokenProperties.Issuer,
                     signingKey : key,
                     encryptingKey: null);
                 // Act
-                var token = generator.Generate(_completeEntitlement);
-                var result = verifier.Verify(_validEntitlementRequest, token);
+                var token = generator.Generate(_completeTokenProperties);
+                var result = verifier.Verify(_validVerificationRequest, token);
                 // Assert
                 result.HasValue.Should().BeTrue();
                 result.Errors.Should().BeEmpty();
@@ -317,14 +317,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 // Arrange
                 var encryptingCredentials = new EncryptingCredentials(key, SecurityAlgorithms.RsaOAEP, SecurityAlgorithms.Aes256CbcHmacSha512);
                 var generator = new TokenGenerator(_nullLogger, signingCredentials: null, encryptingCredentials: encryptingCredentials);
-                var verifier = CreateJwtEntitlementVerifier(
-                    _completeEntitlement.Audience,
-                    _completeEntitlement.Issuer,
+                var verifier = CreateJwtTokenVerifier(
+                    _completeTokenProperties.Audience,
+                    _completeTokenProperties.Issuer,
                     signingKey: null,
                     encryptingKey: key);
                 // Act
-                var token = generator.Generate(_completeEntitlement);
-                var result = verifier.Verify(_validEntitlementRequest, token);
+                var token = generator.Generate(_completeTokenProperties);
+                var result = verifier.Verify(_validVerificationRequest, token);
                 // Assert
                 result.HasValue.Should().BeTrue();
                 result.Errors.Should().BeEmpty();
