@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
@@ -84,11 +85,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <returns>Sequence of certificates (possibly empty).</returns>
         private static IList<X509Certificate2> FindAll(StoreName storeName, StoreLocation storeLocation)
         {
-            using (var store = new X509Store(storeName, storeLocation))
+            try
             {
-                store.Open(OpenFlags.ReadOnly);
-                var found = store.Certificates.Cast<X509Certificate2>().ToList();
-                return found;
+                using (var store = new X509Store(storeName, storeLocation))
+                {
+                    store.Open(OpenFlags.ReadOnly);
+                    var found = store.Certificates.Cast<X509Certificate2>().ToList();
+                    return found;
+                }
+            }
+            catch (Exception ex) when (IsExpectedOnLinux(ex))
+            {
+                // Some store locations not supported on Linux, just return null
+                return new List<X509Certificate2>();
             }
         }
 
@@ -145,13 +154,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                     var found = store.Certificates.Find(thumbprint);
                     return found.SingleOrDefault();
                 }
-
             }
-            catch (PlatformNotSupportedException)
+            catch (Exception ex) when (IsExpectedOnLinux(ex))
             {
                 // Some store locations not supported on Linux, just return null
                 return null;
             }
         }
+
+        /// <summary>
+        /// Test to see if a given exception is one we expect to encounter when running on Linux
+        /// </summary>
+        /// <param name="ex">The exception to test.</param>
+        /// <returns>True if expected; false otherwise.</returns>
+        private static bool IsExpectedOnLinux(Exception ex)
+            => ex is PlatformNotSupportedException
+               || ex is CryptographicException;
     }
 }
