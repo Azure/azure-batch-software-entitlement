@@ -1,5 +1,7 @@
 using System.IO;
+using System.Linq;
 using System.Net;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Security.Cryptography.X509Certificates;
 using Microsoft.AspNetCore.Hosting;
@@ -90,12 +92,29 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 ServerCertificate = _options.ConnectionCertificate
             };
 
-            foreach (var address in addresses)
+            foreach (var address in addresses.Where(CanBind))
             {
                 serverOptions.Listen(
                     address,
                     _options.ServerUrl.Port,
                     listenOptions => listenOptions.UseHttps(httpsOptions));
+            }
+        }
+
+        private static bool CanBind(IPAddress ipAddress)
+        {
+            try
+            {
+                using (var host = new Socket(ipAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp))
+                {
+                    host.Bind(new IPEndPoint(ipAddress, 0));
+                }
+
+                return true;
+            }
+            catch (SocketException ex) when (ex.SocketErrorCode == SocketError.AddressNotAvailable)
+            {
+                return false;
             }
         }
 
