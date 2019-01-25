@@ -39,10 +39,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             var certificateStore = new CertificateStore();
-            var allCertificates = certificateStore.FindAll();
-            var query = allCertificates.Where(c => c.HasPrivateKey && c.RawData != null)
+            var candidates = certificateStore.FindAll()
+                .Where(c => c.HasPrivateKey && c.RawData != null)
                 .ToList();
-            Logger.LogInformation("Found {Count} certificates with private keys", query.Count);
+            Logger.LogInformation("Found {Count} certificates with private keys", candidates.Count);
 
             if (showCerts.Value == ShowCertificates.All
                 || showCerts.Value == ShowCertificates.ForEncrypting
@@ -51,7 +51,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             {
                 LogCertificates(
                     "Found {0} non-expired certificates with private keys that allow both encryption and signing",
-                    query.Where(c => now < c.NotAfter
+                    candidates.Where(c => now < c.NotAfter
                                      && c.SupportsUse(X509KeyUsageFlags.DigitalSignature)
                                      && c.SupportsUse(X509KeyUsageFlags.DataEncipherment)));
             }
@@ -61,10 +61,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 || showCerts.Value == ShowCertificates.NonExpired)
             {
                 LogCertificates(
-                "Found {0} non-expired certificates with private keys that allow signing but not encryption",
-                query.Where(c => now < c.NotAfter
-                                 && c.SupportsUse(X509KeyUsageFlags.DigitalSignature)
-                                 && !c.SupportsUse(X509KeyUsageFlags.DataEncipherment)));
+                    "Found {0} non-expired certificates with private keys that allow signing but not encryption",
+                    candidates.Where(c => now < c.NotAfter
+                                     && c.SupportsUse(X509KeyUsageFlags.DigitalSignature)
+                                     && !c.SupportsUse(X509KeyUsageFlags.DataEncipherment)));
             }
 
             if (showCerts.Value == ShowCertificates.All
@@ -72,27 +72,27 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 || showCerts.Value == ShowCertificates.NonExpired)
             {
                 LogCertificates(
-                "Found {0} non-expired certificates with private keys that allow encryption but not signing",
-                query.Where(c => now < c.NotAfter
-                                 && !c.SupportsUse(X509KeyUsageFlags.DigitalSignature)
-                                 && c.SupportsUse(X509KeyUsageFlags.DataEncipherment)));
+                    "Found {0} non-expired certificates with private keys that allow encryption but not signing",
+                    candidates.Where(c => now < c.NotAfter
+                                     && !c.SupportsUse(X509KeyUsageFlags.DigitalSignature)
+                                     && c.SupportsUse(X509KeyUsageFlags.DataEncipherment)));
             }
 
             if (showCerts.Value == ShowCertificates.All
                 || showCerts.Value == ShowCertificates.NonExpired)
             {
                 LogCertificates(
-                  "Found {0} non-expired certificates with private keys that allow neither encryption nor signing",
-                  query.Where(c => now < c.NotAfter
-                                   && !c.SupportsUse(X509KeyUsageFlags.DigitalSignature)
-                                   && !c.SupportsUse(X509KeyUsageFlags.DataEncipherment)));
+                    "Found {0} non-expired certificates with private keys that allow neither encryption nor signing",
+                    candidates.Where(c => now < c.NotAfter
+                                     && !c.SupportsUse(X509KeyUsageFlags.DigitalSignature)
+                                     && !c.SupportsUse(X509KeyUsageFlags.DataEncipherment)));
             }
 
             if (showCerts.Value == ShowCertificates.All)
             {
                 LogCertificates(
                     "Found {0} expired certificates",
-                    query.Where(c => now >= c.NotAfter));
+                    candidates.Where(c => now >= c.NotAfter));
             }
 
             return Task.FromResult(0);
@@ -170,7 +170,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         private enum ShowCertificates
         {
             NonExpired = 1,
-            ForSigning =2,
+            ForSigning = 2,
             ForEncrypting = 4,
             Expired = 8,
             All = NonExpired | Expired | ForSigning | ForEncrypting
