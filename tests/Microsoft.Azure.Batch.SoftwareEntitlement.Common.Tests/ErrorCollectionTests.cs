@@ -17,7 +17,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenSingleError_ReturnsSingleResult()
             {
-                var result = ErrorCollection.CreateWithErrors("Error");
+                var result = ErrorCollection.Create("Error");
                 result.Count().Should().Be(1);
                 result.First().Should().Be("Error");
             }
@@ -25,21 +25,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenNullString_ThrowsException()
             {
-                var exception = Assert.Throws<ArgumentNullException>(() => ErrorCollection.CreateWithErrors(NullString));
+                var exception = Assert.Throws<ArgumentNullException>(() => ErrorCollection.Create(NullString));
                 exception.ParamName.Should().Be("error");
             }
 
             [Fact]
             public void GivenNullEnumerable_ThrowsException()
             {
-                var exception = Assert.Throws<ArgumentNullException>(() => ErrorCollection.CreateWithErrors(NullCollection));
+                var exception = Assert.Throws<ArgumentNullException>(() => ErrorCollection.Create(NullCollection));
                 exception.ParamName.Should().Be("errors");
             }
 
             [Fact]
             public void GivenListOfSingleValue_ReturnsSingleResult()
             {
-                var result = ErrorCollection.CreateWithErrors(new List<string> { "Error" });
+                var result = ErrorCollection.Create(new List<string> { "Error" });
                 result.Count().Should().Be(1);
                 result.First().Should().Be("Error");
             }
@@ -47,7 +47,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenListOfTwoValues_ReturnsTwoResults()
             {
-                var result = ErrorCollection.CreateWithErrors(new List<string> { "Error1", "Error2" });
+                var result = ErrorCollection.Create(new List<string> { "Error1", "Error2" });
                 result.Count().Should().Be(2);
                 result.Should().Contain("Error1");
                 result.Should().Contain("Error2");
@@ -56,7 +56,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenDuplicateValues_ReturnsOnlyOne()
             {
-                var result = ErrorCollection.CreateWithErrors("Error", "Error");
+                var result = ErrorCollection.Create("Error", "Error");
                 result.Count().Should().Be(1);
                 result.Should().Contain("Error");
             }
@@ -67,17 +67,17 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void CreatesEmptyCollection()
             {
-                var result = ErrorCollection.CreateEmpty();
+                var result = ErrorCollection.Empty;
                 result.Count().Should().Be(0);
             }
         }
 
         public class Combine : ErrorCollectionTests
         {
-            private static readonly ErrorCollection Empty = ErrorCollection.CreateEmpty();
+            private static readonly ErrorCollection Empty = ErrorCollection.Empty;
             private static readonly ErrorCollection Null = null;
-            private static readonly ErrorCollection SingleItem = ErrorCollection.CreateWithErrors("S1");
-            private static readonly ErrorCollection TwoItems = ErrorCollection.CreateWithErrors("T1", "T2");
+            private static readonly ErrorCollection SingleItem = ErrorCollection.Create("S1");
+            private static readonly ErrorCollection TwoItems = ErrorCollection.Create("T1", "T2");
 
             [Fact]
             public void WithNull_ThrowsException()

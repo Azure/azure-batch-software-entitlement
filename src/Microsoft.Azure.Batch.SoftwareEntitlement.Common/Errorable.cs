@@ -16,9 +16,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         public static Errorable<T> Success<T>(T value)
             => Errorable<T>.CreateSuccess(value);
 
-        public static Errorable<T> Failure<T>(ErrorCollection errors)
-            => Errorable<T>.CreateFailure(errors);
-
         /// <summary>
         /// Create a value that represents a failed operation
         /// </summary>
@@ -52,15 +49,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         }
 
         public static Errorable<T> CreateSuccess(T value) =>
-            new Errorable<T>(value, ErrorCollection.CreateEmpty(), true);
+            new Errorable<T>(value, ErrorCollection.Empty, true);
 
         public static Errorable<T> CreateFailure(ErrorCollection errors) =>
             new Errorable<T>(default, errors, false);
 
         public static Errorable<T> CreateFailure(IEnumerable<string> errors) =>
-            new Errorable<T>(default, ErrorCollection.CreateWithErrors(errors), false);
+            new Errorable<T>(default, ErrorCollection.Create(errors), false);
 
         public static Errorable<T> CreateFailure(string error, params string[] errors) =>
-            new Errorable<T>(default, ErrorCollection.CreateWithErrors(error, errors), false);
+            new Errorable<T>(default, ErrorCollection.Create(error, errors), false);
     }
 }
