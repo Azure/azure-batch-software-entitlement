@@ -32,7 +32,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Gets the moment at which the token is issued from the 'iat' claim on the JWT.
         /// </summary>
-        public Errorable<DateTimeOffset> IssuedAt()
+        public Result<DateTimeOffset, ErrorCollection> IssuedAt()
         {
             var iat = _jwt.Payload.Iat;
             if (!iat.HasValue)
@@ -46,20 +46,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Gets the earliest moment at which the token is active from the 'nbf' claim on the JWT.
         /// </summary>
-        public Errorable<DateTimeOffset> NotBefore()
+        public Result<DateTimeOffset, ErrorCollection> NotBefore()
             => Errorable.Success(new DateTimeOffset(_jwt.ValidFrom));
 
         /// <summary>
         /// Gets the latest moment at which the token is active from the 'exp' claim on the JWT.
         /// </summary>
-        public Errorable<DateTimeOffset> NotAfter()
+        public Result<DateTimeOffset, ErrorCollection> NotAfter()
             => Errorable.Success(new DateTimeOffset(_jwt.ValidTo));
 
         /// <summary>
         /// Gets the audience for whom the token is intended from the 'aud' claim on the JWT, or
         /// an error if there are zero or many such claims.
         /// </summary>
-        public Errorable<string> Audience()
+        public Result<string, ErrorCollection> Audience()
         {
             // We don't expect multiple audiences to appear in the token
             var audiences = _jwt.Audiences?.ToList();
@@ -79,13 +79,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Gets the issuer who hands out token tokens from the 'iss' claim on the JWT.
         /// </summary>
-        public Errorable<string> Issuer()
+        public Result<string, ErrorCollection> Issuer()
             => Errorable.Success(_jwt.Issuer);
 
         /// <summary>
         /// Gets the set of applications that are entitled to run from the claims in the principal.
         /// </summary>
-        public Errorable<IEnumerable<string>> ApplicationIds()
+        public Result<IEnumerable<string>, ErrorCollection> ApplicationIds()
         {
             var applicationIds = ReadAll(Claims.Application);
             if (!applicationIds.Any())
@@ -99,20 +99,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Gets the IP addresses of the machine authorized to use this token from the claims in the principal.
         /// </summary>
-        public Errorable<IEnumerable<IPAddress>> IpAddresses()
-            => ReadAll(Claims.IpAddress).Select(ParseIpAddress).Reduce().AsErrorable();
+        public Result<IEnumerable<IPAddress>, ErrorCollection> IpAddresses()
+            => ReadAll(Claims.IpAddress).Select(ParseIpAddress).Reduce();
 
         /// <summary>
         /// Gets the virtual machine identifier for the machine entitled to use the specified packages from a claim
         /// in the principal.
         /// </summary>
-        public Errorable<string> VirtualMachineId()
+        public Result<string, ErrorCollection> VirtualMachineId()
             => Errorable.Success(Read(Claims.VirtualMachineId));
 
         /// <summary>
         /// Gets the unique identifier for the token from a claim in the principal.
         /// </summary>
-        public Errorable<string> TokenId()
+        public Result<string, ErrorCollection> TokenId()
         {
             var entitlementId = Read(Claims.TokenId);
             if (string.IsNullOrEmpty(entitlementId))
@@ -123,7 +123,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return Errorable.Success(entitlementId);
         }
 
-        private static Errorable<IPAddress> ParseIpAddress(string value)
+        private static Result<IPAddress, ErrorCollection> ParseIpAddress(string value)
         {
             return IPAddress.TryParse(value, out var parsedAddress)
                 ? Errorable.Success(parsedAddress)

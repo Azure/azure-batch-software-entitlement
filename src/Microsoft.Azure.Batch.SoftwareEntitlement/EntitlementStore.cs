@@ -18,7 +18,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 EntitlementProperties.CreateNew(entitlementId, tokenProperties, acquisitionTime),
                 (e, props) => props);
 
-        public Errorable<EntitlementProperties> FindEntitlement(string entitlementId)
+        public Result<EntitlementProperties, ErrorCollection> FindEntitlement(string entitlementId)
         {
             if (!_entitlements.TryGetValue(entitlementId, out var entitlementProperties))
             {
@@ -28,7 +28,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return Errorable.Success(entitlementProperties);
         }
 
-        public Errorable<EntitlementProperties> RenewEntitlement(
+        public Result<EntitlementProperties, ErrorCollection> RenewEntitlement(
             string entitlementId,
             DateTime renewalTime) =>
             TryUpdate(
@@ -36,7 +36,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 props => props.WithRenewal(renewalTime),
                 $"Unable to store renewal event for {entitlementId}");
 
-        public Errorable<EntitlementProperties> ReleaseEntitlement(
+        public Result<EntitlementProperties, ErrorCollection> ReleaseEntitlement(
             string entitlementId,
             DateTime releaseTime) =>
             TryUpdate(
@@ -44,7 +44,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 props => props.WithRelease(releaseTime),
                 $"Unable to store release event for {entitlementId}");
 
-        private Errorable<EntitlementProperties> TryUpdate(
+        private Result<EntitlementProperties, ErrorCollection> TryUpdate(
             string entitlementId,
             Func<EntitlementProperties, EntitlementProperties> updater,
             string errorMessage)

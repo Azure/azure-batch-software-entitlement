@@ -183,7 +183,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
         }
 
-        private static Errorable<LogLevel> TryParseLogLevel(string level, string purpose, LogLevel defaultLevel)
+        private static Result<LogLevel, ErrorCollection> TryParseLogLevel(string level, string purpose, LogLevel defaultLevel)
         {
             if (string.IsNullOrEmpty(level))
             {

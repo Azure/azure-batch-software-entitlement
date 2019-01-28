@@ -517,22 +517,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         }
 
         /// <summary>
-        /// Converts a <see cref="Result{TOk,ErrorCollection}"/> to an equivalent <see cref="Errorable{TOk}"/>
-        /// </summary>
-        public static Errorable<TOk> AsErrorable<TOk>(this Result<TOk, ErrorCollection> result)
-        {
-            if (result == null)
-            {
-                throw new ArgumentNullException(nameof(result));
-            }
-
-            return result.Match(
-                fromOk: Errorable<TOk>.CreateSuccess,
-                fromError: Errorable<TOk>.CreateFailure
-            );
-        }
-
-        /// <summary>
         /// Convert a collection of <see cref="Result{TOk,TError}"/> into an <see cref="Result{TOk,TError}"/>
         /// which contains all the items if they were all OK, or all the errors if there were any.
         /// </summary>

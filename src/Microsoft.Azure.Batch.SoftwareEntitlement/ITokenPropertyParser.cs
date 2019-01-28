@@ -14,9 +14,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="token">A string token</param>
         /// <returns>
-        /// An <see cref="Errorable{TokenProperties}"/> containing the result, or an
+        /// An <see cref="Result{TokenProperties,ErrorCollection}"/> containing the result, or an
         /// error if it failed to validate correctly.
         /// </returns>
-        Errorable<EntitlementTokenProperties> Parse(string token);
+        Result<EntitlementTokenProperties, ErrorCollection> Parse(string token);
     }
 }

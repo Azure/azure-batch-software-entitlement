@@ -66,8 +66,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             IpAddresses = ImmutableHashSet<IPAddress>.Empty;
         }
 
-        public static Errorable<EntitlementTokenProperties> Build(ITokenPropertyProvider provider) =>
-            (
+        public static Result<EntitlementTokenProperties, ErrorCollection> Build(ITokenPropertyProvider provider) =>
             from props in Errorable.Success(new EntitlementTokenProperties())
             join notBefore in provider.NotBefore() on true equals true
             join notAfter in provider.NotAfter() on true equals true
@@ -87,8 +86,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 .WithApplications(applicationIds)
                 .WithIpAddresses(ipAddresses)
                 .WithVirtualMachineId(vmid)
-                .WithIdentifier(tokenId)
-            ).AsErrorable();
+                .WithIdentifier(tokenId);
 
         /// <summary>
         /// Specify the virtual machine Id of the machine

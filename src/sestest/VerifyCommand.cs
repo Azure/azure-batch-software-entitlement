@@ -113,7 +113,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return handler;
         }
 
-        private Errorable<string> FindToken(VerifyCommandLine commandLine)
+        private Result<string, ErrorCollection> FindToken(VerifyCommandLine commandLine)
         {
             var token = commandLine.Token;
             if (string.IsNullOrEmpty(token))
@@ -130,7 +130,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return Errorable.Success(token);
         }
 
-        private static Errorable<string> FindApplication(VerifyCommandLine commandLine)
+        private static Result<string, ErrorCollection> FindApplication(VerifyCommandLine commandLine)
         {
             var application = commandLine.Application;
             if (string.IsNullOrEmpty(application))
@@ -141,7 +141,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return Errorable.Success(application);
         }
 
-        private Errorable<Uri> FindServer(VerifyCommandLine commandLine)
+        private Result<Uri, ErrorCollection> FindServer(VerifyCommandLine commandLine)
         {
             var server = commandLine.Server;
             if (string.IsNullOrEmpty(server))
@@ -165,7 +165,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
         }
 
-        private static Errorable<string> FindApiVersion(VerifyCommandLine commandLine)
+        private static Result<string, ErrorCollection> FindApiVersion(VerifyCommandLine commandLine)
         {
             var version = commandLine.ApiVersion;
             if (string.IsNullOrEmpty(version))

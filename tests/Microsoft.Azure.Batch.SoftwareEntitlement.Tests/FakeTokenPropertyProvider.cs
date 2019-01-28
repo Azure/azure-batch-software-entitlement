@@ -8,57 +8,72 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 {
     public sealed class FakeTokenPropertyProvider : ITokenPropertyProvider
     {
-        public static FakeTokenPropertyProvider CreateValid()
+        public static FakeTokenPropertyProvider CreateValid(DateTimeOffset? issuedAt = null)
         {
-            var now = DateTimeOffset.Now;
+            issuedAt = issuedAt ?? DateTimeOffset.Now;
             return new FakeTokenPropertyProvider
             {
-                ApplicationIds = Errorable.Success(new[] { "contosoapp" }.AsEnumerable()),
-                Audience = Errorable.Success("https://audience.region.batch.azure.test"),
-                TokenId = Errorable.Success("token-fbacd5f2-0bce-46db-a374-2682c975d95d"),
-                IpAddresses = Errorable.Success(new List<IPAddress> { IPAddress.Parse("127.0.0.1") }.AsEnumerable()),
-                IssuedAt = Errorable.Success(now),
-                Issuer = Errorable.Success("https://issuer.region.batch.azure.test"),
-                NotAfter = Errorable.Success(now + TimeSpan.FromDays(7)),
-                NotBefore = Errorable.Success(now),
-                VirtualMachineId = Errorable.Success("Sample")
+                ApplicationIds = Errorable.Success(DefaultApplicationIds),
+                Audience = Errorable.Success(DefaultAudience),
+                TokenId = Errorable.Success(DefaultTokenId),
+                IpAddresses = Errorable.Success(DefaultIpAddresses),
+                IssuedAt = Errorable.Success(issuedAt.Value),
+                Issuer = Errorable.Success(DefaultIssuer),
+                NotAfter = Errorable.Success(issuedAt.Value + DefaultLifetime),
+                NotBefore = Errorable.Success(issuedAt.Value),
+                VirtualMachineId = Errorable.Success(DefaultVirtualMachineId)
             };
         }
 
-        public Errorable<IEnumerable<string>> ApplicationIds { get; set; }
+        public static readonly IEnumerable<string> DefaultApplicationIds = new[] {"contosoapp"}.AsEnumerable();
 
-        public Errorable<string> Audience { get; set; }
+        public static readonly string DefaultAudience = "https://audience.region.batch.azure.test";
 
-        public Errorable<string> TokenId { get; set; }
+        public static readonly string DefaultTokenId = "token-fbacd5f2-0bce-46db-a374-2682c975d95d";
 
-        public Errorable<IEnumerable<IPAddress>> IpAddresses { get; set; }
+        public static readonly IEnumerable<IPAddress> DefaultIpAddresses =
+            new List<IPAddress> {IPAddress.Parse("127.0.0.1")}.AsEnumerable();
 
-        public Errorable<DateTimeOffset> IssuedAt { get; set; }
+        public static readonly string DefaultIssuer = "https://issuer.region.batch.azure.test";
 
-        public Errorable<string> Issuer { get; set; }
+        public static readonly string DefaultVirtualMachineId = "Sample";
 
-        public Errorable<DateTimeOffset> NotAfter { get; set; }
+        public static readonly TimeSpan DefaultLifetime = TimeSpan.FromDays(7);
 
-        public Errorable<DateTimeOffset> NotBefore { get; set; }
+        public Result<IEnumerable<string>, ErrorCollection> ApplicationIds { get; set; }
 
-        public Errorable<string> VirtualMachineId { get; set; }
+        public Result<string, ErrorCollection> Audience { get; set; }
 
-        Errorable<IEnumerable<string>> ITokenPropertyProvider.ApplicationIds() => ApplicationIds;
+        public Result<string, ErrorCollection> TokenId { get; set; }
 
-        Errorable<string> ITokenPropertyProvider.Audience() => Audience;
+        public Result<IEnumerable<IPAddress>, ErrorCollection> IpAddresses { get; set; }
 
-        Errorable<string> ITokenPropertyProvider.TokenId() => TokenId;
+        public Result<DateTimeOffset, ErrorCollection> IssuedAt { get; set; }
 
-        Errorable<IEnumerable<IPAddress>> ITokenPropertyProvider.IpAddresses() => IpAddresses;
+        public Result<string, ErrorCollection> Issuer { get; set; }
 
-        Errorable<DateTimeOffset> ITokenPropertyProvider.IssuedAt() => IssuedAt;
+        public Result<DateTimeOffset, ErrorCollection> NotAfter { get; set; }
 
-        Errorable<string> ITokenPropertyProvider.Issuer() => Issuer;
+        public Result<DateTimeOffset, ErrorCollection> NotBefore { get; set; }
 
-        Errorable<DateTimeOffset> ITokenPropertyProvider.NotAfter() => NotAfter;
+        public Result<string, ErrorCollection> VirtualMachineId { get; set; }
 
-        Errorable<DateTimeOffset> ITokenPropertyProvider.NotBefore() => NotBefore;
+        Result<IEnumerable<string>, ErrorCollection> ITokenPropertyProvider.ApplicationIds() => ApplicationIds;
 
-        Errorable<string> ITokenPropertyProvider.VirtualMachineId() => VirtualMachineId;
+        Result<string, ErrorCollection> ITokenPropertyProvider.Audience() => Audience;
+
+        Result<string, ErrorCollection> ITokenPropertyProvider.TokenId() => TokenId;
+
+        Result<IEnumerable<IPAddress>, ErrorCollection> ITokenPropertyProvider.IpAddresses() => IpAddresses;
+
+        Result<DateTimeOffset, ErrorCollection> ITokenPropertyProvider.IssuedAt() => IssuedAt;
+
+        Result<string, ErrorCollection> ITokenPropertyProvider.Issuer() => Issuer;
+
+        Result<DateTimeOffset, ErrorCollection> ITokenPropertyProvider.NotAfter() => NotAfter;
+
+        Result<DateTimeOffset, ErrorCollection> ITokenPropertyProvider.NotBefore() => NotBefore;
+
+        Result<string, ErrorCollection> ITokenPropertyProvider.VirtualMachineId() => VirtualMachineId;
     }
 }

@@ -9,7 +9,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
 {
     public static class RequestExtensions
     {
-        public static Errorable<(TokenVerificationRequest Request, string Token)> ExtractVerificationRequest(
+        public static Result<(TokenVerificationRequest Request, string Token), ErrorCollection> ExtractVerificationRequest(
             this IVerificationRequestBody requestBody,
             IPAddress remoteAddress,
             ILogger logger)
@@ -39,7 +39,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
             return Errorable.Success((Request: request, requestBody.Token));
         }
 
-        public static Errorable<TimeSpan> ParseDuration(this string duration)
+        public static Result<TimeSpan, ErrorCollection> ParseDuration(this string duration)
         {
             if (string.IsNullOrEmpty(duration))
             {

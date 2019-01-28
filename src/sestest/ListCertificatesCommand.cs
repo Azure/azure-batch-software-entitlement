@@ -157,7 +157,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             };
         }
 
-        private static Errorable<ShowCertificates> TryParseShow(string show)
+        private static Result<ShowCertificates, ErrorCollection> TryParseShow(string show)
         {
             if (string.IsNullOrEmpty(show))
             {

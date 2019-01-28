@@ -46,7 +46,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             var encryptingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(plainTextEncryptionKey));
             _encryptingCredentials = new EncryptingCredentials(encryptingKey, "dir", SecurityAlgorithms.Aes256CbcHmacSha512);
 
-            _completeTokenProperties = EntitlementTokenProperties.Build(FakeTokenPropertyProvider.CreateValid()).GetValue();
+            _completeTokenProperties = EntitlementTokenProperties.Build(FakeTokenPropertyProvider.CreateValid()).AssertOk();
             _validVerificationRequest = new TokenVerificationRequest(
                 _completeTokenProperties.Applications.First(),
                 _completeTokenProperties.IpAddresses.First());
@@ -102,8 +102,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
                 var verifier = new TokenVerifier(parser);
                 var result = verifier.Verify(_validVerificationRequest, _testToken);
-                result.HasValue().Should().BeFalse();
-                result.GetErrors().Should().Contain(e => e.Contains(_validVerificationRequest.ApplicationId));
+                var errors = result.AssertError();
+                errors.Should().Contain(e => e.Contains(_validVerificationRequest.ApplicationId));
             }
 
             [Fact]
@@ -113,7 +113,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
                 var verifier = new TokenVerifier(parser);
                 var result = verifier.Verify(_validVerificationRequest, _testToken);
-                result.HasValue().Should().BeTrue();
+                result.AssertOk();
             }
 
             [Fact]
@@ -123,8 +123,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
                 var verifier = new TokenVerifier(parser);
                 var result = verifier.Verify(_validVerificationRequest, _testToken);
-                result.HasValue().Should().BeFalse();
-                result.GetErrors().Should().Contain(e => e.Contains(_validVerificationRequest.ApplicationId));
+                var errors = result.AssertError();
+                errors.Should().Contain(e => e.Contains(_validVerificationRequest.ApplicationId));
             }
 
             [Fact]
@@ -134,8 +134,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
                 var verifier = new TokenVerifier(parser);
                 var result = verifier.Verify(_validVerificationRequest, _testToken);
-                result.HasValue().Should().BeFalse();
-                result.GetErrors().Should().Contain(e => e.Contains(_validVerificationRequest.ApplicationId));
+                var errors = result.AssertError();
+                errors.Should().Contain(e => e.Contains(_validVerificationRequest.ApplicationId));
             }
 
             [Fact]
@@ -146,7 +146,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
                 var verifier = new TokenVerifier(parser);
                 var result = verifier.Verify(_validVerificationRequest, _testToken);
-                result.HasValue().Should().BeTrue();
+                result.AssertOk();
             }
         }
 
@@ -162,8 +162,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
                 var verifier = new TokenVerifier(parser);
                 var result = verifier.Verify(_validVerificationRequest, _testToken);
-                result.HasValue().Should().BeFalse();
-                result.GetErrors().Should().Contain(e => e.Contains(_validVerificationRequest.IpAddress.ToString()));
+                var errors = result.AssertError();
+                errors.Should().Contain(e => e.Contains(_validVerificationRequest.IpAddress.ToString()));
             }
 
             [Fact]
@@ -173,7 +173,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
                 var verifier = new TokenVerifier(parser);
                 var result = verifier.Verify(_validVerificationRequest, _testToken);
-                result.HasValue().Should().BeTrue();
+                result.AssertOk();
             }
 
             [Fact]
@@ -183,8 +183,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
                 var verifier = new TokenVerifier(parser);
                 var result = verifier.Verify(_validVerificationRequest, _testToken);
-                result.HasValue().Should().BeFalse();
-                result.GetErrors().Should().Contain(e => e.Contains(_validVerificationRequest.IpAddress.ToString()));
+                var errors = result.AssertError();
+                errors.Should().Contain(e => e.Contains(_validVerificationRequest.IpAddress.ToString()));
             }
 
             [Fact]
@@ -194,8 +194,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
                 var verifier = new TokenVerifier(parser);
                 var result = verifier.Verify(_validVerificationRequest, _testToken);
-                result.HasValue().Should().BeFalse();
-                result.GetErrors().Should().Contain(e => e.Contains(_validVerificationRequest.IpAddress.ToString()));
+                var errors = result.AssertError();
+                errors.Should().Contain(e => e.Contains(_validVerificationRequest.IpAddress.ToString()));
             }
 
             [Fact]
@@ -206,7 +206,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
                 var verifier = new TokenVerifier(parser);
                 var result = verifier.Verify(_validVerificationRequest, _testToken);
-                result.HasValue().Should().BeTrue();
+                result.AssertOk();
             }
         }
 
@@ -221,7 +221,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var verifier = CreateSignedEncryptedJwtTokenVerifier(_completeTokenProperties.Audience, _completeTokenProperties.Issuer);
                 var token = CreateSignedEncryptedJwtToken(_completeTokenProperties);
                 var result = verifier.Verify(_validVerificationRequest, token);
-                result.HasValue().Should().BeTrue();
+                result.AssertOk();
             }
         }
 
@@ -242,7 +242,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var token = CreateJwtToken(_completeTokenProperties, signingCredentials: null, encryptingCredentials: _encryptingCredentials);
 
                 var result = verifier.Verify(_validVerificationRequest, token);
-                result.HasValue().Should().BeTrue();
+                result.AssertOk();
             }
         }
 
@@ -263,7 +263,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var token = CreateJwtToken(_completeTokenProperties, signingCredentials: _signingCredentials, encryptingCredentials: null);
 
                 var result = verifier.Verify(_validVerificationRequest, token);
-                result.HasValue().Should().BeTrue();
+                result.AssertOk();
             }
         }
 
@@ -284,7 +284,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var token = CreateJwtToken(_completeTokenProperties, signingCredentials: null, encryptingCredentials: null);
 
                 var result = verifier.Verify(_validVerificationRequest, token);
-                result.HasValue().Should().BeTrue();
+                result.AssertOk();
             }
         }
 
@@ -306,8 +306,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var token = generator.Generate(_completeTokenProperties);
                 var result = verifier.Verify(_validVerificationRequest, token);
                 // Assert
-                result.HasValue().Should().BeTrue();
-                result.GetErrors().Should().BeEmpty();
+                result.AssertOk();
             }
 
             [Theory(Skip = "Specify a certificate thumbprint in TestCaseKeys() to enable this test.")]
@@ -326,8 +325,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var token = generator.Generate(_completeTokenProperties);
                 var result = verifier.Verify(_validVerificationRequest, token);
                 // Assert
-                result.HasValue().Should().BeTrue();
-                result.GetErrors().Should().BeEmpty();
+                result.AssertOk();
             }
 
             public static IEnumerable<object[]> TestCaseKeys()
@@ -335,13 +333,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 // To use this test, change the next line by entering a thumbprint that exists on the test machine
                 var thumbprint = new CertificateThumbprint("<thumbprint-goes-here>");
                 var store = new CertificateStore();
-                var cert = store.FindByThumbprint("test", thumbprint);
-                if (!cert.HasValue())
-                {
-                    throw new InvalidOperationException(cert.GetErrors().First());
-                }
 
-                var parameters = cert.GetValue().GetRSAPrivateKey().ExportParameters(includePrivateParameters: true);
+                X509Certificate2 ThrowIfNotFound(ErrorCollection errors) =>
+                    throw new InvalidOperationException(errors.First());
+
+                var cert = store.FindByThumbprint("test", thumbprint).OnError(ThrowIfNotFound).AssertOk();
+
+                var parameters = cert.GetRSAPrivateKey().ExportParameters(includePrivateParameters: true);
                 var key = new RsaSecurityKey(parameters);
 
                 yield return new object[] { key };

@@ -35,8 +35,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <returns>Either a usable (and completely valid) <see cref="ServerOptions"/> or a set 
         /// of errors.</returns>
-        public Errorable<ServerOptions> Build() =>
-        (
+        public Result<ServerOptions, ErrorCollection> Build() =>
             from options in Errorable.Success(new ServerOptions())
             join url in ServerUrl() on true equals true
             join connCert in ConnectionCertificate() on true equals true
@@ -52,15 +51,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 .WithEncryptionCertificate(encryptCert)
                 .WithAudience(audience)
                 .WithIssuer(issuer)
-                .WithAutomaticExitAfterOneRequest(exit)
-        ).AsErrorable();
+                .WithAutomaticExitAfterOneRequest(exit);
 
         /// <summary>
         /// Find the server URL for our hosting
         /// </summary>
-        /// <returns>An <see cref="Errorable{Uri}"/> containing either the URL to use or any 
+        /// <returns>An <see cref="Result{Uri,ErrorCollection}"/> containing either the URL to use or any 
         /// relevant errors.</returns>
-        private Errorable<Uri> ServerUrl()
+        private Result<Uri, ErrorCollection> ServerUrl()
         {
             // If the server URL is not specified, default it.
             var serverUrl = string.IsNullOrWhiteSpace(_commandLine.ServerUrl)
@@ -87,7 +85,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Find the certificate to use for HTTPS connections
         /// </summary>
         /// <returns>Certificate, if found; error details otherwise.</returns>
-        private Errorable<X509Certificate2> ConnectionCertificate()
+        private Result<X509Certificate2, ErrorCollection> ConnectionCertificate()
         {
             if (string.IsNullOrEmpty(_commandLine.ConnectionCertificateThumbprint))
             {
@@ -101,7 +99,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Find the certificate to use for signing tokens
         /// </summary>
         /// <returns>Certificate, if found; error details otherwise.</returns>
-        private Errorable<X509Certificate2> SigningCertificate()
+        private Result<X509Certificate2, ErrorCollection> SigningCertificate()
         {
             if (string.IsNullOrEmpty(_commandLine.SigningCertificateThumbprint))
             {
@@ -116,7 +114,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Find the certificate to use for encrypting tokens
         /// </summary>
         /// <returns>Certificate, if found; error details otherwise.</returns>
-        private Errorable<X509Certificate2> EncryptingCertificate()
+        private Result<X509Certificate2, ErrorCollection> EncryptingCertificate()
         {
             if (string.IsNullOrEmpty(_commandLine.EncryptionCertificateThumbprint))
             {
@@ -131,7 +129,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Return the audience required 
         /// </summary>
         /// <returns>Audience from the commandline, if provided; default value otherwise.</returns>
-        private Errorable<string> Audience()
+        private Result<string, ErrorCollection> Audience()
         {
             if (string.IsNullOrEmpty(_commandLine.Audience))
             {
@@ -145,7 +143,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Return the issuer required 
         /// </summary>
         /// <returns>Issuer from the commandline, if provided; default value otherwise.</returns>
-        private Errorable<string> Issuer()
+        private Result<string, ErrorCollection> Issuer()
         {
             if (string.IsNullOrEmpty(_commandLine.Issuer))
             {
@@ -159,7 +157,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Return whether the server should shut down after processing one request
         /// </summary>
         /// <returns></returns>
-        private Errorable<bool> ExitAfterRequest()
+        private Result<bool, ErrorCollection> ExitAfterRequest()
         {
             return Errorable.Success(_commandLine.ExitAfterRequest);
         }
@@ -170,7 +168,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="purpose">A use for which the certificate is needed (for human consumption).</param>
         /// <param name="thumbprint">Thumbprint of the required certificate.</param>
         /// <returns>The certificate, if found; an error message otherwise.</returns>
-        private Errorable<X509Certificate2> FindCertificate(string purpose, string thumbprint)
+        private Result<X509Certificate2, ErrorCollection> FindCertificate(string purpose, string thumbprint)
         {
             if (string.IsNullOrWhiteSpace(thumbprint))
             {

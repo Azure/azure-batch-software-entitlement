@@ -34,7 +34,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.ServerUrl = string.Empty;
                 var options = new ServerOptionBuilder(_commandLine, _certificateStore).Build();
-                options.GetValue().ServerUrl.Should().Be(ServerCommandLine.DefaultServerUrl);
+                options.AssertOk().ServerUrl.Should().Be(ServerCommandLine.DefaultServerUrl);
             }
 
             [Fact]
@@ -42,7 +42,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.ServerUrl = "http://www.example.com";
                 var options = new ServerOptionBuilder(_commandLine, _certificateStore).Build();
-                options.GetErrors().Should().Contain(e => e.Contains("Server endpoint URL"));
+                options.AssertError().Should().Contain(e => e.Contains("Server endpoint URL"));
             }
 
             [Fact]
@@ -50,7 +50,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.ServerUrl = "https://example.com/";
                 var options = new ServerOptionBuilder(_commandLine, _certificateStore).Build();
-                options.GetValue().ServerUrl.ToString().Should().Be(_commandLine.ServerUrl);
+                options.AssertOk().ServerUrl.ToString().Should().Be(_commandLine.ServerUrl);
             }
         }
 
@@ -61,7 +61,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.ConnectionCertificateThumbprint = string.Empty;
                 var options = new ServerOptionBuilder(_commandLine, _certificateStore).Build();
-                options.HasValue().Should().BeFalse();
+                options.AssertError();
             }
 
             [Fact]
@@ -69,7 +69,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.ConnectionCertificateThumbprint = string.Empty;
                 var options = new ServerOptionBuilder(_commandLine, _certificateStore).Build();
-                options.GetErrors().Should().Contain(e => e.Contains("connection"));
+                options.AssertError().Should().Contain(e => e.Contains("connection"));
             }
 
             [Fact]
@@ -77,7 +77,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.ConnectionCertificateThumbprint = "2N DR UL EO FC ER TC LU BI SD ON TT AL KA BO UT CE RT CL UB";
                 var options = new ServerOptionBuilder(_commandLine, _certificateStore).Build();
-                options.GetErrors().Should().Contain(CertificateNotFoundError);
+                options.AssertError().Should().Contain(CertificateNotFoundError);
             }
         }
 
@@ -88,7 +88,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.Audience = string.Empty;
                 var options = new ServerOptionBuilder(_commandLine, _certificateStore).Build();
-                options.GetValue().Audience.Should().NotBeNullOrEmpty();
+                options.AssertOk().Audience.Should().NotBeNullOrEmpty();
             }
         }
 
@@ -99,7 +99,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.Issuer = string.Empty;
                 var options = new ServerOptionBuilder(_commandLine, _certificateStore).Build();
-                options.GetValue().Issuer.Should().NotBeNullOrEmpty();
+                options.AssertOk().Issuer.Should().NotBeNullOrEmpty();
             }
         }
 
@@ -110,7 +110,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.ExitAfterRequest = false;
                 var options = new ServerOptionBuilder(_commandLine, _certificateStore).Build();
-                options.GetValue().ExitAfterRequest.Should().BeFalse();
+                options.AssertOk().ExitAfterRequest.Should().BeFalse();
             }
 
             [Fact]
@@ -118,7 +118,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.ExitAfterRequest = true;
                 var options = new ServerOptionBuilder(_commandLine, _certificateStore).Build();
-                options.GetValue().ExitAfterRequest.Should().BeTrue();
+                options.AssertOk().ExitAfterRequest.Should().BeTrue();
             }
         }
     }

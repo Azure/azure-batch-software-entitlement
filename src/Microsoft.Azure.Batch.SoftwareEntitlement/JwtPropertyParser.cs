@@ -42,18 +42,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="token">The JWT token string</param>
         /// <returns>
-        /// An <see cref="Errorable{NodeEntitlements}"/> containing the result, or an
+        /// An <see cref="Result{NodeEntitlements,ErrorCollection}"/> containing the result, or an
         /// error if it failed to validate correctly.
         /// </returns>
-        public Errorable<EntitlementTokenProperties> Parse(string token) =>
-            (
+        public Result<EntitlementTokenProperties, ErrorCollection> Parse(string token) =>
             from pair in ExtractJwt(token)
             let provider = new JwtPropertyProvider(pair.Principal, pair.Token)
             from entitlements in EntitlementTokenProperties.Build(provider)
-            select entitlements
-            ).AsErrorable();
+            select entitlements;
 
-        private Errorable<(ClaimsPrincipal Principal, JwtSecurityToken Token)> ExtractJwt(string tokenString)
+        private Result<(ClaimsPrincipal Principal, JwtSecurityToken Token), ErrorCollection> ExtractJwt(string tokenString)
         {
             var validationParameters = new TokenValidationParameters
             {
@@ -70,7 +68,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 TokenDecryptionKey = _encryptionKey
             };
 
-            Errorable<(ClaimsPrincipal Principal, JwtSecurityToken Token)> Failure(string error)
+            Result<(ClaimsPrincipal Principal, JwtSecurityToken Token), ErrorCollection> Failure(string error)
                 => Errorable.Failure<(ClaimsPrincipal Principal, JwtSecurityToken Token)>(error);
 
             try

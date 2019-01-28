@@ -25,10 +25,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="request">The entitlement request</param>
         /// <param name="token">The token string containing the entitlements</param>
-        /// <returns>An <see cref="Errorable{NodeEntitlements}"/> containing the validated
+        /// <returns>An <see cref="Result{NodeEntitlements,ErrorCollection}"/> containing the validated
         /// <see cref="EntitlementTokenProperties"/> if validation was successful, or one or more
         /// validation errors otherwise.</returns>
-        public Errorable<EntitlementTokenProperties> Verify(
+        public Result<EntitlementTokenProperties,ErrorCollection> Verify(
             TokenVerificationRequest request,
             string token)
         {
@@ -37,15 +37,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 throw new ArgumentNullException(nameof(token));
             }
 
-            var result =
+            return
                 from parsedProps in _tokenPropertyParser.Parse(token)
                 from verifiedProps in Verify(request, parsedProps)
                 select verifiedProps;
-
-            return result.AsErrorable();
         }
 
-        private static Errorable<EntitlementTokenProperties> Verify(
+        private static Result<EntitlementTokenProperties, ErrorCollection> Verify(
             TokenVerificationRequest request,
             EntitlementTokenProperties tokenProperties)
         {

@@ -15,46 +15,46 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Gets the moment at which the token is issued
         /// </summary>
-        Errorable<DateTimeOffset> IssuedAt();
+        Result<DateTimeOffset, ErrorCollection> IssuedAt();
 
         /// <summary>
         /// Gets the earliest moment at which the token is active
         /// </summary>
-        Errorable<DateTimeOffset> NotBefore();
+        Result<DateTimeOffset, ErrorCollection> NotBefore();
 
         /// <summary>
         /// Gets the latest moment at which the token is active
         /// </summary>
-        Errorable<DateTimeOffset> NotAfter();
+        Result<DateTimeOffset, ErrorCollection> NotAfter();
 
         /// <summary>
         /// Gets the audience for whom the token is intended
         /// </summary>
-        Errorable<string> Audience();
+        Result<string, ErrorCollection> Audience();
 
         /// <summary>
         /// Gets the issuer who hands out entitlement tokens
         /// </summary>
-        Errorable<string> Issuer();
+        Result<string, ErrorCollection> Issuer();
 
         /// <summary>
         /// Gets the set of applications that are entitled to run
         /// </summary>
-        Errorable<IEnumerable<string>> ApplicationIds();
+        Result<IEnumerable<string>, ErrorCollection> ApplicationIds();
 
         /// <summary>
         /// Gets the IP addresses of the machine authorized to use this token
         /// </summary>
-        Errorable<IEnumerable<IPAddress>> IpAddresses();
+        Result<IEnumerable<IPAddress>, ErrorCollection> IpAddresses();
 
         /// <summary>
         /// Gets the virtual machine identifier for the machine entitled to use the specified packages
         /// </summary>
-        Errorable<string> VirtualMachineId();
+        Result<string, ErrorCollection> VirtualMachineId();
 
         /// <summary>
         /// Gets the unique identifier for the token
         /// </summary>
-        Errorable<string> TokenId();
+        Result<string, ErrorCollection> TokenId();
     }
 }

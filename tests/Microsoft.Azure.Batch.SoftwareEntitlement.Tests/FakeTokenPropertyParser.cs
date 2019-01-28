@@ -7,18 +7,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 {
     public class FakeTokenPropertyParser : ITokenPropertyParser
     {
-        private readonly Dictionary<string, Errorable<EntitlementTokenProperties>> _outputLookup;
+        private readonly Dictionary<string, Result<EntitlementTokenProperties, ErrorCollection>> _outputLookup;
 
         public FakeTokenPropertyParser(string token, EntitlementTokenProperties result) : this((token, Errorable.Success(result)))
         {
         }
 
-        public FakeTokenPropertyParser(params (string Token, Errorable<EntitlementTokenProperties> Result)[] output)
+        public FakeTokenPropertyParser(params (string Token, Result<EntitlementTokenProperties, ErrorCollection> Result)[] output)
         {
             _outputLookup = output.ToDictionary(x => x.Token, x => x.Result);
         }
 
-        public Errorable<EntitlementTokenProperties> Parse(string token)
+        public Result<EntitlementTokenProperties, ErrorCollection> Parse(string token)
         {
             if (!_outputLookup.TryGetValue(token, out var entitlementResult))
             {

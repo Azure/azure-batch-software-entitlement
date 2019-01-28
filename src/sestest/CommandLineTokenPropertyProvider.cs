@@ -33,10 +33,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             _commandLine = commandLine ?? throw new ArgumentNullException(nameof(commandLine));
         }
 
-        public Errorable<DateTimeOffset> IssuedAt()
+        public Result<DateTimeOffset, ErrorCollection> IssuedAt()
             => Errorable.Success(_now);
 
-        public Errorable<DateTimeOffset> NotBefore()
+        public Result<DateTimeOffset, ErrorCollection> NotBefore()
         {
             if (string.IsNullOrEmpty(_commandLine.NotBefore))
             {
@@ -47,7 +47,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return _timestampParser.TryParse(_commandLine.NotBefore, "NotBefore");
         }
 
-        public Errorable<DateTimeOffset> NotAfter()
+        public Result<DateTimeOffset, ErrorCollection> NotAfter()
         {
             if (string.IsNullOrEmpty(_commandLine.NotAfter))
             {
@@ -58,7 +58,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return _timestampParser.TryParse(_commandLine.NotAfter, "NotAfter");
         }
 
-        public Errorable<string> Audience()
+        public Result<string, ErrorCollection> Audience()
         {
             if (string.IsNullOrEmpty(_commandLine.Audience))
             {
@@ -69,7 +69,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return Errorable.Success(_commandLine.Audience);
         }
 
-        public Errorable<string> Issuer()
+        public Result<string, ErrorCollection> Issuer()
         {
             if (string.IsNullOrEmpty(_commandLine.Issuer))
             {
@@ -80,9 +80,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return Errorable.Success(_commandLine.Issuer);
         }
 
-        public Errorable<IEnumerable<IPAddress>> IpAddresses()
+        public Result<IEnumerable<IPAddress>, ErrorCollection> IpAddresses()
         {
-            var result = new List<Errorable<IPAddress>>();
+            var result = new List<Result<IPAddress, ErrorCollection>>();
             if (_commandLine.Addresses != null)
             {
                 foreach (var address in _commandLine.Addresses)
@@ -96,10 +96,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 result.AddRange(ListMachineIpAddresses());
             }
 
-            return result.Reduce().AsErrorable();
+            return result.Reduce();
         }
 
-        private static IEnumerable<Errorable<IPAddress>> ListMachineIpAddresses()
+        private static IEnumerable<Result<IPAddress, ErrorCollection>> ListMachineIpAddresses()
         {
             // No IP addresses specified by the user, default to using all from the current machine
             foreach (var i in NetworkInterface.GetAllNetworkInterfaces())
@@ -121,7 +121,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
         }
 
-        private static Errorable<IPAddress> TryParseIPAddress(string address)
+        private static Result<IPAddress, ErrorCollection> TryParseIPAddress(string address)
         {
             if (IPAddress.TryParse(address, out var ip))
             {
@@ -131,7 +131,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return Errorable.Failure<IPAddress>($"IP address '{address}' is not in an expected format (IPv4 and IPv6 supported).");
         }
 
-        public Errorable<IEnumerable<string>> ApplicationIds()
+        public Result<IEnumerable<string>, ErrorCollection> ApplicationIds()
         {
             if (_commandLine.ApplicationIds == null || !_commandLine.ApplicationIds.Any())
             {
@@ -142,10 +142,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return Errorable.Success(apps);
         }
 
-        public Errorable<string> VirtualMachineId()
+        public Result<string, ErrorCollection> VirtualMachineId()
             => Errorable.Success(_commandLine.VirtualMachineId);
 
-        public Errorable<string> TokenId()
+        public Result<string, ErrorCollection> TokenId()
             => Errorable.Success(_tokenId);
     }
 }
