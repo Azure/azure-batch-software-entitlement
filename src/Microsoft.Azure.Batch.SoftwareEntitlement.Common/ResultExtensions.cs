@@ -22,9 +22,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             Func<TLocalOk, TOtherOk, TResultOk> okCombiner)
             where TError : ICombinable<TError>
         {
-            if (result == null) throw new ArgumentNullException(nameof(result));
-            if (otherResult == null) throw new ArgumentNullException(nameof(otherResult));
-            if (okCombiner == null) throw new ArgumentNullException(nameof(okCombiner));
+            if (result == null)
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
+
+            if (otherResult == null)
+            {
+                throw new ArgumentNullException(nameof(otherResult));
+            }
+
+            if (okCombiner == null)
+            {
+                throw new ArgumentNullException(nameof(okCombiner));
+            }
 
             return result.Match(
                 fromOk: localOk => otherResult.Match(
@@ -51,8 +62,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             Result<TSecondOk, TError> second)
             where TError : ICombinable<TError>
         {
-            if (first == null) throw new ArgumentNullException(nameof(first));
-            if (second == null) throw new ArgumentNullException(nameof(second));
+            if (first == null)
+            {
+                throw new ArgumentNullException(nameof(first));
+            }
+
+            if (second == null)
+            {
+                throw new ArgumentNullException(nameof(second));
+            }
 
             return first.With(second, (v1, v2) => (v1, v2));
         }
@@ -77,8 +95,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             Func<TOuter, TInner, TResult> resultSelector)
             where TError : ICombinable<TError>
         {
-            if (outer == null) throw new ArgumentNullException(nameof(outer));
-            if (inner == null) throw new ArgumentNullException(nameof(inner));
+            if (outer == null)
+            {
+                throw new ArgumentNullException(nameof(outer));
+            }
+
+            if (inner == null)
+            {
+                throw new ArgumentNullException(nameof(inner));
+            }
 
             return outer.With(inner, resultSelector);
         }
@@ -126,13 +151,35 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             IEqualityComparer<TKey> comparer)
             where TError : ICombinable<TError>
         {
-            if (outer == null) throw new ArgumentNullException(nameof(outer));
+            if (outer == null)
+            {
+                throw new ArgumentNullException(nameof(outer));
+            }
+
             if (joinTo.Result == null || EqualityComparer<TError>.Default.Equals(joinTo.JoinError, default))
+            {
                 throw new ArgumentNullException(nameof(joinTo));
-            if (localKeySelector == null) throw new ArgumentNullException(nameof(localKeySelector));
-            if (otherKeySelector == null) throw new ArgumentNullException(nameof(otherKeySelector));
-            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
-            if (comparer == null) throw new ArgumentNullException(nameof(comparer));
+            }
+
+            if (localKeySelector == null)
+            {
+                throw new ArgumentNullException(nameof(localKeySelector));
+            }
+
+            if (otherKeySelector == null)
+            {
+                throw new ArgumentNullException(nameof(otherKeySelector));
+            }
+
+            if (resultSelector == null)
+            {
+                throw new ArgumentNullException(nameof(resultSelector));
+            }
+
+            if (comparer == null)
+            {
+                throw new ArgumentNullException(nameof(comparer));
+            }
 
             return
                 from combined in outer.With(
@@ -165,8 +212,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             this Result<TOk, TError> source,
             Func<TOk, PredicateResult<TError>> predicate)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (predicate == null) throw new ArgumentNullException(nameof(predicate));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (predicate == null)
+            {
+                throw new ArgumentNullException(nameof(predicate));
+            }
 
             Result<TOk, TError> Filter(TOk ok) =>
                 predicate(ok).Match(
@@ -182,7 +236,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// </summary>
         public static T Merge<T>(this Result<T, T> result)
         {
-            if (result == null) throw new ArgumentNullException(nameof(result));
+            if (result == null)
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
 
             return result.Match(ok => ok, error => error);
         }
@@ -196,8 +253,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             this Result<TOk, TError> result,
             Func<TError, TOk> fromError)
         {
-            if (result == null) throw new ArgumentNullException(nameof(result));
-            if (fromError == null) throw new ArgumentNullException(nameof(fromError));
+            if (result == null)
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
+
+            if (fromError == null)
+            {
+                throw new ArgumentNullException(nameof(fromError));
+            }
 
             return result.OnError(fromError).Merge();
         }
@@ -211,8 +275,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             this Result<TOk, TError> result,
             Action<TError> action)
         {
-            if (result == null) throw new ArgumentNullException(nameof(result));
-            if (action == null) throw new ArgumentNullException(nameof(action));
+            if (result == null)
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
+
+            if (action == null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
 
             result.Match(okAction: _ => { }, errorAction: action);
         }
@@ -227,8 +298,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             this Result<TOk, TError> result,
             Func<TError, TNextError> operation)
         {
-            if (result == null) throw new ArgumentNullException(nameof(result));
-            if (operation == null) throw new ArgumentNullException(nameof(operation));
+            if (result == null)
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
+
+            if (operation == null)
+            {
+                throw new ArgumentNullException(nameof(operation));
+            }
 
             return result.Match(
                 fromOk: ok => new Result<TOk, TNextError>(ok),
@@ -245,8 +323,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             this Result<TOk, TError> result,
             Action<TOk> action)
         {
-            if (result == null) throw new ArgumentNullException(nameof(result));
-            if (action == null) throw new ArgumentNullException(nameof(action));
+            if (result == null)
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
+
+            if (action == null)
+            {
+                throw new ArgumentNullException(nameof(action));
+            }
 
             result.Match(okAction: action, errorAction: _ => { });
         }
@@ -269,8 +354,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             this Result<TOk, TError> result,
             Func<TOk, TNextOk> operation)
         {
-            if (result == null) throw new ArgumentNullException(nameof(result));
-            if (operation == null) throw new ArgumentNullException(nameof(operation));
+            if (result == null)
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
+
+            if (operation == null)
+            {
+                throw new ArgumentNullException(nameof(operation));
+            }
 
             return result.Match(
                 fromOk: ok => new Result<TNextOk, TError>(operation(ok)),
@@ -296,8 +388,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             this Result<TOk, TError> result,
             Func<TOk, Result<TNextOk, TError>> operation)
         {
-            if (result == null) throw new ArgumentNullException(nameof(result));
-            if (operation == null) throw new ArgumentNullException(nameof(operation));
+            if (result == null)
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
+
+            if (operation == null)
+            {
+                throw new ArgumentNullException(nameof(operation));
+            }
 
             return result.Match(
                 fromOk: operation,
@@ -319,8 +418,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             this Result<TSourceOk, TError> source,
             Func<TSourceOk, TResultOk> selector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (selector == null) throw new ArgumentNullException(nameof(selector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (selector == null)
+            {
+                throw new ArgumentNullException(nameof(selector));
+            }
 
             return source.OnOk(selector);
         }
@@ -343,9 +449,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             Func<TSourceOk, Result<TOtherOk, TError>> otherSelector,
             Func<TSourceOk, TOtherOk, TResultOk> resultSelector)
         {
-            if (source == null) throw new ArgumentNullException(nameof(source));
-            if (otherSelector == null) throw new ArgumentNullException(nameof(otherSelector));
-            if (resultSelector == null) throw new ArgumentNullException(nameof(resultSelector));
+            if (source == null)
+            {
+                throw new ArgumentNullException(nameof(source));
+            }
+
+            if (otherSelector == null)
+            {
+                throw new ArgumentNullException(nameof(otherSelector));
+            }
+
+            if (resultSelector == null)
+            {
+                throw new ArgumentNullException(nameof(resultSelector));
+            }
 
             return source.OnOk(s => otherSelector(s).OnOk(o => resultSelector(s, o)));
         }
@@ -385,7 +502,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// </summary>
         public static Task<Result<TOk, TError>> AsTask<TOk, TError>(this Result<Task<TOk>, TError> result)
         {
-            if (result == null) throw new ArgumentNullException(nameof(result));
+            if (result == null)
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
 
             return result
                 .OnOk(async t =>
@@ -401,7 +521,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// </summary>
         public static Errorable<TOk> AsErrorable<TOk>(this Result<TOk, ErrorCollection> result)
         {
-            if (result == null) throw new ArgumentNullException(nameof(result));
+            if (result == null)
+            {
+                throw new ArgumentNullException(nameof(result));
+            }
 
             return result.Match(
                 fromOk: Errorable<TOk>.CreateSuccess,

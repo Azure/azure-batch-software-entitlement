@@ -20,7 +20,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 
         public static ErrorCollection Create(IEnumerable<string> errors)
         {
-            if (errors == null) throw new ArgumentNullException(nameof(errors));
+            if (errors == null)
+            {
+                throw new ArgumentNullException(nameof(errors));
+            }
 
             var errorHashSet = errors.ToImmutableHashSet();
             if (!errorHashSet.Any())
@@ -33,7 +36,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 
         public static ErrorCollection Create(string error, params string[] errors)
         {
-            if (string.IsNullOrEmpty(error)) throw new ArgumentNullException(nameof(error));
+            if (string.IsNullOrEmpty(error))
+            {
+                throw new ArgumentNullException(nameof(error));
+            }
 
             var errorHashSet = errors != null && errors.Length > 0
                 ? errors.ToImmutableHashSet().Add(error)
@@ -47,7 +53,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 
         public ErrorCollection Combine(ErrorCollection combinable)
         {
-            if (combinable == null) throw new ArgumentNullException(nameof(combinable));
+            if (combinable == null)
+            {
+                throw new ArgumentNullException(nameof(combinable));
+            }
 
             return new ErrorCollection(_errors.Union(combinable));
         }

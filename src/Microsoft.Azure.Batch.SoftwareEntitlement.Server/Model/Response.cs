@@ -13,7 +13,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Model
 
         public static Response CreateSuccess(IResponseValue value)
         {
-            if (value == null) throw new ArgumentNullException(nameof(value));
+            if (value == null)
+            {
+                throw new ArgumentNullException(nameof(value));
+            }
+
             return new Response(StatusCodes.Status200OK, value);
         }
 

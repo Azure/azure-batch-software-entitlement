@@ -30,8 +30,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 
         public void Match(Action<TOk> okAction, Action<TError> errorAction)
         {
-            if (okAction == null) throw new ArgumentNullException(nameof(okAction));
-            if (errorAction == null) throw new ArgumentNullException(nameof(errorAction));
+            if (okAction == null)
+            {
+                throw new ArgumentNullException(nameof(okAction));
+            }
+
+            if (errorAction == null)
+            {
+                throw new ArgumentNullException(nameof(errorAction));
+            }
 
             if (_isOk)
             {
@@ -45,8 +52,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 
         public T Match<T>(Func<TOk, T> fromOk, Func<TError, T> fromError)
         {
-            if (fromOk == null) throw new ArgumentNullException(nameof(fromOk));
-            if (fromError == null) throw new ArgumentNullException(nameof(fromError));
+            if (fromOk == null)
+            {
+                throw new ArgumentNullException(nameof(fromOk));
+            }
+
+            if (fromError == null)
+            {
+                throw new ArgumentNullException(nameof(fromError));
+            }
 
             return _isOk
                 ? fromOk(_ok)
