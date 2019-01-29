@@ -9,7 +9,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
     {
         private readonly Dictionary<string, Result<EntitlementTokenProperties, ErrorCollection>> _outputLookup;
 
-        public FakeTokenPropertyParser(string token, EntitlementTokenProperties result) : this((token, Errorable.Success(result)))
+        public FakeTokenPropertyParser(string token, EntitlementTokenProperties result) : this((token, result))
         {
         }
 

@@ -123,11 +123,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             if (string.IsNullOrEmpty(token))
             {
-                return Errorable.Failure<string>(
+                return ErrorCollection.Create(
                     "No token supplied on command line and AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN not set.");
             }
 
-            return Errorable.Success(token);
+            return token;
         }
 
         private static Result<string, ErrorCollection> FindApplication(VerifyCommandLine commandLine)
@@ -135,10 +135,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var application = commandLine.Application;
             if (string.IsNullOrEmpty(application))
             {
-                return Errorable.Failure<string>("No application specified.");
+                return ErrorCollection.Create("No application specified.");
             }
 
-            return Errorable.Success(application);
+            return application;
         }
 
         private Result<Uri, ErrorCollection> FindServer(VerifyCommandLine commandLine)
@@ -151,16 +151,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             if (string.IsNullOrEmpty(server))
             {
-                return Errorable.Failure<Uri>("No server supplied on command line and AZ_BATCH_ACCOUNT_URL not set.");
+                return ErrorCollection.Create("No server supplied on command line and AZ_BATCH_ACCOUNT_URL not set.");
             }
 
             try
             {
-                return Errorable.Success(new Uri(server));
+                return new Uri(server);
             }
             catch (UriFormatException ex)
             {
-                return Errorable.Failure<Uri>(
+                return ErrorCollection.Create(
                     $"Failed to parse server url ({ex.Message})");
             }
         }
@@ -173,7 +173,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 version = "2017-05-01.5.0";
             }
 
-            return Errorable.Success(version);
+            return version;
         }
 
         private string ReadEnvironmentVariable(string name)

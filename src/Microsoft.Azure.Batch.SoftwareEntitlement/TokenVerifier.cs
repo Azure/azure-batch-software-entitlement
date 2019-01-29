@@ -49,15 +49,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (!tokenProperties.Applications.Any(a => string.Equals(a, request.ApplicationId, StringComparison.OrdinalIgnoreCase)))
             {
-                return Errorable.Failure<EntitlementTokenProperties>($"Token does not grant entitlement for {request.ApplicationId}");
+                return ErrorCollection.Create($"Token does not grant entitlement for {request.ApplicationId}");
             }
 
             if (!tokenProperties.IpAddresses.Any(addr => addr.Equals(request.IpAddress)))
             {
-                return Errorable.Failure<EntitlementTokenProperties>($"Token does not grant entitlement for {request.IpAddress}");
+                return ErrorCollection.Create($"Token does not grant entitlement for {request.IpAddress}");
             }
 
-            return Errorable.Success(tokenProperties);
+            return tokenProperties;
         }
     }
 }

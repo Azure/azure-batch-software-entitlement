@@ -34,14 +34,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         public Result<DateTimeOffset, ErrorCollection> IssuedAt()
-            => Errorable.Success(_now);
+            => _now;
 
         public Result<DateTimeOffset, ErrorCollection> NotBefore()
         {
             if (string.IsNullOrEmpty(_commandLine.NotBefore))
             {
                 // If the user does not specify a start instant for the token, we default to 'now'
-                return Errorable.Success(_now);
+                return _now;
             }
 
             return _timestampParser.TryParse(_commandLine.NotBefore, "NotBefore");
@@ -52,7 +52,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             if (string.IsNullOrEmpty(_commandLine.NotAfter))
             {
                 // If the user does not specify an expiry for the token, we default to 7days from 'now'
-                return Errorable.Success(_now + TimeSpan.FromDays(7));
+                return _now + TimeSpan.FromDays(7);
             }
 
             return _timestampParser.TryParse(_commandLine.NotAfter, "NotAfter");
@@ -63,10 +63,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             if (string.IsNullOrEmpty(_commandLine.Audience))
             {
                 // if the user does not specify an audience, we use a default value to "self-sign"
-                return Errorable.Success(Claims.DefaultAudience);
+                return Claims.DefaultAudience;
             }
 
-            return Errorable.Success(_commandLine.Audience);
+            return _commandLine.Audience;
         }
 
         public Result<string, ErrorCollection> Issuer()
@@ -74,10 +74,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             if (string.IsNullOrEmpty(_commandLine.Issuer))
             {
                 // if the user does not specify an issuer, we use a default value to "self-sign"
-                return Errorable.Success(Claims.DefaultIssuer);
+                return Claims.DefaultIssuer;
             }
 
-            return Errorable.Success(_commandLine.Issuer);
+            return _commandLine.Issuer;
         }
 
         public Result<IEnumerable<IPAddress>, ErrorCollection> IpAddresses()
@@ -113,9 +113,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                         // Strip out the ScopeId for any local IPv6 addresses
                         // (Can't just assign 0 to ScopeId, that doesn't work)
                         var bytes = info.Address.GetAddressBytes();
-                        var ip = new IPAddress(bytes);
-
-                        yield return Errorable.Success(ip);
+                        yield return new IPAddress(bytes);
                     }
                 }
             }
@@ -125,27 +123,27 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (IPAddress.TryParse(address, out var ip))
             {
-                return Errorable.Success(ip);
+                return ip;
             }
 
-            return Errorable.Failure<IPAddress>($"IP address '{address}' is not in an expected format (IPv4 and IPv6 supported).");
+            return ErrorCollection.Create($"IP address '{address}' is not in an expected format (IPv4 and IPv6 supported).");
         }
 
         public Result<IEnumerable<string>, ErrorCollection> ApplicationIds()
         {
             if (_commandLine.ApplicationIds == null || !_commandLine.ApplicationIds.Any())
             {
-                return Errorable.Failure<IEnumerable<string>>("No applications specified.");
+                return ErrorCollection.Create("No applications specified.");
             }
 
             var apps = _commandLine.ApplicationIds.Select(app => app.Trim());
-            return Errorable.Success(apps);
+            return Result.FromOk(apps);
         }
 
         public Result<string, ErrorCollection> VirtualMachineId()
-            => Errorable.Success(_commandLine.VirtualMachineId);
+            => _commandLine.VirtualMachineId;
 
         public Result<string, ErrorCollection> TokenId()
-            => Errorable.Success(_tokenId);
+            => _tokenId;
     }
 }

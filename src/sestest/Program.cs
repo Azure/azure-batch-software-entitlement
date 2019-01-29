@@ -187,16 +187,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (string.IsNullOrEmpty(level))
             {
-                return Errorable.Success(defaultLevel);
+                return defaultLevel;
             }
 
             if (Enum.TryParse<LogLevel>(level, true, out var result))
             {
                 // Successfully parsed the string
-                return Errorable.Success(result);
+                return result;
             }
 
-            return Errorable.Failure<LogLevel>(
+            return ErrorCollection.Create(
                 $"Failed to recognize {purpose} log level '{level}'; valid choices are: error, warning, information, and debug.");
         }
     }

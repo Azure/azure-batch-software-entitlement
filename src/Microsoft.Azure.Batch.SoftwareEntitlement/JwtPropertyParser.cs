@@ -68,9 +68,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 TokenDecryptionKey = _encryptionKey
             };
 
-            Result<(ClaimsPrincipal Principal, JwtSecurityToken Token), ErrorCollection> Failure(string error)
-                => Errorable.Failure<(ClaimsPrincipal Principal, JwtSecurityToken Token)>(error);
-
             try
             {
                 var handler = new JwtSecurityTokenHandler();
@@ -78,30 +75,30 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
                 if (!(token is JwtSecurityToken jwt))
                 {
-                    return Failure("Validated security token is expected to be a JWT");
+                    return ErrorCollection.Create("Validated security token is expected to be a JWT");
                 }
 
-                return Errorable.Success((principal, jwt));
+                return (principal, jwt);
             }
             catch (SecurityTokenNotYetValidException exception)
             {
-                return Failure(TokenNotYetValidError(exception.NotBefore));
+                return ErrorCollection.Create(TokenNotYetValidError(exception.NotBefore));
             }
             catch (SecurityTokenExpiredException exception)
             {
-                return Failure(TokenExpiredError(exception.Expires));
+                return ErrorCollection.Create(TokenExpiredError(exception.Expires));
             }
             catch (SecurityTokenNoExpirationException)
             {
-                return Failure(MissingExpirationError());
+                return ErrorCollection.Create(MissingExpirationError());
             }
             catch (SecurityTokenInvalidIssuerException exception)
             {
-                return Failure(UnexpectedIssuerError(exception.InvalidIssuer));
+                return ErrorCollection.Create(UnexpectedIssuerError(exception.InvalidIssuer));
             }
             catch (SecurityTokenInvalidAudienceException exception)
             {
-                return Failure(UnexpectedAudienceError(exception.InvalidAudience));
+                return ErrorCollection.Create(UnexpectedAudienceError(exception.InvalidAudience));
             }
             catch (ArgumentException exception)
                 when (exception.Message.StartsWith("IDX", StringComparison.Ordinal))
@@ -111,11 +108,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 //  - Invalid characters (not base-64)
                 //  - Invalid base-64 strings (not decodable)
                 //  - base-64 strings that decode to invalid JWT parts
-                return Failure("Token is not well formed");
+                return ErrorCollection.Create("Token is not well formed");
             }
             catch (Exception exception)
             {
-                return Failure(InvalidTokenError(exception.Message));
+                return ErrorCollection.Create(InvalidTokenError(exception.Message));
             }
         }
 

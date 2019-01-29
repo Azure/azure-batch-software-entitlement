@@ -13,15 +13,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             issuedAt = issuedAt ?? DateTimeOffset.Now;
             return new FakeTokenPropertyProvider
             {
-                ApplicationIds = Errorable.Success(DefaultApplicationIds),
-                Audience = Errorable.Success(DefaultAudience),
-                TokenId = Errorable.Success(DefaultTokenId),
-                IpAddresses = Errorable.Success(DefaultIpAddresses),
-                IssuedAt = Errorable.Success(issuedAt.Value),
-                Issuer = Errorable.Success(DefaultIssuer),
-                NotAfter = Errorable.Success(issuedAt.Value + DefaultLifetime),
-                NotBefore = Errorable.Success(issuedAt.Value),
-                VirtualMachineId = Errorable.Success(DefaultVirtualMachineId)
+                ApplicationIds = Result.FromOk(DefaultApplicationIds),
+                Audience = Result.FromOk(DefaultAudience),
+                TokenId = Result.FromOk(DefaultTokenId),
+                IpAddresses = Result.FromOk(DefaultIpAddresses),
+                IssuedAt = Result.FromOk(issuedAt.Value),
+                Issuer = Result.FromOk(DefaultIssuer),
+                NotAfter = Result.FromOk(issuedAt.Value + DefaultLifetime),
+                NotBefore = Result.FromOk(issuedAt.Value),
+                VirtualMachineId = Result.FromOk(DefaultVirtualMachineId)
             };
         }
 

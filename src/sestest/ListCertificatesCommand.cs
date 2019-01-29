@@ -161,16 +161,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (string.IsNullOrEmpty(show))
             {
-                return Errorable.Success(ShowCertificates.NonExpired);
+                return ShowCertificates.NonExpired;
             }
 
             if (Enum.TryParse<ShowCertificates>(show, true, out var result))
             {
                 // Successfully parsed the string
-                return Errorable.Success(result);
+                return result;
             }
 
-            return Errorable.Failure<ShowCertificates>(
+            return ErrorCollection.Create(
                 $"Failed to recognize '{show}'; valid choices are: `nonexpired` (default), 'forsigning', 'forencrypting', 'expired', and 'all'.");
         }
 

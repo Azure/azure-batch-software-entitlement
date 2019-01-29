@@ -124,16 +124,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 // If so, prefer any copies that have their private key over those that do not
                 // Certificates with private keys can be used to both encrypt/decrypt and to 
                 // sign/verify - copies without can only be used to encrypt and verify.
-                return Errorable.Success(certWithPrivateKey);
+                return certWithPrivateKey;
             }
 
             var certificate = candidates.FirstOrDefault();
             if (certificate != null)
             {
-                return Errorable.Success(certificate);
+                return certificate;
             }
 
-            return Errorable.Failure<X509Certificate2>($"Did not find {purpose} certificate {thumbprint}");
+            return ErrorCollection.Create($"Did not find {purpose} certificate {thumbprint}");
         }
 
         /// <summary>

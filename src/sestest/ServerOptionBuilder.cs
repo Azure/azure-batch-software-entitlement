@@ -36,15 +36,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>Either a usable (and completely valid) <see cref="ServerOptions"/> or a set 
         /// of errors.</returns>
         public Result<ServerOptions, ErrorCollection> Build() =>
-            from options in Errorable.Success(new ServerOptions())
-            join url in ServerUrl() on true equals true
+            from url in ServerUrl()
             join connCert in ConnectionCertificate() on true equals true
             join signCert in SigningCertificate() on true equals true
             join encryptCert in EncryptingCertificate() on true equals true
             join audience in Audience() on true equals true
             join issuer in Issuer() on true equals true
             join exit in ExitAfterRequest() on true equals true
-            select options
+            select new ServerOptions()
                 .WithServerUrl(url)
                 .WithConnectionCertificate(connCert)
                 .WithSigningCertificate(signCert)
@@ -70,14 +69,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 var result = new Uri(serverUrl);
                 if (!result.HasScheme("https"))
                 {
-                    return Errorable.Failure<Uri>("Server endpoint URL must specify https://");
+                    return ErrorCollection.Create("Server endpoint URL must specify https://");
                 }
 
-                return Errorable.Success(result);
+                return result;
             }
             catch (Exception e)
             {
-                return Errorable.Failure<Uri>($"Invalid server endpoint URL specified ({e.Message})");
+                return ErrorCollection.Create($"Invalid server endpoint URL specified ({e.Message})");
             }
         }
 
@@ -89,7 +88,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (string.IsNullOrEmpty(_commandLine.ConnectionCertificateThumbprint))
             {
-                return Errorable.Failure<X509Certificate2>("A connection thumbprint is required.");
+                return ErrorCollection.Create("A connection thumbprint is required.");
             }
 
             return FindCertificate("connection", _commandLine.ConnectionCertificateThumbprint);
@@ -104,7 +103,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             if (string.IsNullOrEmpty(_commandLine.SigningCertificateThumbprint))
             {
                 // No certificate requested, no need to look for one
-                return Errorable.Success<X509Certificate2>(null);
+                return null as X509Certificate2;
             }
 
             return FindCertificate("signing", _commandLine.SigningCertificateThumbprint);
@@ -119,7 +118,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             if (string.IsNullOrEmpty(_commandLine.EncryptionCertificateThumbprint))
             {
                 // No certificate requested, no need to look for one
-                return Errorable.Success<X509Certificate2>(null);
+                return null as X509Certificate2;
             }
 
             return FindCertificate("encrypting", _commandLine.EncryptionCertificateThumbprint);
@@ -133,10 +132,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (string.IsNullOrEmpty(_commandLine.Audience))
             {
-                return Errorable.Success(Claims.DefaultAudience);
+                return Claims.DefaultAudience;
             }
 
-            return Errorable.Success(_commandLine.Audience);
+            return _commandLine.Audience;
         }
 
         /// <summary>
@@ -147,10 +146,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (string.IsNullOrEmpty(_commandLine.Issuer))
             {
-                return Errorable.Success(Claims.DefaultIssuer);
+                return Claims.DefaultIssuer;
             }
 
-            return Errorable.Success(_commandLine.Issuer);
+            return _commandLine.Issuer;
         }
 
         /// <summary>
@@ -159,7 +158,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns></returns>
         private Result<bool, ErrorCollection> ExitAfterRequest()
         {
-            return Errorable.Success(_commandLine.ExitAfterRequest);
+            return _commandLine.ExitAfterRequest;
         }
 
         /// <summary>
@@ -172,7 +171,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (string.IsNullOrWhiteSpace(thumbprint))
             {
-                return Errorable.Failure<X509Certificate2>($"No thumbprint supplied; unable to find a {purpose} certificate.");
+                return ErrorCollection.Create($"No thumbprint supplied; unable to find a {purpose} certificate.");
             }
 
             var certificateThumbprint = new CertificateThumbprint(thumbprint);

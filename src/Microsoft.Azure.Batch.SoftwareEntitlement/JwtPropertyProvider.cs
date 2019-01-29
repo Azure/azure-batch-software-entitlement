@@ -37,23 +37,23 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var iat = _jwt.Payload.Iat;
             if (!iat.HasValue)
             {
-                return Errorable.Failure<DateTimeOffset>("Missing issued-at claim on token.");
+                return ErrorCollection.Create("Missing issued-at claim on token.");
             }
 
-            return Errorable.Success<DateTimeOffset>(EpochTime.DateTime(iat.Value));
+            return (DateTimeOffset)EpochTime.DateTime(iat.Value);
         }
 
         /// <summary>
         /// Gets the earliest moment at which the token is active from the 'nbf' claim on the JWT.
         /// </summary>
         public Result<DateTimeOffset, ErrorCollection> NotBefore()
-            => Errorable.Success(new DateTimeOffset(_jwt.ValidFrom));
+            => new DateTimeOffset(_jwt.ValidFrom);
 
         /// <summary>
         /// Gets the latest moment at which the token is active from the 'exp' claim on the JWT.
         /// </summary>
         public Result<DateTimeOffset, ErrorCollection> NotAfter()
-            => Errorable.Success(new DateTimeOffset(_jwt.ValidTo));
+            => new DateTimeOffset(_jwt.ValidTo);
 
         /// <summary>
         /// Gets the audience for whom the token is intended from the 'aud' claim on the JWT, or
@@ -65,22 +65,22 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var audiences = _jwt.Audiences?.ToList();
             if (audiences == null || !audiences.Any())
             {
-                return Errorable.Failure<string>("No audience claim found in token.");
+                return ErrorCollection.Create("No audience claim found in token.");
             }
 
             if (audiences.Count > 1)
             {
-                return Errorable.Failure<string>("Multiple audience claims found in token.");
+                return ErrorCollection.Create("Multiple audience claims found in token.");
             }
 
-            return Errorable.Success(audiences.Single());
+            return audiences.Single();
         }
 
         /// <summary>
         /// Gets the issuer who hands out token tokens from the 'iss' claim on the JWT.
         /// </summary>
         public Result<string, ErrorCollection> Issuer()
-            => Errorable.Success(_jwt.Issuer);
+            => _jwt.Issuer;
 
         /// <summary>
         /// Gets the set of applications that are entitled to run from the claims in the principal.
@@ -90,10 +90,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var applicationIds = ReadAll(Claims.Application);
             if (!applicationIds.Any())
             {
-                return Errorable.Failure<IEnumerable<string>>("No application id claims found in token.");
+                return ErrorCollection.Create("No application id claims found in token.");
             }
 
-            return Errorable.Success(applicationIds);
+            return Result.FromOk(applicationIds);
         }
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// in the principal.
         /// </summary>
         public Result<string, ErrorCollection> VirtualMachineId()
-            => Errorable.Success(Read(Claims.VirtualMachineId));
+            => Read(Claims.VirtualMachineId);
 
         /// <summary>
         /// Gets the unique identifier for the token from a claim in the principal.
@@ -117,17 +117,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var entitlementId = Read(Claims.TokenId);
             if (string.IsNullOrEmpty(entitlementId))
             {
-                return Errorable.Failure<string>("Missing token identifier in token.");
+                return ErrorCollection.Create("Missing token identifier in token.");
             }
 
-            return Errorable.Success(entitlementId);
+            return entitlementId;
         }
 
         private static Result<IPAddress, ErrorCollection> ParseIpAddress(string value)
         {
-            return IPAddress.TryParse(value, out var parsedAddress)
-                ? Errorable.Success(parsedAddress)
-                : Errorable.Failure<IPAddress>($"Invalid IP claim: {value}");
+            if (!IPAddress.TryParse(value, out var parsedAddress))
+            {
+                return ErrorCollection.Create($"Invalid IP claim: {value}");
+            }
+
+            return parsedAddress;
         }
 
         private string Read(string claimId)

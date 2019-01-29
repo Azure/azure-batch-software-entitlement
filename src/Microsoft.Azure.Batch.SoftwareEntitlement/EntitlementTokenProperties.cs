@@ -67,8 +67,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
         public static Result<EntitlementTokenProperties, ErrorCollection> Build(ITokenPropertyProvider provider) =>
-            from props in Errorable.Success(new EntitlementTokenProperties())
-            join notBefore in provider.NotBefore() on true equals true
+            from notBefore in provider.NotBefore()
             join notAfter in provider.NotAfter() on true equals true
             join issuedAt in provider.IssuedAt() on true equals true
             join issuer in provider.Issuer() on true equals true
@@ -77,7 +76,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             join ipAddresses in provider.IpAddresses() on true equals true
             join vmid in provider.VirtualMachineId() on true equals true
             join tokenId in provider.TokenId() on true equals true
-            select props
+            select new EntitlementTokenProperties()
                 .FromInstant(notBefore)
                 .UntilInstant(notAfter)
                 .WithIssuedAt(issuedAt)

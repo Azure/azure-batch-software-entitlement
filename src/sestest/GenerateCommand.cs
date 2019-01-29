@@ -101,7 +101,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             if (string.IsNullOrEmpty(thumbprint))
             {
                 // No certificate requested, so we successfully return null
-                return Errorable.Success<X509Certificate2>(null);
+                return null as X509Certificate2;
             }
 
             var t = new CertificateThumbprint(thumbprint);

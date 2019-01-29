@@ -22,10 +22,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             if (!_entitlements.TryGetValue(entitlementId, out var entitlementProperties))
             {
-                return Errorable.Failure<EntitlementProperties>($"Entitlement {entitlementId} not found.");
+                return ErrorCollection.Create($"Entitlement {entitlementId} not found.");
             }
 
-            return Errorable.Success(entitlementProperties);
+            return entitlementProperties;
         }
 
         public Result<EntitlementProperties, ErrorCollection> RenewEntitlement(
@@ -57,11 +57,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     updatedEntitlementProperties,
                     currentEntitlementProperties))
                 {
-                    return Errorable.Success(updatedEntitlementProperties);
+                    return updatedEntitlementProperties;
                 }
             }
 
-            return Errorable.Failure<EntitlementProperties>(errorMessage);
+            return ErrorCollection.Create(errorMessage);
         }
     }
 }

@@ -16,19 +16,19 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
         {
             if (requestBody == null)
             {
-                return Errorable.Failure<(TokenVerificationRequest, string)>(
+                return ErrorCollection.Create(
                     "Missing request body from software entitlement request.");
             }
 
             if (string.IsNullOrEmpty(requestBody.Token))
             {
-                return Errorable.Failure<(TokenVerificationRequest, string)>(
+                return ErrorCollection.Create(
                     "Missing token from software entitlement request.");
             }
 
             if (string.IsNullOrEmpty(requestBody.ApplicationId))
             {
-                return Errorable.Failure<(TokenVerificationRequest, string)>(
+                return ErrorCollection.Create(
                     "Missing applicationId value from software entitlement request.");
             }
 
@@ -36,24 +36,23 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
 
             var request = new TokenVerificationRequest(requestBody.ApplicationId, remoteAddress);
 
-            return Errorable.Success((Request: request, requestBody.Token));
+            return (Request: request, requestBody.Token);
         }
 
         public static Result<TimeSpan, ErrorCollection> ParseDuration(this string duration)
         {
             if (string.IsNullOrEmpty(duration))
             {
-                return Errorable.Failure<TimeSpan>("Value for duration was not specified.");
+                return ErrorCollection.Create("Value for duration was not specified.");
             }
 
             try
             {
-                var timeSpan = XmlConvert.ToTimeSpan(duration);
-                return Errorable.Success(timeSpan);
+                return XmlConvert.ToTimeSpan(duration);
             }
             catch (FormatException e)
             {
-                return Errorable.Failure<TimeSpan>($"Unable to parse duration {duration}: {e.Message}");
+                return ErrorCollection.Create($"Unable to parse duration {duration}: {e.Message}");
             }
         }
     }

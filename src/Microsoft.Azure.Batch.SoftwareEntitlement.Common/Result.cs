@@ -2,6 +2,12 @@ using System;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
+    public static class Result
+    {
+        public static Result<TOk, ErrorCollection> FromOk<TOk>(TOk ok) =>
+            new Result<TOk, ErrorCollection>(ok);
+    }
+
     /// <summary>
     /// A container that either contains a success (OK) value, or an error.
     /// </summary>
@@ -66,5 +72,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 ? fromOk(_ok)
                 : fromError(_error);
         }
+
+        public static implicit operator Result<TOk, TError>(TError error) =>
+            new Result<TOk, TError>(error);
+
+        public static implicit operator Result<TOk, TError>(TOk ok) =>
+            new Result<TOk, TError>(ok);
     }
 }
