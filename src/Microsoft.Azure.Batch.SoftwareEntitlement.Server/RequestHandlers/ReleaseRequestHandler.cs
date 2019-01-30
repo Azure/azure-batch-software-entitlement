@@ -26,7 +26,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
             return
             (
                 from found in FindEntitlement(entitlementId)
-                let releaseTime = DateTime.UtcNow
+                let releaseTime = DateTimeOffset.UtcNow
                 from released in StoreRelease(entitlementId, releaseTime)
                 select CreateSuccessResponse()
             ).Merge();
@@ -36,7 +36,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
             _entitlementStore.FindEntitlement(entitlementId)
                 .OnError(errors => CreateNotFoundResponse(entitlementId));
 
-        private Result<EntitlementProperties, Response> StoreRelease(string entitlementId, DateTime releaseTime) =>
+        private Result<EntitlementProperties, Response> StoreRelease(string entitlementId, DateTimeOffset releaseTime) =>
             _entitlementStore.ReleaseEntitlement(entitlementId, releaseTime)
                 .OnError(CreateInternalErrorResponse);
 

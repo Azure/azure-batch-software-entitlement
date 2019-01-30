@@ -9,9 +9,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         private EntitlementProperties(
             string entitlementId,
             EntitlementTokenProperties tokenProperties,
-            DateTime acquisitionEventTime,
-            IEnumerable<DateTime> renewalEventTimes,
-            DateTime? releaseEventTime)
+            DateTimeOffset acquisitionEventTime,
+            IEnumerable<DateTimeOffset> renewalEventTimes,
+            DateTimeOffset? releaseEventTime)
         {
             EntitlementId = entitlementId;
             TokenProperties = tokenProperties;
@@ -23,15 +23,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public static EntitlementProperties CreateNew(
             string entitlementId,
             EntitlementTokenProperties tokenProperties,
-            DateTime acquisitionTime) =>
+            DateTimeOffset acquisitionTime) =>
             new EntitlementProperties(
                 entitlementId,
                 tokenProperties,
                 acquisitionTime,
-                Enumerable.Empty<DateTime>(),
+                Enumerable.Empty<DateTimeOffset>(),
                 null);
 
-        public EntitlementProperties WithRenewal(DateTime renewalTime) =>
+        public EntitlementProperties WithRenewal(DateTimeOffset renewalTime) =>
             new EntitlementProperties(
                 EntitlementId,
                 TokenProperties,
@@ -39,7 +39,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 RenewalEventTimes.Append(renewalTime),
                 ReleaseEventTime);
 
-        public EntitlementProperties WithRelease(DateTime releaseTime) =>
+        public EntitlementProperties WithRelease(DateTimeOffset releaseTime) =>
             new EntitlementProperties(
                 EntitlementId,
                 TokenProperties,
@@ -51,11 +51,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         public EntitlementTokenProperties TokenProperties { get; }
 
-        public DateTime AcquisitionEventTime { get; }
+        public DateTimeOffset AcquisitionEventTime { get; }
 
-        public IEnumerable<DateTime> RenewalEventTimes { get; }
+        public IEnumerable<DateTimeOffset> RenewalEventTimes { get; }
 
-        public DateTime? ReleaseEventTime { get; }
+        public DateTimeOffset? ReleaseEventTime { get; }
 
         public bool IsReleased => ReleaseEventTime.HasValue;
     }

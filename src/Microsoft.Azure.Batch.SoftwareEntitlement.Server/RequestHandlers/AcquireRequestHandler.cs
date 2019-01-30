@@ -17,8 +17,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
             TokenVerifier tokenVerifier,
             EntitlementStore entitlementStore) : base(logger)
         {
-            _verifier = tokenVerifier;
-            _entitlementStore = entitlementStore;
+            _verifier = tokenVerifier ?? throw new ArgumentNullException(nameof(tokenVerifier));
+            _entitlementStore = entitlementStore ?? throw new ArgumentNullException(nameof(entitlementStore));
         }
 
         public Response Handle(
@@ -33,7 +33,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
                 from extracted in ExtractVerificationRequest(requestContext, remoteIpAddress)
                 from tokenProperties in Verify(extracted.Request, extracted.Token)
                 let entitlementId = CreateEntitlementId()
-                let acquisitionTime = DateTime.UtcNow
+                let acquisitionTime = DateTimeOffset.UtcNow
                 let expiry = acquisitionTime.Add(duration)
                 let entitlementProperties = StoreEntitlement(entitlementId, tokenProperties, acquisitionTime)
                 select CreateSuccessResponse(entitlementId, expiry)
@@ -62,12 +62,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
         private EntitlementProperties StoreEntitlement(
             string entitlementId,
             EntitlementTokenProperties tokenProperties,
-            DateTime acquisitionTime) =>
+            DateTimeOffset acquisitionTime) =>
             _entitlementStore.StoreEntitlement(entitlementId, tokenProperties, acquisitionTime);
 
         private static Response CreateSuccessResponse(
             string entitlementId,
-            DateTime expiryTime)
+            DateTimeOffset expiryTime)
         {
             var value = new AcquireSuccessResponse(entitlementId, expiryTime);
             return Response.CreateSuccess(value);

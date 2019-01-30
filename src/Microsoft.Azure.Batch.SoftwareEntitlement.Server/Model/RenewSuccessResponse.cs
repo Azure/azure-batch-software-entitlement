@@ -4,7 +4,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Model
 {
     public class RenewSuccessResponse : IResponseValue
     {
-        public RenewSuccessResponse(DateTime expiryTime)
+        public RenewSuccessResponse(DateTimeOffset expiryTime)
         {
             ExpiryTime = expiryTime.ToUniversalTime().ToString("O");
         }

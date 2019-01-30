@@ -4,7 +4,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Model
 {
     public class AcquireSuccessResponse : IResponseValue
     {
-        public AcquireSuccessResponse(string entitlementId, DateTime initialExpiryTime)
+        public AcquireSuccessResponse(string entitlementId, DateTimeOffset initialExpiryTime)
         {
             EntitlementId = entitlementId;
             InitialExpiryTime = initialExpiryTime.ToUniversalTime().ToString("O");

@@ -12,7 +12,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public EntitlementProperties StoreEntitlement(
             string entitlementId,
             EntitlementTokenProperties tokenProperties,
-            DateTime acquisitionTime) =>
+            DateTimeOffset acquisitionTime) =>
             _entitlements.AddOrUpdate(
                 entitlementId,
                 EntitlementProperties.CreateNew(entitlementId, tokenProperties, acquisitionTime),
@@ -30,7 +30,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         public Result<EntitlementProperties, ErrorSet> RenewEntitlement(
             string entitlementId,
-            DateTime renewalTime) =>
+            DateTimeOffset renewalTime) =>
             TryUpdate(
                 entitlementId,
                 props => props.WithRenewal(renewalTime),
@@ -38,7 +38,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
         public Result<EntitlementProperties, ErrorSet> ReleaseEntitlement(
             string entitlementId,
-            DateTime releaseTime) =>
+            DateTimeOffset releaseTime) =>
             TryUpdate(
                 entitlementId,
                 props => props.WithRelease(releaseTime),

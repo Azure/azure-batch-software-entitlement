@@ -28,7 +28,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
                 from duration in ParseDuration(requestContext.Body)
                 from foundEntitlement in FindEntitlement(entitlementId)
                 where NotReleased(foundEntitlement)
-                let renewalTime = DateTime.UtcNow
+                let renewalTime = DateTimeOffset.UtcNow
                 let expiry = renewalTime.Add(duration)
                 from renewedEntitlement in StoreRenewal(entitlementId, renewalTime)
                 select CreateSuccessResponse(expiry)
@@ -48,11 +48,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
             entitlementProperties.IsReleased.AsPredicateFailure(
                 () => CreateAlreadyReleasedResponse(entitlementProperties.EntitlementId));
 
-        private Result<EntitlementProperties, Response> StoreRenewal(string entitlementId, DateTime renewalTime) =>
+        private Result<EntitlementProperties, Response> StoreRenewal(string entitlementId, DateTimeOffset renewalTime) =>
             _entitlementStore.RenewEntitlement(entitlementId, renewalTime)
                 .OnError(CreateInternalErrorResponse);
 
-        private static Response CreateSuccessResponse(DateTime expiryTime)
+        private static Response CreateSuccessResponse(DateTimeOffset expiryTime)
         {
             var value = new RenewSuccessResponse(expiryTime);
             return Response.CreateSuccess(value);
