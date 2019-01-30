@@ -16,6 +16,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Model
         /// <summary>
         /// [Deprecated] The virtual machine identifier for the Azure VM entitled to run the software
         /// </summary>
+        /// <remarks>
+        /// The real Azure Batch implementation of this returns a random GUID rather than a meaningful
+        /// value, so clients are not advised to make use of this value.
+        /// </remarks>
         [JsonProperty(PropertyName = "vmid", DefaultValueHandling = DefaultValueHandling.Ignore)]
         public string VirtualMachineId { get; set; }
     }
