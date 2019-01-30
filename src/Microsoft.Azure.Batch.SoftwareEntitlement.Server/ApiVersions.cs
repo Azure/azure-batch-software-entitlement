@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.Immutable;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server
 {
@@ -13,15 +14,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server
         public const string August012018 = "2018-08-01.7.0";
         public const string ApiVersionLatest = "9999-09-09.99.99";
 
-        private static readonly HashSet<string> ValidApiVersions = new HashSet<string>
-        {
+        private static readonly ISet<string> ValidApiVersions = ImmutableHashSet.Create(
             May012017,
             June012017,
             Sept012017,
             March012018,
             August012018,
-            ApiVersionLatest
-        };
+            ApiVersionLatest);
 
         /// <summary>
         /// Check to see whether the specified <c>api-version</c> is valid for software entitlements

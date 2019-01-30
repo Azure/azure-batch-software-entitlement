@@ -85,7 +85,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         {
             _logger.LogDebug("Invalid api-version specified");
             return HandleApiVersionError(
-                $"Selected api-version of {apiVersion} is not supported; denying entitlement request.");
+                $"Specified api-version of {apiVersion} is not supported; denying entitlement request.");
         }
 
         [HttpPost]
@@ -96,7 +96,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             [FromQuery(Name = ApiVersions.ParameterName)] string apiVersion)
         {
             _logger.LogInformation(
-                "[Approve] Selected api-version is {ApiVersion}",
+                "[Approve] Specified api-version is {ApiVersion}",
                 apiVersion);
 
             return HandleRequest(_approveV1RequestHandler, requestBody);
@@ -110,7 +110,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             [FromQuery(Name = ApiVersions.ParameterName)] string apiVersion)
         {
             _logger.LogInformation(
-                "[Approve] Selected api-version is {ApiVersion}",
+                "[Approve] Specified api-version is {ApiVersion}",
                 apiVersion);
 
             return HandleRequest(_approveV2RequestHandler, requestBody);
@@ -124,7 +124,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             [FromQuery(Name = ApiVersions.ParameterName)] string apiVersion)
         {
             _logger.LogInformation(
-                "[Acquire] Selected api-version is {ApiVersion}",
+                "[Acquire] Specified api-version is {ApiVersion}",
                 apiVersion);
 
             return HandleRequest(_acquireRequestHandler, requestBody);
@@ -140,7 +140,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             [FromQuery(Name = ApiVersions.ParameterName)] string apiVersion)
         {
             _logger.LogInformation(
-                "[Renew] Selected api-version is {ApiVersion}",
+                "[Renew] Specified api-version is {ApiVersion}",
                 apiVersion);
 
             return HandleRequest(_renewRequestHandler, (requestBody, entitlementId));
@@ -155,7 +155,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
             [FromQuery(Name = ApiVersions.ParameterName)] string apiVersion)
         {
             _logger.LogInformation(
-                "[Release] Selected api-version is {ApiVersion}",
+                "[Release] Specified api-version is {ApiVersion}",
                 apiVersion);
 
             return HandleRequest(_releaseRequestHandler, entitlementId);
