@@ -96,7 +96,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return generator.Generate(tokenProperties);
         }
 
-        private static Result<X509Certificate2, ErrorCollection> FindCertificate(string purpose, string thumbprint)
+        private static Result<X509Certificate2, ErrorSet> FindCertificate(string purpose, string thumbprint)
         {
             if (string.IsNullOrEmpty(thumbprint))
             {

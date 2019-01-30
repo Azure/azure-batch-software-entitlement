@@ -32,12 +32,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Gets the moment at which the token is issued from the 'iat' claim on the JWT.
         /// </summary>
-        public Result<DateTimeOffset, ErrorCollection> IssuedAt()
+        public Result<DateTimeOffset, ErrorSet> IssuedAt()
         {
             var iat = _jwt.Payload.Iat;
             if (!iat.HasValue)
             {
-                return ErrorCollection.Create("Missing issued-at claim on token.");
+                return ErrorSet.Create("Missing issued-at claim on token.");
             }
 
             return (DateTimeOffset)EpochTime.DateTime(iat.Value);
@@ -46,31 +46,31 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Gets the earliest moment at which the token is active from the 'nbf' claim on the JWT.
         /// </summary>
-        public Result<DateTimeOffset, ErrorCollection> NotBefore()
+        public Result<DateTimeOffset, ErrorSet> NotBefore()
             => new DateTimeOffset(_jwt.ValidFrom);
 
         /// <summary>
         /// Gets the latest moment at which the token is active from the 'exp' claim on the JWT.
         /// </summary>
-        public Result<DateTimeOffset, ErrorCollection> NotAfter()
+        public Result<DateTimeOffset, ErrorSet> NotAfter()
             => new DateTimeOffset(_jwt.ValidTo);
 
         /// <summary>
         /// Gets the audience for whom the token is intended from the 'aud' claim on the JWT, or
         /// an error if there are zero or many such claims.
         /// </summary>
-        public Result<string, ErrorCollection> Audience()
+        public Result<string, ErrorSet> Audience()
         {
             // We don't expect multiple audiences to appear in the token
             var audiences = _jwt.Audiences?.ToList();
             if (audiences == null || !audiences.Any())
             {
-                return ErrorCollection.Create("No audience claim found in token.");
+                return ErrorSet.Create("No audience claim found in token.");
             }
 
             if (audiences.Count > 1)
             {
-                return ErrorCollection.Create("Multiple audience claims found in token.");
+                return ErrorSet.Create("Multiple audience claims found in token.");
             }
 
             return audiences.Single();
@@ -79,55 +79,55 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Gets the issuer who hands out token tokens from the 'iss' claim on the JWT.
         /// </summary>
-        public Result<string, ErrorCollection> Issuer()
+        public Result<string, ErrorSet> Issuer()
             => _jwt.Issuer;
 
         /// <summary>
         /// Gets the set of applications that are entitled to run from the claims in the principal.
         /// </summary>
-        public Result<IEnumerable<string>, ErrorCollection> ApplicationIds()
+        public Result<IEnumerable<string>, ErrorSet> ApplicationIds()
         {
             var applicationIds = ReadAll(Claims.Application);
             if (!applicationIds.Any())
             {
-                return ErrorCollection.Create("No application id claims found in token.");
+                return ErrorSet.Create("No application id claims found in token.");
             }
 
-            return Result.FromOk(applicationIds);
+            return applicationIds.AsOk();
         }
 
         /// <summary>
         /// Gets the IP addresses of the machine authorized to use this token from the claims in the principal.
         /// </summary>
-        public Result<IEnumerable<IPAddress>, ErrorCollection> IpAddresses()
+        public Result<IEnumerable<IPAddress>, ErrorSet> IpAddresses()
             => ReadAll(Claims.IpAddress).Select(ParseIpAddress).Reduce();
 
         /// <summary>
         /// Gets the virtual machine identifier for the machine entitled to use the specified packages from a claim
         /// in the principal.
         /// </summary>
-        public Result<string, ErrorCollection> VirtualMachineId()
+        public Result<string, ErrorSet> VirtualMachineId()
             => Read(Claims.VirtualMachineId);
 
         /// <summary>
         /// Gets the unique identifier for the token from a claim in the principal.
         /// </summary>
-        public Result<string, ErrorCollection> TokenId()
+        public Result<string, ErrorSet> TokenId()
         {
             var entitlementId = Read(Claims.TokenId);
             if (string.IsNullOrEmpty(entitlementId))
             {
-                return ErrorCollection.Create("Missing token identifier in token.");
+                return ErrorSet.Create("Missing token identifier in token.");
             }
 
             return entitlementId;
         }
 
-        private static Result<IPAddress, ErrorCollection> ParseIpAddress(string value)
+        private static Result<IPAddress, ErrorSet> ParseIpAddress(string value)
         {
             if (!IPAddress.TryParse(value, out var parsedAddress))
             {
-                return ErrorCollection.Create($"Invalid IP claim: {value}");
+                return ErrorSet.Create($"Invalid IP claim: {value}");
             }
 
             return parsedAddress;

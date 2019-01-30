@@ -33,10 +33,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             _commandLine = commandLine ?? throw new ArgumentNullException(nameof(commandLine));
         }
 
-        public Result<DateTimeOffset, ErrorCollection> IssuedAt()
+        public Result<DateTimeOffset, ErrorSet> IssuedAt()
             => _now;
 
-        public Result<DateTimeOffset, ErrorCollection> NotBefore()
+        public Result<DateTimeOffset, ErrorSet> NotBefore()
         {
             if (string.IsNullOrEmpty(_commandLine.NotBefore))
             {
@@ -47,7 +47,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return _timestampParser.TryParse(_commandLine.NotBefore, "NotBefore");
         }
 
-        public Result<DateTimeOffset, ErrorCollection> NotAfter()
+        public Result<DateTimeOffset, ErrorSet> NotAfter()
         {
             if (string.IsNullOrEmpty(_commandLine.NotAfter))
             {
@@ -58,7 +58,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return _timestampParser.TryParse(_commandLine.NotAfter, "NotAfter");
         }
 
-        public Result<string, ErrorCollection> Audience()
+        public Result<string, ErrorSet> Audience()
         {
             if (string.IsNullOrEmpty(_commandLine.Audience))
             {
@@ -69,7 +69,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return _commandLine.Audience;
         }
 
-        public Result<string, ErrorCollection> Issuer()
+        public Result<string, ErrorSet> Issuer()
         {
             if (string.IsNullOrEmpty(_commandLine.Issuer))
             {
@@ -80,9 +80,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return _commandLine.Issuer;
         }
 
-        public Result<IEnumerable<IPAddress>, ErrorCollection> IpAddresses()
+        public Result<IEnumerable<IPAddress>, ErrorSet> IpAddresses()
         {
-            var result = new List<Result<IPAddress, ErrorCollection>>();
+            var result = new List<Result<IPAddress, ErrorSet>>();
             if (_commandLine.Addresses != null)
             {
                 foreach (var address in _commandLine.Addresses)
@@ -99,7 +99,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return result.Reduce();
         }
 
-        private static IEnumerable<Result<IPAddress, ErrorCollection>> ListMachineIpAddresses()
+        private static IEnumerable<Result<IPAddress, ErrorSet>> ListMachineIpAddresses()
         {
             // No IP addresses specified by the user, default to using all from the current machine
             foreach (var i in NetworkInterface.GetAllNetworkInterfaces())
@@ -119,31 +119,31 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
         }
 
-        private static Result<IPAddress, ErrorCollection> TryParseIPAddress(string address)
+        private static Result<IPAddress, ErrorSet> TryParseIPAddress(string address)
         {
             if (IPAddress.TryParse(address, out var ip))
             {
                 return ip;
             }
 
-            return ErrorCollection.Create($"IP address '{address}' is not in an expected format (IPv4 and IPv6 supported).");
+            return ErrorSet.Create($"IP address '{address}' is not in an expected format (IPv4 and IPv6 supported).");
         }
 
-        public Result<IEnumerable<string>, ErrorCollection> ApplicationIds()
+        public Result<IEnumerable<string>, ErrorSet> ApplicationIds()
         {
             if (_commandLine.ApplicationIds == null || !_commandLine.ApplicationIds.Any())
             {
-                return ErrorCollection.Create("No applications specified.");
+                return ErrorSet.Create("No applications specified.");
             }
 
             var apps = _commandLine.ApplicationIds.Select(app => app.Trim());
-            return Result.FromOk(apps);
+            return apps.AsOk();
         }
 
-        public Result<string, ErrorCollection> VirtualMachineId()
+        public Result<string, ErrorSet> VirtualMachineId()
             => _commandLine.VirtualMachineId;
 
-        public Result<string, ErrorCollection> TokenId()
+        public Result<string, ErrorSet> TokenId()
             => _tokenId;
     }
 }

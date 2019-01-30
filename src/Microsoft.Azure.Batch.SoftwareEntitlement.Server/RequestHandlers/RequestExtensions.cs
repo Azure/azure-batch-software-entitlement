@@ -9,26 +9,26 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
 {
     public static class RequestExtensions
     {
-        public static Result<(TokenVerificationRequest Request, string Token), ErrorCollection> ExtractVerificationRequest(
+        public static Result<(TokenVerificationRequest Request, string Token), ErrorSet> ExtractVerificationRequest(
             this IVerificationRequestBody requestBody,
             IPAddress remoteAddress,
             ILogger logger)
         {
             if (requestBody == null)
             {
-                return ErrorCollection.Create(
+                return ErrorSet.Create(
                     "Missing request body from software entitlement request.");
             }
 
             if (string.IsNullOrEmpty(requestBody.Token))
             {
-                return ErrorCollection.Create(
+                return ErrorSet.Create(
                     "Missing token from software entitlement request.");
             }
 
             if (string.IsNullOrEmpty(requestBody.ApplicationId))
             {
-                return ErrorCollection.Create(
+                return ErrorSet.Create(
                     "Missing applicationId value from software entitlement request.");
             }
 
@@ -39,11 +39,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
             return (Request: request, requestBody.Token);
         }
 
-        public static Result<TimeSpan, ErrorCollection> ParseDuration(this string duration)
+        public static Result<TimeSpan, ErrorSet> ParseDuration(this string duration)
         {
             if (string.IsNullOrEmpty(duration))
             {
-                return ErrorCollection.Create("Value for duration was not specified.");
+                return ErrorSet.Create("Value for duration was not specified.");
             }
 
             try
@@ -52,7 +52,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers
             }
             catch (FormatException e)
             {
-                return ErrorCollection.Create($"Unable to parse duration {duration}: {e.Message}");
+                return ErrorSet.Create($"Unable to parse duration {duration}: {e.Message}");
             }
         }
     }

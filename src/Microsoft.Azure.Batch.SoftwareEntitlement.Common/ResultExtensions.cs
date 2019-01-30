@@ -347,7 +347,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="operation">A function to execute on the value of this instance if it
         /// is successful</param>
         /// <returns>
-        /// An <see cref="Errorable{TNextOk}"/> containing the result of executing <paramref name="operation"/>
+        /// A <see cref="Result{TNextOk,TError}"/> containing the result of executing <paramref name="operation"/>
         /// if the input was successful, or the errors from this instance otherwise.
         /// </returns>
         public static Result<TNextOk, TError> OnOk<TOk, TError, TNextOk>(

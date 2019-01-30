@@ -18,17 +18,17 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 EntitlementProperties.CreateNew(entitlementId, tokenProperties, acquisitionTime),
                 (e, props) => props);
 
-        public Result<EntitlementProperties, ErrorCollection> FindEntitlement(string entitlementId)
+        public Result<EntitlementProperties, ErrorSet> FindEntitlement(string entitlementId)
         {
             if (!_entitlements.TryGetValue(entitlementId, out var entitlementProperties))
             {
-                return ErrorCollection.Create($"Entitlement {entitlementId} not found.");
+                return ErrorSet.Create($"Entitlement {entitlementId} not found.");
             }
 
             return entitlementProperties;
         }
 
-        public Result<EntitlementProperties, ErrorCollection> RenewEntitlement(
+        public Result<EntitlementProperties, ErrorSet> RenewEntitlement(
             string entitlementId,
             DateTime renewalTime) =>
             TryUpdate(
@@ -36,7 +36,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 props => props.WithRenewal(renewalTime),
                 $"Unable to store renewal event for {entitlementId}");
 
-        public Result<EntitlementProperties, ErrorCollection> ReleaseEntitlement(
+        public Result<EntitlementProperties, ErrorSet> ReleaseEntitlement(
             string entitlementId,
             DateTime releaseTime) =>
             TryUpdate(
@@ -44,7 +44,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 props => props.WithRelease(releaseTime),
                 $"Unable to store release event for {entitlementId}");
 
-        private Result<EntitlementProperties, ErrorCollection> TryUpdate(
+        private Result<EntitlementProperties, ErrorSet> TryUpdate(
             string entitlementId,
             Func<EntitlementProperties, EntitlementProperties> updater,
             string errorMessage)
@@ -61,7 +61,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 }
             }
 
-            return ErrorCollection.Create(errorMessage);
+            return ErrorSet.Create(errorMessage);
         }
     }
 }

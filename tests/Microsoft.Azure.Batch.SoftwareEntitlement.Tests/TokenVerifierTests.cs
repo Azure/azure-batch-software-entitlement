@@ -334,7 +334,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var thumbprint = new CertificateThumbprint("<thumbprint-goes-here>");
                 var store = new CertificateStore();
 
-                X509Certificate2 ThrowIfNotFound(ErrorCollection errors) =>
+                X509Certificate2 ThrowIfNotFound(ErrorSet errors) =>
                     throw new InvalidOperationException(errors.First());
 
                 var cert = store.FindByThumbprint("test", thumbprint).OnError(ThrowIfNotFound).AssertOk();

@@ -157,7 +157,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             };
         }
 
-        private static Result<ShowCertificates, ErrorCollection> TryParseShow(string show)
+        private static Result<ShowCertificates, ErrorSet> TryParseShow(string show)
         {
             if (string.IsNullOrEmpty(show))
             {
@@ -170,7 +170,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 return result;
             }
 
-            return ErrorCollection.Create(
+            return ErrorSet.Create(
                 $"Failed to recognize '{show}'; valid choices are: `nonexpired` (default), 'forsigning', 'forencrypting', 'expired', and 'all'.");
         }
 

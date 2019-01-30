@@ -35,7 +35,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <returns>Either a usable (and completely valid) <see cref="ServerOptions"/> or a set 
         /// of errors.</returns>
-        public Result<ServerOptions, ErrorCollection> Build() =>
+        public Result<ServerOptions, ErrorSet> Build() =>
             from url in ServerUrl()
             join connCert in ConnectionCertificate() on true equals true
             join signCert in SigningCertificate() on true equals true
@@ -55,9 +55,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Find the server URL for our hosting
         /// </summary>
-        /// <returns>An <see cref="Result{Uri,ErrorCollection}"/> containing either the URL to use or any 
+        /// <returns>An <see cref="Result{Uri,ErrorSet}"/> containing either the URL to use or any 
         /// relevant errors.</returns>
-        private Result<Uri, ErrorCollection> ServerUrl()
+        private Result<Uri, ErrorSet> ServerUrl()
         {
             // If the server URL is not specified, default it.
             var serverUrl = string.IsNullOrWhiteSpace(_commandLine.ServerUrl)
@@ -69,14 +69,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 var result = new Uri(serverUrl);
                 if (!result.HasScheme("https"))
                 {
-                    return ErrorCollection.Create("Server endpoint URL must specify https://");
+                    return ErrorSet.Create("Server endpoint URL must specify https://");
                 }
 
                 return result;
             }
             catch (Exception e)
             {
-                return ErrorCollection.Create($"Invalid server endpoint URL specified ({e.Message})");
+                return ErrorSet.Create($"Invalid server endpoint URL specified ({e.Message})");
             }
         }
 
@@ -84,11 +84,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Find the certificate to use for HTTPS connections
         /// </summary>
         /// <returns>Certificate, if found; error details otherwise.</returns>
-        private Result<X509Certificate2, ErrorCollection> ConnectionCertificate()
+        private Result<X509Certificate2, ErrorSet> ConnectionCertificate()
         {
             if (string.IsNullOrEmpty(_commandLine.ConnectionCertificateThumbprint))
             {
-                return ErrorCollection.Create("A connection thumbprint is required.");
+                return ErrorSet.Create("A connection thumbprint is required.");
             }
 
             return FindCertificate("connection", _commandLine.ConnectionCertificateThumbprint);
@@ -98,7 +98,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Find the certificate to use for signing tokens
         /// </summary>
         /// <returns>Certificate, if found; error details otherwise.</returns>
-        private Result<X509Certificate2, ErrorCollection> SigningCertificate()
+        private Result<X509Certificate2, ErrorSet> SigningCertificate()
         {
             if (string.IsNullOrEmpty(_commandLine.SigningCertificateThumbprint))
             {
@@ -113,7 +113,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Find the certificate to use for encrypting tokens
         /// </summary>
         /// <returns>Certificate, if found; error details otherwise.</returns>
-        private Result<X509Certificate2, ErrorCollection> EncryptingCertificate()
+        private Result<X509Certificate2, ErrorSet> EncryptingCertificate()
         {
             if (string.IsNullOrEmpty(_commandLine.EncryptionCertificateThumbprint))
             {
@@ -128,7 +128,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Return the audience required 
         /// </summary>
         /// <returns>Audience from the commandline, if provided; default value otherwise.</returns>
-        private Result<string, ErrorCollection> Audience()
+        private Result<string, ErrorSet> Audience()
         {
             if (string.IsNullOrEmpty(_commandLine.Audience))
             {
@@ -142,7 +142,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Return the issuer required 
         /// </summary>
         /// <returns>Issuer from the commandline, if provided; default value otherwise.</returns>
-        private Result<string, ErrorCollection> Issuer()
+        private Result<string, ErrorSet> Issuer()
         {
             if (string.IsNullOrEmpty(_commandLine.Issuer))
             {
@@ -156,7 +156,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Return whether the server should shut down after processing one request
         /// </summary>
         /// <returns></returns>
-        private Result<bool, ErrorCollection> ExitAfterRequest()
+        private Result<bool, ErrorSet> ExitAfterRequest()
         {
             return _commandLine.ExitAfterRequest;
         }
@@ -167,11 +167,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="purpose">A use for which the certificate is needed (for human consumption).</param>
         /// <param name="thumbprint">Thumbprint of the required certificate.</param>
         /// <returns>The certificate, if found; an error message otherwise.</returns>
-        private Result<X509Certificate2, ErrorCollection> FindCertificate(string purpose, string thumbprint)
+        private Result<X509Certificate2, ErrorSet> FindCertificate(string purpose, string thumbprint)
         {
             if (string.IsNullOrWhiteSpace(thumbprint))
             {
-                return ErrorCollection.Create($"No thumbprint supplied; unable to find a {purpose} certificate.");
+                return ErrorSet.Create($"No thumbprint supplied; unable to find a {purpose} certificate.");
             }
 
             var certificateThumbprint = new CertificateThumbprint(thumbprint);

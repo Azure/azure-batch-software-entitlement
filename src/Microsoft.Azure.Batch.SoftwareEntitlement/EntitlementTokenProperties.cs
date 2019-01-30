@@ -66,7 +66,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             IpAddresses = ImmutableHashSet<IPAddress>.Empty;
         }
 
-        public static Result<EntitlementTokenProperties, ErrorCollection> Build(ITokenPropertyProvider provider) =>
+        public static Result<EntitlementTokenProperties, ErrorSet> Build(ITokenPropertyProvider provider) =>
             from notBefore in provider.NotBefore()
             join notAfter in provider.NotAfter() on true equals true
             join issuedAt in provider.IssuedAt() on true equals true

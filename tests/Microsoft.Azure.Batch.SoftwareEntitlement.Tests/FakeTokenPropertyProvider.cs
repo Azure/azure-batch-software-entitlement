@@ -13,15 +13,15 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             issuedAt = issuedAt ?? DateTimeOffset.Now;
             return new FakeTokenPropertyProvider
             {
-                ApplicationIds = Result.FromOk(DefaultApplicationIds),
-                Audience = Result.FromOk(DefaultAudience),
-                TokenId = Result.FromOk(DefaultTokenId),
-                IpAddresses = Result.FromOk(DefaultIpAddresses),
-                IssuedAt = Result.FromOk(issuedAt.Value),
-                Issuer = Result.FromOk(DefaultIssuer),
-                NotAfter = Result.FromOk(issuedAt.Value + DefaultLifetime),
-                NotBefore = Result.FromOk(issuedAt.Value),
-                VirtualMachineId = Result.FromOk(DefaultVirtualMachineId)
+                ApplicationIds = DefaultApplicationIds.AsOk(),
+                Audience = DefaultAudience.AsOk(),
+                TokenId = DefaultTokenId.AsOk(),
+                IpAddresses = DefaultIpAddresses.AsOk(),
+                IssuedAt = issuedAt.Value.AsOk(),
+                Issuer = DefaultIssuer.AsOk(),
+                NotAfter = (issuedAt.Value + DefaultLifetime).AsOk(),
+                NotBefore = issuedAt.Value.AsOk(),
+                VirtualMachineId = DefaultVirtualMachineId.AsOk()
             };
         }
 
@@ -40,40 +40,40 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
         public static readonly TimeSpan DefaultLifetime = TimeSpan.FromDays(7);
 
-        public Result<IEnumerable<string>, ErrorCollection> ApplicationIds { get; set; }
+        public Result<IEnumerable<string>, ErrorSet> ApplicationIds { get; set; }
 
-        public Result<string, ErrorCollection> Audience { get; set; }
+        public Result<string, ErrorSet> Audience { get; set; }
 
-        public Result<string, ErrorCollection> TokenId { get; set; }
+        public Result<string, ErrorSet> TokenId { get; set; }
 
-        public Result<IEnumerable<IPAddress>, ErrorCollection> IpAddresses { get; set; }
+        public Result<IEnumerable<IPAddress>, ErrorSet> IpAddresses { get; set; }
 
-        public Result<DateTimeOffset, ErrorCollection> IssuedAt { get; set; }
+        public Result<DateTimeOffset, ErrorSet> IssuedAt { get; set; }
 
-        public Result<string, ErrorCollection> Issuer { get; set; }
+        public Result<string, ErrorSet> Issuer { get; set; }
 
-        public Result<DateTimeOffset, ErrorCollection> NotAfter { get; set; }
+        public Result<DateTimeOffset, ErrorSet> NotAfter { get; set; }
 
-        public Result<DateTimeOffset, ErrorCollection> NotBefore { get; set; }
+        public Result<DateTimeOffset, ErrorSet> NotBefore { get; set; }
 
-        public Result<string, ErrorCollection> VirtualMachineId { get; set; }
+        public Result<string, ErrorSet> VirtualMachineId { get; set; }
 
-        Result<IEnumerable<string>, ErrorCollection> ITokenPropertyProvider.ApplicationIds() => ApplicationIds;
+        Result<IEnumerable<string>, ErrorSet> ITokenPropertyProvider.ApplicationIds() => ApplicationIds;
 
-        Result<string, ErrorCollection> ITokenPropertyProvider.Audience() => Audience;
+        Result<string, ErrorSet> ITokenPropertyProvider.Audience() => Audience;
 
-        Result<string, ErrorCollection> ITokenPropertyProvider.TokenId() => TokenId;
+        Result<string, ErrorSet> ITokenPropertyProvider.TokenId() => TokenId;
 
-        Result<IEnumerable<IPAddress>, ErrorCollection> ITokenPropertyProvider.IpAddresses() => IpAddresses;
+        Result<IEnumerable<IPAddress>, ErrorSet> ITokenPropertyProvider.IpAddresses() => IpAddresses;
 
-        Result<DateTimeOffset, ErrorCollection> ITokenPropertyProvider.IssuedAt() => IssuedAt;
+        Result<DateTimeOffset, ErrorSet> ITokenPropertyProvider.IssuedAt() => IssuedAt;
 
-        Result<string, ErrorCollection> ITokenPropertyProvider.Issuer() => Issuer;
+        Result<string, ErrorSet> ITokenPropertyProvider.Issuer() => Issuer;
 
-        Result<DateTimeOffset, ErrorCollection> ITokenPropertyProvider.NotAfter() => NotAfter;
+        Result<DateTimeOffset, ErrorSet> ITokenPropertyProvider.NotAfter() => NotAfter;
 
-        Result<DateTimeOffset, ErrorCollection> ITokenPropertyProvider.NotBefore() => NotBefore;
+        Result<DateTimeOffset, ErrorSet> ITokenPropertyProvider.NotBefore() => NotBefore;
 
-        Result<string, ErrorCollection> ITokenPropertyProvider.VirtualMachineId() => VirtualMachineId;
+        Result<string, ErrorSet> ITokenPropertyProvider.VirtualMachineId() => VirtualMachineId;
     }
 }

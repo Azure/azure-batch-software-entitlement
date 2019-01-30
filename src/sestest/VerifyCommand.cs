@@ -113,7 +113,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return handler;
         }
 
-        private Result<string, ErrorCollection> FindToken(VerifyCommandLine commandLine)
+        private Result<string, ErrorSet> FindToken(VerifyCommandLine commandLine)
         {
             var token = commandLine.Token;
             if (string.IsNullOrEmpty(token))
@@ -123,25 +123,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             if (string.IsNullOrEmpty(token))
             {
-                return ErrorCollection.Create(
+                return ErrorSet.Create(
                     "No token supplied on command line and AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN not set.");
             }
 
             return token;
         }
 
-        private static Result<string, ErrorCollection> FindApplication(VerifyCommandLine commandLine)
+        private static Result<string, ErrorSet> FindApplication(VerifyCommandLine commandLine)
         {
             var application = commandLine.Application;
             if (string.IsNullOrEmpty(application))
             {
-                return ErrorCollection.Create("No application specified.");
+                return ErrorSet.Create("No application specified.");
             }
 
             return application;
         }
 
-        private Result<Uri, ErrorCollection> FindServer(VerifyCommandLine commandLine)
+        private Result<Uri, ErrorSet> FindServer(VerifyCommandLine commandLine)
         {
             var server = commandLine.Server;
             if (string.IsNullOrEmpty(server))
@@ -151,7 +151,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             if (string.IsNullOrEmpty(server))
             {
-                return ErrorCollection.Create("No server supplied on command line and AZ_BATCH_ACCOUNT_URL not set.");
+                return ErrorSet.Create("No server supplied on command line and AZ_BATCH_ACCOUNT_URL not set.");
             }
 
             try
@@ -160,12 +160,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
             catch (UriFormatException ex)
             {
-                return ErrorCollection.Create(
+                return ErrorSet.Create(
                     $"Failed to parse server url ({ex.Message})");
             }
         }
 
-        private static Result<string, ErrorCollection> FindApiVersion(VerifyCommandLine commandLine)
+        private static Result<string, ErrorSet> FindApiVersion(VerifyCommandLine commandLine)
         {
             var version = commandLine.ApiVersion;
             if (string.IsNullOrEmpty(version))

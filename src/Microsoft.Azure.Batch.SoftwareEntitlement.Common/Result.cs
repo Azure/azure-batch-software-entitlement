@@ -2,36 +2,29 @@ using System;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
 {
-    public static class Result
-    {
-        public static Result<TOk, ErrorCollection> FromOk<TOk>(TOk ok) =>
-            new Result<TOk, ErrorCollection>(ok);
-    }
-
     /// <summary>
     /// A container that either contains a success (OK) value, or an error.
     /// </summary>
     /// <typeparam name="TOk">The success type</typeparam>
     /// <typeparam name="TError">The error type</typeparam>
-    public class Result<TOk, TError>
+    public sealed class Result<TOk, TError>
     {
         private readonly TOk _ok;
         private readonly TError _error;
         private readonly bool _isOk;
 
-        protected Result(TOk ok, TError error, bool isOk)
+        public Result(TOk ok)
         {
             _ok = ok;
+            _error = default;
+            _isOk = true;
+        }
+
+        public Result(TError error)
+        {
+            _ok = default;
             _error = error;
-            _isOk = isOk;
-        }
-
-        public Result(TOk ok) : this(ok, default, true)
-        {
-        }
-
-        public Result(TError error) : this(default, error, false)
-        {
+            _isOk = false;
         }
 
         public void Match(Action<TOk> okAction, Action<TError> errorAction)

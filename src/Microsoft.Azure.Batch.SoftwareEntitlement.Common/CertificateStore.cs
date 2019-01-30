@@ -22,9 +22,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// </summary>
         /// <param name="purpose">A use for which the certificate is needed (for human consumption).</param>
         /// <param name="thumbprint">Thumbprint of the certificate we need.</param>
-        /// <returns>An <see cref="Result{X509Certificate2, ErrorCollection}"/> containing a certificate if found, or an
+        /// <returns>An <see cref="Result{X509Certificate2,ErrorSet}"/> containing a certificate if found, or an
         /// error otherwise.</returns>
-        Result<X509Certificate2, ErrorCollection> FindByThumbprint(string purpose, CertificateThumbprint thumbprint);
+        Result<X509Certificate2, ErrorSet> FindByThumbprint(string purpose, CertificateThumbprint thumbprint);
     }
 
     /// <summary>
@@ -106,9 +106,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// </summary>
         /// <param name="purpose">A use for which the certificate is needed (for human consumption).</param>
         /// <param name="thumbprint">Thumbprint of the certificate we need.</param>
-        /// <returns>An <see cref="Result{X509Certificate2,ErrorCollection}"/> containing a certificate if found, or an
+        /// <returns>An <see cref="Result{X509Certificate2,ErrorSet}"/> containing a certificate if found, or an
         /// error otherwise.</returns>
-        public Result<X509Certificate2, ErrorCollection> FindByThumbprint(string purpose, CertificateThumbprint thumbprint)
+        public Result<X509Certificate2, ErrorSet> FindByThumbprint(string purpose, CertificateThumbprint thumbprint)
         {
             var query =
                 from name in _storeNames
@@ -133,7 +133,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 return certificate;
             }
 
-            return ErrorCollection.Create($"Did not find {purpose} certificate {thumbprint}");
+            return ErrorSet.Create($"Did not find {purpose} certificate {thumbprint}");
         }
 
         /// <summary>

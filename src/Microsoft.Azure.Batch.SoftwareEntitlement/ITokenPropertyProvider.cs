@@ -15,46 +15,46 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Gets the moment at which the token is issued
         /// </summary>
-        Result<DateTimeOffset, ErrorCollection> IssuedAt();
+        Result<DateTimeOffset, ErrorSet> IssuedAt();
 
         /// <summary>
         /// Gets the earliest moment at which the token is active
         /// </summary>
-        Result<DateTimeOffset, ErrorCollection> NotBefore();
+        Result<DateTimeOffset, ErrorSet> NotBefore();
 
         /// <summary>
         /// Gets the latest moment at which the token is active
         /// </summary>
-        Result<DateTimeOffset, ErrorCollection> NotAfter();
+        Result<DateTimeOffset, ErrorSet> NotAfter();
 
         /// <summary>
         /// Gets the audience for whom the token is intended
         /// </summary>
-        Result<string, ErrorCollection> Audience();
+        Result<string, ErrorSet> Audience();
 
         /// <summary>
         /// Gets the issuer who hands out entitlement tokens
         /// </summary>
-        Result<string, ErrorCollection> Issuer();
+        Result<string, ErrorSet> Issuer();
 
         /// <summary>
         /// Gets the set of applications that are entitled to run
         /// </summary>
-        Result<IEnumerable<string>, ErrorCollection> ApplicationIds();
+        Result<IEnumerable<string>, ErrorSet> ApplicationIds();
 
         /// <summary>
         /// Gets the IP addresses of the machine authorized to use this token
         /// </summary>
-        Result<IEnumerable<IPAddress>, ErrorCollection> IpAddresses();
+        Result<IEnumerable<IPAddress>, ErrorSet> IpAddresses();
 
         /// <summary>
         /// Gets the virtual machine identifier for the machine entitled to use the specified packages
         /// </summary>
-        Result<string, ErrorCollection> VirtualMachineId();
+        Result<string, ErrorSet> VirtualMachineId();
 
         /// <summary>
         /// Gets the unique identifier for the token
         /// </summary>
-        Result<string, ErrorCollection> TokenId();
+        Result<string, ErrorSet> TokenId();
     }
 }

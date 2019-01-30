@@ -42,16 +42,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="token">The JWT token string</param>
         /// <returns>
-        /// An <see cref="Result{NodeEntitlements,ErrorCollection}"/> containing the result, or an
+        /// An <see cref="Result{NodeEntitlements,ErrorSet}"/> containing the result, or an
         /// error if it failed to validate correctly.
         /// </returns>
-        public Result<EntitlementTokenProperties, ErrorCollection> Parse(string token) =>
+        public Result<EntitlementTokenProperties, ErrorSet> Parse(string token) =>
             from pair in ExtractJwt(token)
             let provider = new JwtPropertyProvider(pair.Principal, pair.Token)
             from entitlements in EntitlementTokenProperties.Build(provider)
             select entitlements;
 
-        private Result<(ClaimsPrincipal Principal, JwtSecurityToken Token), ErrorCollection> ExtractJwt(string tokenString)
+        private Result<(ClaimsPrincipal Principal, JwtSecurityToken Token), ErrorSet> ExtractJwt(string tokenString)
         {
             var validationParameters = new TokenValidationParameters
             {
@@ -75,30 +75,30 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
                 if (!(token is JwtSecurityToken jwt))
                 {
-                    return ErrorCollection.Create("Validated security token is expected to be a JWT");
+                    return ErrorSet.Create("Validated security token is expected to be a JWT");
                 }
 
                 return (principal, jwt);
             }
             catch (SecurityTokenNotYetValidException exception)
             {
-                return ErrorCollection.Create(TokenNotYetValidError(exception.NotBefore));
+                return ErrorSet.Create(TokenNotYetValidError(exception.NotBefore));
             }
             catch (SecurityTokenExpiredException exception)
             {
-                return ErrorCollection.Create(TokenExpiredError(exception.Expires));
+                return ErrorSet.Create(TokenExpiredError(exception.Expires));
             }
             catch (SecurityTokenNoExpirationException)
             {
-                return ErrorCollection.Create(MissingExpirationError());
+                return ErrorSet.Create(MissingExpirationError());
             }
             catch (SecurityTokenInvalidIssuerException exception)
             {
-                return ErrorCollection.Create(UnexpectedIssuerError(exception.InvalidIssuer));
+                return ErrorSet.Create(UnexpectedIssuerError(exception.InvalidIssuer));
             }
             catch (SecurityTokenInvalidAudienceException exception)
             {
-                return ErrorCollection.Create(UnexpectedAudienceError(exception.InvalidAudience));
+                return ErrorSet.Create(UnexpectedAudienceError(exception.InvalidAudience));
             }
             catch (ArgumentException exception)
                 when (exception.Message.StartsWith("IDX", StringComparison.Ordinal))
@@ -108,11 +108,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 //  - Invalid characters (not base-64)
                 //  - Invalid base-64 strings (not decodable)
                 //  - base-64 strings that decode to invalid JWT parts
-                return ErrorCollection.Create("Token is not well formed");
+                return ErrorSet.Create("Token is not well formed");
             }
             catch (Exception exception)
             {
-                return ErrorCollection.Create(InvalidTokenError(exception.Message));
+                return ErrorSet.Create(InvalidTokenError(exception.Message));
             }
         }
 

@@ -9,14 +9,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
     public interface ITokenPropertyParser
     {
         /// <summary>
-        /// Parses a token and builds a <see cref="EntitlementTokenProperties"/> object, or an <see cref="Errorable"/>
+        /// Parses a token and builds a <see cref="EntitlementTokenProperties"/> object, or a <see cref="Result{TokenProperties,ErrorSet}"/>
         /// if any parsing or validation error occurs.
         /// </summary>
         /// <param name="token">A string token</param>
         /// <returns>
-        /// An <see cref="Result{TokenProperties,ErrorCollection}"/> containing the result, or an
+        /// An <see cref="Result{TokenProperties,ErrorSet}"/> containing the result, or an
         /// error if it failed to validate correctly.
         /// </returns>
-        Result<EntitlementTokenProperties, ErrorCollection> Parse(string token);
+        Result<EntitlementTokenProperties, ErrorSet> Parse(string token);
     }
 }

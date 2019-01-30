@@ -25,10 +25,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="request">The entitlement request</param>
         /// <param name="token">The token string containing the entitlements</param>
-        /// <returns>An <see cref="Result{NodeEntitlements,ErrorCollection}"/> containing the validated
+        /// <returns>An <see cref="Result{NodeEntitlements,ErrorSet}"/> containing the validated
         /// <see cref="EntitlementTokenProperties"/> if validation was successful, or one or more
         /// validation errors otherwise.</returns>
-        public Result<EntitlementTokenProperties,ErrorCollection> Verify(
+        public Result<EntitlementTokenProperties,ErrorSet> Verify(
             TokenVerificationRequest request,
             string token)
         {
@@ -43,18 +43,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 select verifiedProps;
         }
 
-        private static Result<EntitlementTokenProperties, ErrorCollection> Verify(
+        private static Result<EntitlementTokenProperties, ErrorSet> Verify(
             TokenVerificationRequest request,
             EntitlementTokenProperties tokenProperties)
         {
             if (!tokenProperties.Applications.Any(a => string.Equals(a, request.ApplicationId, StringComparison.OrdinalIgnoreCase)))
             {
-                return ErrorCollection.Create($"Token does not grant entitlement for {request.ApplicationId}");
+                return ErrorSet.Create($"Token does not grant entitlement for {request.ApplicationId}");
             }
 
             if (!tokenProperties.IpAddresses.Any(addr => addr.Equals(request.IpAddress)))
             {
-                return ErrorCollection.Create($"Token does not grant entitlement for {request.IpAddress}");
+                return ErrorSet.Create($"Token does not grant entitlement for {request.IpAddress}");
             }
 
             return tokenProperties;

@@ -183,7 +183,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
         }
 
-        private static Result<LogLevel, ErrorCollection> TryParseLogLevel(string level, string purpose, LogLevel defaultLevel)
+        private static Result<LogLevel, ErrorSet> TryParseLogLevel(string level, string purpose, LogLevel defaultLevel)
         {
             if (string.IsNullOrEmpty(level))
             {
@@ -196,7 +196,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 return result;
             }
 
-            return ErrorCollection.Create(
+            return ErrorSet.Create(
                 $"Failed to recognize {purpose} log level '{level}'; valid choices are: error, warning, information, and debug.");
         }
     }

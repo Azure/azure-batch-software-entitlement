@@ -5,7 +5,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 {
     public static class ResultExtensions
     {
-        public static T LogIfFailed<T>(this Result<T, ErrorCollection> result, ILogger logger, T valueIfFailed) =>
+        public static T LogIfFailed<T>(this Result<T, ErrorSet> result, ILogger logger, T valueIfFailed) =>
             result.Merge(errors =>
             {
                 logger.LogErrors(errors);
