@@ -96,6 +96,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                                      && !c.SupportsUse(X509KeyUsageFlags.DataEncipherment)));
             }
 
+            if (showCerts == ShowCertificates.All
+                || showCerts == ShowCertificates.ForServerAuth
+                || showCerts == ShowCertificates.NonExpired)
+            {
+                LogCertificates(
+                    "Found {0} non-expired certificates with private keys that allow server authentication",
+                    candidates.Where(c => now < c.NotAfter
+                                     && c.SupportsServerAuthentication()));
+            }
+
             if (showCerts == ShowCertificates.All)
             {
                 LogCertificates(
@@ -171,7 +181,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             return ErrorSet.Create(
-                $"Failed to recognize '{show}'; valid choices are: `nonexpired` (default), 'forsigning', 'forencrypting', 'expired', and 'all'.");
+                $"Failed to recognize '{show}'; valid choices are: `nonexpired` (default), 'forsigning', 'forencrypting', 'expired', 'forserverauth', and 'all'.");
         }
 
         [Flags]
@@ -180,8 +190,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             NonExpired = 1,
             ForSigning = 2,
             ForEncrypting = 4,
-            Expired = 8,
-            All = NonExpired | Expired | ForSigning | ForEncrypting
+            ForServerAuth = 8,
+            Expired = 16,
+            All = NonExpired | Expired | ForSigning | ForEncrypting | ForServerAuth
         }
     }
 }
