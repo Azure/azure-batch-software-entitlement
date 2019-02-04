@@ -100,10 +100,22 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 || showCerts == ShowCertificates.ForServerAuth
                 || showCerts == ShowCertificates.NonExpired)
             {
+                var serverAuthCerts = candidates
+                    .Where(cert => now < cert.NotAfter && cert.SupportsServerAuthentication())
+                    .Select(cert => new
+                    {
+                        IsVerified = cert.Verify(),
+                        Cert = cert
+                    })
+                    .ToList();
+
                 LogCertificates(
-                    "Found {0} non-expired certificates with private keys that allow server authentication",
-                    candidates.Where(c => now < c.NotAfter
-                                     && c.SupportsServerAuthentication()));
+                    "Found {0} non-expired certificates with private keys that allow server authentication and are verified",
+                    serverAuthCerts.Where(c => c.IsVerified).Select(c => c.Cert));
+
+                LogCertificates(
+                    "Found {0} non-expired certificates with private keys that allow server authentication and are not verified",
+                    serverAuthCerts.Where(c => !c.IsVerified).Select(c => c.Cert));
             }
 
             if (showCerts == ShowCertificates.All)
