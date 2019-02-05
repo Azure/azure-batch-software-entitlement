@@ -190,14 +190,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 return defaultLevel;
             }
 
-            if (Enum.TryParse<LogLevel>(level, true, out var result))
-            {
-                // Successfully parsed the string
-                return result;
-            }
-
-            return ErrorSet.Create(
-                $"Failed to recognize {purpose} log level '{level}'; valid choices are: error, warning, information, and debug.");
+            return purpose.ParseEnum<LogLevel>().OnError(_ => ErrorSet.Create(
+                $"Failed to recognize {purpose} log level '{level}'; valid choices are: error, warning, information, and debug."));
         }
     }
 }
