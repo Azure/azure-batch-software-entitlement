@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Net;
 using FluentAssertions;
+using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
 using Xunit;
 
 namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
@@ -198,85 +200,156 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             }
         }
 
-        public class Create : EntitlementTokenPropertiesTests
+        public class Build : EntitlementTokenPropertiesTests
         {
-            private readonly FakeTokenPropertyProvider _validProvider = FakeTokenPropertyProvider.CreateValid();
+            private readonly FakeTokenPropertyProvider _defaultProvider = FakeTokenPropertyProvider.CreateDefault();
 
             [Fact]
-            public void GivenValidReader_ReturnsNoErrors()
+            public void GivenValidProvider_ReturnsNoErrors()
             {
-                // If this test fails, verify that the command line specified by _commandLine 
-                // (above) correctly specifies a valid token; If this constraint is violated, most 
+                // If this test fails, verify that the token provider specified by _defaultProvider 
+                // (above) has no errors in any of its properties; If this constraint is violated, most 
                 // all of the tests later in this file might fail with spurious errors.
-                var tokenProperties = EntitlementTokenProperties.Build(_validProvider);
-                tokenProperties.AssertOk($"the command line represented by {nameof(_validProvider)} should result in a valid token");
+                var tokenProperties = EntitlementTokenProperties.Build(_defaultProvider);
+                tokenProperties.AssertOk($"the token provider represented by {nameof(_defaultProvider)} should have no errors");
             }
 
             [Fact]
-            public void GivenValidReader_ApplicationIdsAreSet()
+            public void GivenValidProvider_ApplicationIdsAreSet()
             {
-                var tokenProperties = EntitlementTokenProperties.Build(_validProvider);
+                var tokenProperties = EntitlementTokenProperties.Build(_defaultProvider);
                 tokenProperties.AssertOk().Applications.Should().BeEquivalentTo(FakeTokenPropertyProvider.DefaultApplicationIds);
             }
 
             [Fact]
-            public void GivenValidReader_AudienceIsSet()
+            public void GivenValidProvider_AudienceIsSet()
             {
-                var tokenProperties = EntitlementTokenProperties.Build(_validProvider);
+                var tokenProperties = EntitlementTokenProperties.Build(_defaultProvider);
                 tokenProperties.AssertOk().Audience.Should().Be(FakeTokenPropertyProvider.DefaultAudience);
             }
 
             [Fact]
-            public void GivenValidReader_IdentifierIsSet()
+            public void GivenValidProvider_IdentifierIsSet()
             {
-                var tokenProperties = EntitlementTokenProperties.Build(_validProvider);
+                var tokenProperties = EntitlementTokenProperties.Build(_defaultProvider);
                 tokenProperties.AssertOk().Identifier.Should().Be(FakeTokenPropertyProvider.DefaultTokenId);
             }
 
             [Fact]
-            public void GivenValidReader_IpAddressesAreSet()
+            public void GivenValidProvider_IpAddressesAreSet()
             {
-                var tokenProperties = EntitlementTokenProperties.Build(_validProvider);
+                var tokenProperties = EntitlementTokenProperties.Build(_defaultProvider);
                 tokenProperties.AssertOk().IpAddresses.Should().BeEquivalentTo(FakeTokenPropertyProvider.DefaultIpAddresses);
             }
 
             [Fact]
-            public void GivenValidReader_IssuedAtIsSet()
+            public void GivenValidProvider_IssuedAtIsSet()
             {
-                var now = DateTimeOffset.Now;
-                var tokenProperties = EntitlementTokenProperties.Build(FakeTokenPropertyProvider.CreateValid(now));
-                tokenProperties.AssertOk().IssuedAt.Should().Be(now);
+                var tokenProperties = EntitlementTokenProperties.Build(_defaultProvider);
+                tokenProperties.AssertOk().IssuedAt.Should().Be(FakeTokenPropertyProvider.DefaultIssuedAt);
             }
 
             [Fact]
-            public void GivenValidReader_IssuerIsSet()
+            public void GivenValidProvider_IssuerIsSet()
             {
-                var tokenProperties = EntitlementTokenProperties.Build(_validProvider);
+                var tokenProperties = EntitlementTokenProperties.Build(_defaultProvider);
                 tokenProperties.AssertOk().Issuer.Should().Be(FakeTokenPropertyProvider.DefaultIssuer);
             }
 
             [Fact]
-            public void GivenValidReader_NotAfterIsSet()
+            public void GivenValidProvider_NotAfterIsSet()
             {
-                var now = DateTimeOffset.Now;
-                var tokenProperties = EntitlementTokenProperties.Build(FakeTokenPropertyProvider.CreateValid(now));
-                tokenProperties.AssertOk().NotAfter.Should().Be(now + FakeTokenPropertyProvider.DefaultLifetime);
+                var tokenProperties = EntitlementTokenProperties.Build(_defaultProvider);
+                tokenProperties.AssertOk().NotAfter.Should().Be(FakeTokenPropertyProvider.DefaultNotAfter);
             }
 
             [Fact]
-            public void GivenValidReader_NotBeforeIsSet()
+            public void GivenValidProvider_NotBeforeIsSet()
             {
-                var now = DateTimeOffset.Now;
-                var tokenProperties = EntitlementTokenProperties.Build(FakeTokenPropertyProvider.CreateValid(now));
-                tokenProperties.AssertOk().NotBefore.Should().Be(now);
+                var tokenProperties = EntitlementTokenProperties.Build(_defaultProvider);
+                tokenProperties.AssertOk().NotBefore.Should().Be(FakeTokenPropertyProvider.DefaultNotBefore);
             }
 
             [Fact]
-            public void GivenValidReader_VirtualMachineIdIsSet()
+            public void GivenValidProvider_VirtualMachineIdIsSet()
             {
-                var tokenProperties = EntitlementTokenProperties.Build(_validProvider);
+                var tokenProperties = EntitlementTokenProperties.Build(_defaultProvider);
                 tokenProperties.AssertOk().VirtualMachineId.Should().Be(FakeTokenPropertyProvider.DefaultVirtualMachineId);
             }
+
+            [Theory]
+            [MemberData(nameof(GetInvalidTokenPropertyProviders))]
+            public void GivenInvalidProvider_TokenPropertiesHasError(ITokenPropertyProvider provider, ErrorSet expectedErrors)
+            {
+                var tokenProperties = EntitlementTokenProperties.Build(provider);
+                tokenProperties.AssertError().Should().BeEquivalentTo(expectedErrors);
+            }
+
+            public static TheoryData<ITokenPropertyProvider, ErrorSet> GetInvalidTokenPropertyProviders()
+            {
+                var data = new TheoryData<ITokenPropertyProvider, ErrorSet>();
+                void AddData(FakeTokenPropertyProvider provider)
+                {
+                    var expectedErrors = new List<string>();
+
+                    provider.ApplicationIds.OnError(e => expectedErrors.AddRange(e));
+                    provider.Audience.OnError(e => expectedErrors.AddRange(e));
+                    provider.IpAddresses.OnError(e => expectedErrors.AddRange(e));
+                    provider.NotAfter.OnError(e => expectedErrors.AddRange(e));
+                    provider.IssuedAt.OnError(e => expectedErrors.AddRange(e));
+                    provider.Issuer.OnError(e => expectedErrors.AddRange(e));
+                    provider.NotBefore.OnError(e => expectedErrors.AddRange(e));
+                    provider.TokenId.OnError(e => expectedErrors.AddRange(e));
+                    provider.VirtualMachineId.OnError(e => expectedErrors.AddRange(e));
+
+                    data.Add(provider, ErrorSet.Create(expectedErrors));
+                }
+
+                Result<IEnumerable<string>, ErrorSet> applicationIdsError = ErrorSet.Create("Error providing applicationIds");
+                Result<string, ErrorSet> audienceError = ErrorSet.Create("Error providing audience");
+                Result<IEnumerable<IPAddress>, ErrorSet> ipAddressesError = ErrorSet.Create("Error providing ipAddresses");
+                Result<DateTimeOffset, ErrorSet> notAfterError = ErrorSet.Create("Error providing notAfter");
+                Result<DateTimeOffset, ErrorSet> issuedAtError = ErrorSet.Create("Error providing issuedAt");
+                Result<string, ErrorSet> issuerError = ErrorSet.Create("Error providing issuer");
+                Result<DateTimeOffset, ErrorSet> notBeforeError = ErrorSet.Create("Error providing notBefore");
+                Result<string, ErrorSet> tokenIdError = ErrorSet.Create("Error providing tokenId");
+                Result<string, ErrorSet> vmidError = ErrorSet.Create("Error providing vmid");
+
+                AddData(CreateProvider(applicationIds: Specify.As(applicationIdsError)));
+                AddData(CreateProvider(audience: Specify.As(audienceError)));
+                AddData(CreateProvider(ipAddresses: Specify.As(ipAddressesError)));
+                AddData(CreateProvider(notAfter: Specify.As(notAfterError)));
+                AddData(CreateProvider(issuedAt: Specify.As(issuedAtError)));
+                AddData(CreateProvider(issuer: Specify.As(issuerError)));
+                AddData(CreateProvider(notBefore: Specify.As(notBeforeError)));
+                AddData(CreateProvider(tokenId: Specify.As(tokenIdError)));
+                AddData(CreateProvider(vmid: Specify.As(vmidError)));
+
+                return data;
+            }
+
+            private static FakeTokenPropertyProvider CreateProvider(
+                Specifiable<Result<IEnumerable<string>, ErrorSet>> applicationIds = default,
+                Specifiable<Result<string, ErrorSet>> audience = default,
+                Specifiable<Result<IEnumerable<IPAddress>, ErrorSet>> ipAddresses = default,
+                Specifiable<Result<DateTimeOffset, ErrorSet>> notAfter = default,
+                Specifiable<Result<DateTimeOffset, ErrorSet>> issuedAt = default,
+                Specifiable<Result<string, ErrorSet>> issuer = default,
+                Specifiable<Result<DateTimeOffset, ErrorSet>> notBefore = default,
+                Specifiable<Result<string, ErrorSet>> tokenId = default,
+                Specifiable<Result<string, ErrorSet>> vmid = default) =>
+                new FakeTokenPropertyProvider
+                {
+                    ApplicationIds = applicationIds.OrDefault(FakeTokenPropertyProvider.DefaultApplicationIds.AsOk()),
+                    Audience = audience.OrDefault(FakeTokenPropertyProvider.DefaultAudience.AsOk()),
+                    IpAddresses = ipAddresses.OrDefault(FakeTokenPropertyProvider.DefaultIpAddresses.AsOk()),
+                    NotAfter = notAfter.OrDefault(FakeTokenPropertyProvider.DefaultNotAfter.AsOk()),
+                    IssuedAt = issuedAt.OrDefault(FakeTokenPropertyProvider.DefaultIssuedAt.AsOk()),
+                    Issuer = issuer.OrDefault(FakeTokenPropertyProvider.DefaultIssuer.AsOk()),
+                    NotBefore = notBefore.OrDefault(FakeTokenPropertyProvider.DefaultNotBefore.AsOk()),
+                    TokenId = tokenId.OrDefault(FakeTokenPropertyProvider.DefaultTokenId.AsOk()),
+                    VirtualMachineId = vmid.OrDefault(FakeTokenPropertyProvider.DefaultVirtualMachineId.AsOk())
+                };
         }
     }
 }

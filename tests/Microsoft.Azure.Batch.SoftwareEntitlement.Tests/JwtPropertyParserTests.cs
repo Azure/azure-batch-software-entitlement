@@ -15,8 +15,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         // Credentials used for signing
         private readonly SigningCredentials _signingCredentials;
 
-        // The entitlements used to generate the token
+        // The properties used to generate the token
         private readonly EntitlementTokenProperties _sourceTokenProperties;
+
+        private static readonly TimeSpan TokenLifetime = TimeSpan.FromDays(1);
+        private static readonly DateTimeOffset TokenNotBefore = DateTimeOffset.Now.ToUniversalTime();
+        private static readonly DateTimeOffset TokenNotAfter = TokenNotBefore.Add(TokenLifetime);
 
         public JwtPropertyParserTests()
         {
@@ -30,7 +34,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             var encryptingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(plainTextEncryptionKey));
             _encryptingCredentials = new EncryptingCredentials(encryptingKey, "dir", SecurityAlgorithms.Aes256CbcHmacSha512);
 
-            _sourceTokenProperties = EntitlementTokenProperties.Build(FakeTokenPropertyProvider.CreateValid()).AssertOk();
+            _sourceTokenProperties = EntitlementTokenProperties.Build(FakeTokenPropertyProvider.CreateDefault())
+                .AssertOk()
+                .FromInstant(TokenNotBefore).UntilInstant(TokenNotAfter);
         }
 
         private string GenerateToken(EntitlementTokenProperties tokenProperties)

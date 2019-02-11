@@ -1,6 +1,5 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Net;
 using System.Security.Claims;
 using FluentAssertions;
@@ -20,7 +19,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
         public JwtPropertyProviderTests()
         {
-            _sourceTokenProperties = EntitlementTokenProperties.Build(FakeTokenPropertyProvider.CreateValid()).AssertOk();
+            _sourceTokenProperties = EntitlementTokenProperties.Build(FakeTokenPropertyProvider.CreateDefault()).AssertOk();
         }
 
         private static JwtPropertyProvider CreatePropertyProvider(EntitlementTokenProperties sourceTokenProperties)

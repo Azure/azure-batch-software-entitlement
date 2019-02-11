@@ -34,6 +34,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         // Used to look up values in a fake entitlement parser
         private readonly string _testToken = "testtoken";
 
+        private static readonly TimeSpan TokenLifetime = TimeSpan.FromDays(1);
+        private static readonly DateTimeOffset TokenNotBefore = DateTimeOffset.Now.ToUniversalTime();
+        private static readonly DateTimeOffset TokenNotAfter = TokenNotBefore.Add(TokenLifetime);
+
         public TokenVerifierTests()
         {
             // Hard coded key for unit testing only; actual operation will use a cert
@@ -46,7 +50,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             var encryptingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(plainTextEncryptionKey));
             _encryptingCredentials = new EncryptingCredentials(encryptingKey, "dir", SecurityAlgorithms.Aes256CbcHmacSha512);
 
-            _completeTokenProperties = EntitlementTokenProperties.Build(FakeTokenPropertyProvider.CreateValid()).AssertOk();
+            _completeTokenProperties = EntitlementTokenProperties.Build(FakeTokenPropertyProvider.CreateDefault())
+                .AssertOk()
+                .FromInstant(TokenNotBefore).UntilInstant(TokenNotAfter);
+
             _validVerificationRequest = new TokenVerificationRequest(
                 _completeTokenProperties.Applications.First(),
                 _completeTokenProperties.IpAddresses.First());
