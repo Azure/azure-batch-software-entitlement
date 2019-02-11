@@ -16,7 +16,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// if either input is an error, the output is an error.
         /// </remarks>
         /// <returns></returns>
-        public static Result<TResultOk, TError> With<TLocalOk, TError, TOtherOk, TResultOk>(
+        public static Result<TResultOk, TError> With<TLocalOk, TOtherOk, TResultOk, TError>(
             this Result<TLocalOk, TError> result,
             Result<TOtherOk, TError> otherResult,
             Func<TLocalOk, TOtherOk, TResultOk> okCombiner)
@@ -57,7 +57,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// if either input is an error, the output is an error.
         /// </remarks>
         /// <returns></returns>
-        public static Result<(TFirstOk First, TSecondOk Second), TError> With<TFirstOk, TError, TSecondOk>(
+        public static Result<(TFirstOk First, TSecondOk Second), TError> With<TFirstOk, TSecondOk, TError>(
             this Result<TFirstOk, TError> first,
             Result<TSecondOk, TError> second)
             where TError : ICombinable<TError>
@@ -76,7 +76,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         }
 
         /// <summary>
-        /// Combine two <see cref="Result{TOk,TError}"/> values using the <see cref="With{TLocalOk,TError,TOtherOk,TResultOk}"/>
+        /// Combine two <see cref="Result{TOk,TError}"/> values using the <see cref="With{TLocalOk,TOtherOk,TResultOk,TError}"/>
         /// method, which combines their errors if either/both are in an error state.
         /// </summary>
         /// <remarks>
@@ -87,7 +87,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         ///     select (v1, v2)
         /// </code>
         /// </remarks>
-        public static Result<TResult, TError> Join<TOuter, TError, TInner, TKey, TResult>(
+        public static Result<TResult, TError> Join<TOuter, TInner, TKey, TResult, TError>(
             this Result<TOuter, TError> outer,
             Result<TInner, TError> inner,
             Func<TOuter, TKey> outerKeySelector,
@@ -109,7 +109,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         }
 
         /// <summary>
-        /// Combine two <see cref="Result{TOk,TError}"/> values using the <see cref="With{TLocalOk,TError,TOtherOk,TResultOk}"/>
+        /// Combine two <see cref="Result{TOk,TError}"/> values using the <see cref="With{TLocalOk,TOtherOk,TResultOk,TError}"/>
         /// method, which combines their errors if either/both are in an error state.
         /// This overload allows an error to be specified if the join fails (if the join criteria evaluate to false).
         /// </summary>
@@ -123,7 +123,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         ///     select GetResult(supplied)
         /// </code>
         /// </remarks>
-        public static Result<TResult, TError> Join<TOuter, TError, TInner, TKey, TResult>(
+        public static Result<TResult, TError> Join<TOuter, TInner, TKey, TResult, TError>(
             this Result<TOuter, TError> outer,
             (Result<TInner, TError> Result, TError JoinError) inner,
             Func<TOuter, TKey> outerKeySelector,
@@ -137,12 +137,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 EqualityComparer<TKey>.Default);
 
         /// <summary>
-        /// Combine two <see cref="Result{TOk,TError}"/> values using the <see cref="With{TLocalOk,TError,TOtherOk,TResultOk}"/>
+        /// Combine two <see cref="Result{TOk,TError}"/> values using the <see cref="With{TLocalOk,TOtherOk,TResultOk,TError}"/>
         /// method, which combines their errors if either/both are in an error state.
         /// This overload allows an error to be specified if the join fails (if the join criteria evaluate to false),
         /// as well as a custom comparer for the join keys.
         /// </summary>
-        public static Result<TResult, TError> Join<T, TError, TOther, TKey, TResult>(
+        public static Result<TResult, TError> Join<T, TOther, TKey, TResult, TError>(
             this Result<T, TError> outer,
             (Result<TOther, TError> Result, TError JoinError) joinTo,
             Func<T, TKey> localKeySelector,
@@ -350,7 +350,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// A <see cref="Result{TNextOk,TError}"/> containing the result of executing <paramref name="operation"/>
         /// if the input was successful, or the errors from this instance otherwise.
         /// </returns>
-        public static Result<TNextOk, TError> OnOk<TOk, TError, TNextOk>(
+        public static Result<TNextOk, TError> OnOk<TOk, TNextOk, TError>(
             this Result<TOk, TError> result,
             Func<TOk, TNextOk> operation)
         {
@@ -384,7 +384,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// An <see cref="Result{TNextOk,TError}"/> containing the result of executing <paramref name="operation"/>
         /// if the input was successful, or the errors from this instance otherwise.
         /// </returns>
-        public static Result<TNextOk, TError> OnOk<TOk, TError, TNextOk>(
+        public static Result<TNextOk, TError> OnOk<TOk, TNextOk, TError>(
             this Result<TOk, TError> result,
             Func<TOk, Result<TNextOk, TError>> operation)
         {
@@ -414,7 +414,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         ///     select val
         /// </code>
         /// </remarks>
-        public static Result<TResultOk, TError> Select<TSourceOk, TError, TResultOk>(
+        public static Result<TResultOk, TError> Select<TSourceOk, TResultOk, TError>(
             this Result<TSourceOk, TError> source,
             Func<TSourceOk, TResultOk> selector)
         {
@@ -444,7 +444,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         ///     select val1 + val2
         /// </code>
         /// </remarks>
-        public static Result<TResultOk, TError> SelectMany<TSourceOk, TError, TOtherOk, TResultOk>(
+        public static Result<TResultOk, TError> SelectMany<TSourceOk, TOtherOk, TResultOk, TError>(
             this Result<TSourceOk, TError> source,
             Func<TSourceOk, Result<TOtherOk, TError>> otherSelector,
             Func<TSourceOk, TOtherOk, TResultOk> resultSelector)
