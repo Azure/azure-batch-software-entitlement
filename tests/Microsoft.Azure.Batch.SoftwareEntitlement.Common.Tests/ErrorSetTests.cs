@@ -18,8 +18,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             public void GivenSingleError_ReturnsSingleResult()
             {
                 var result = ErrorSet.Create("Error");
-                result.Count().Should().Be(1);
-                result.First().Should().Be("Error");
+                result.Should().Equal("Error");
             }
 
             [Fact]
@@ -42,25 +41,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             public void GivenListOfSingleValue_ReturnsSingleResult()
             {
                 var result = ErrorSet.Create(new List<string> { "Error" });
-                result.Count().Should().Be(1);
-                result.First().Should().Be("Error");
+                result.Should().Equal("Error");
             }
 
             [Fact]
             public void GivenListOfTwoValues_ReturnsTwoResults()
             {
                 var result = ErrorSet.Create(new List<string> { "Error1", "Error2" });
-                result.Count().Should().Be(2);
-                result.Should().Contain("Error1");
-                result.Should().Contain("Error2");
+                result.Should().BeEquivalentTo("Error1", "Error2");
             }
 
             [Fact]
             public void GivenDuplicateValues_ReturnsOnlyOne()
             {
                 var result = ErrorSet.Create("Error", "Error");
-                result.Count().Should().Be(1);
-                result.Should().Contain("Error");
+                result.Should().Equal("Error");
             }
         }
 
@@ -100,34 +95,28 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             public void EmptyWithSingle_ReturnsSingle()
             {
                 var result = Empty.Combine(SingleItem);
-                result.Count().Should().Be(1);
-                result.First().Should().Be("S1");
+                result.Should().Equal("S1");
             }
 
             [Fact]
             public void SingleWithEmpty_ReturnsSingle()
             {
                 var result = SingleItem.Combine(Empty);
-                result.Count().Should().Be(1);
-                result.First().Should().Be("S1");
+                result.Should().Equal("S1");
             }
 
             [Fact]
             public void SingleWithSameSingle_ReturnsSameSingle()
             {
                 var result = SingleItem.Combine(Empty);
-                result.Count().Should().Be(1);
-                result.First().Should().Be("S1");
+                result.Should().Equal("S1");
             }
 
             [Fact]
             public void SingleWithTwo_ReturnsAll()
             {
                 var result = SingleItem.Combine(TwoItems);
-                result.Count().Should().Be(3);
-                result.Contains("S1").Should().BeTrue();
-                result.Contains("T1").Should().BeTrue();
-                result.Contains("T2").Should().BeTrue();
+                result.Should().BeEquivalentTo("S1", "T1", "T2");
             }
         }
     }
