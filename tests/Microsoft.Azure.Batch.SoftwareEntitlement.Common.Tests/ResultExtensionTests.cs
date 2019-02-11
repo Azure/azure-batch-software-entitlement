@@ -63,28 +63,28 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             public void GivenErrorFirst_ReturnsSameErrors()
             {
                 var result = ErrorIntResult.With(OkIntResult);
-                result.GetError().Content.Should().Be(DefaultErrorString);
+                result.AssertError().Content.Should().Be(DefaultErrorString);
             }
 
             [Fact]
             public void GivenErrorSecond_ReturnsSameErrors()
             {
                 var result = OkIntResult.With(ErrorIntResult);
-                result.GetError().Content.Should().Be(DefaultErrorString);
+                result.AssertError().Content.Should().Be(DefaultErrorString);
             }
 
             [Fact]
             public void GivenErrorOnBothSides_ReturnsAllErrors()
             {
                 var result = ErrorIntResult.With(OtherErrorIntResult);
-                result.GetError().Content.Should().Be($"{DefaultErrorString}, {DefaultOtherErrorString}");
+                result.AssertError().Content.Should().Be($"{DefaultErrorString}, {DefaultOtherErrorString}");
             }
 
             [Fact]
             public void GivenSuccessOnBothSides_ReturnsExpectedTuple()
             {
                 var result = OkIntResult.With(OtherOkIntResult);
-                result.GetOk().Should().Be((DefaultOkInt, DefaultOtherOkInt));
+                result.AssertOk().Should().Be((DefaultOkInt, DefaultOtherOkInt));
             }
         }
 
@@ -122,8 +122,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     join inner in OkIntResult on 1 equals 2
                     select outer + inner;
 
-                result.IsError().Should().BeFalse();
-                result.GetOk().Should().Be(DefaultOkInt * 2);
+                result.AssertOk().Should().Be(DefaultOkInt * 2);
             }
 
             [Fact]
@@ -141,7 +140,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     GetJoinKey,
                     (outer, inner) => outer + inner);
 
-                result.IsError().Should().BeFalse();
+                result.AssertOk();
                 _invocationCount.Should().Be(0);
             }
 
@@ -154,7 +153,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     null as Func<int, int>,
                     (outer, inner) => outer + inner);
 
-                result.IsError().Should().BeFalse();
+                result.AssertOk();
             }
 
             [Fact]
@@ -165,7 +164,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     join inner in OkIntResult on true equals true
                     select outer + inner;
 
-                result.GetError().Content.Should().Be(DefaultErrorString);
+                result.AssertError().Content.Should().Be(DefaultErrorString);
             }
 
             [Fact]
@@ -182,7 +181,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     join inner in OkIntResult on true equals true
                     select SelectResult(outer, inner);
 
-                result.IsError().Should().BeTrue();
+                result.AssertError();
                 _invocationCount.Should().Be(0);
             }
 
@@ -194,7 +193,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     join inner in ErrorIntResult on true equals true
                     select outer + inner;
 
-                result.GetError().Content.Should().Be(DefaultErrorString);
+                result.AssertError().Content.Should().Be(DefaultErrorString);
             }
 
             [Fact]
@@ -211,7 +210,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     join inner in ErrorIntResult on true equals true
                     select SelectResult(outer, inner);
 
-                result.IsError().Should().BeTrue();
+                result.AssertError();
                 _invocationCount.Should().Be(0);
             }
 
@@ -223,7 +222,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     join inner in OtherErrorIntResult on true equals true
                     select $"{outer} {inner}";
 
-                result.GetError().Content.Should().Be($"{DefaultErrorString}, {DefaultOtherErrorString}");
+                result.AssertError().Content.Should().Be($"{DefaultErrorString}, {DefaultOtherErrorString}");
             }
 
             [Fact]
@@ -240,7 +239,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     join inner in OtherErrorIntResult on true equals true
                     select SelectResult(outer, inner);
 
-                result.IsError().Should().BeTrue();
+                result.AssertError();
                 _invocationCount.Should().Be(0);
             }
 
@@ -252,7 +251,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     join inner in OtherOkIntResult on true equals true
                     select outer + inner;
 
-                result.GetOk().Should().Be(DefaultOkInt + DefaultOtherOkInt);
+                result.AssertOk().Should().Be(DefaultOkInt + DefaultOtherOkInt);
             }
 
             [Fact]
@@ -269,7 +268,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     join inner in OtherOkIntResult on true equals true
                     select SelectResult(outer, inner);
 
-                result.IsError().Should().BeFalse();
+                result.AssertOk();
                 _invocationCount.Should().Be(1);
             }
         }
@@ -284,7 +283,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     join inner in (OtherOkIntResult, "join failed") on 1 equals 0
                     select $"{outer} {inner}";
 
-                result.GetError().Content.Should().Be("join failed");
+                result.AssertError().Content.Should().Be("join failed");
             }
         }
 
@@ -314,7 +313,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             public void WhenPredicateIsTrue_ReturnsResult()
             {
                 var result = OkIntResult.Where(i => true.AsPredicateResult(new CombinableString("unused error")));
-                result.GetOk().Should().Be(DefaultOkInt);
+                result.AssertOk().Should().Be(DefaultOkInt);
             }
 
             [Fact]
@@ -322,7 +321,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             {
                 var predicateError = new CombinableString("predicate error");
                 var result = OkIntResult.Where(i => false.AsPredicateResult(predicateError));
-                result.GetError().Content.Should().Be(predicateError.Content);
+                result.AssertError().Content.Should().Be(predicateError.Content);
             }
 
             [Fact]
@@ -333,7 +332,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     where true.AsPredicateResult(new CombinableString("unused error"))
                     select r;
 
-                result.GetOk().Should().Be(DefaultOkInt);
+                result.AssertOk().Should().Be(DefaultOkInt);
             }
         }
 
@@ -411,7 +410,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                 });
 
                 invoked.Should().Be(true);
-                result.GetError().Should().Be(DefaultErrorString + "!");
+                result.AssertError().Should().Be(DefaultErrorString + "!");
             }
 
             [Fact]
@@ -425,7 +424,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                 });
 
                 invoked.Should().Be(false);
-                result.IsOk().Should().BeTrue();
+                result.AssertOk();
             }
         }
 
@@ -467,7 +466,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                 });
 
                 invoked.Should().Be(false);
-                result.IsError().Should().BeTrue();
+                result.AssertError();
             }
 
             [Fact]
@@ -481,8 +480,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                 });
 
                 invoked.Should().Be(true);
-                result.IsOk().Should().BeTrue();
-                result.GetOk().Should().Be(DefaultOkInt + 1);
+                result.AssertOk().Should().Be(DefaultOkInt + 1);
             }
         }
 
@@ -499,7 +497,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                 });
 
                 invoked.Should().Be(false);
-                result.IsError().Should().BeTrue();
+                result.AssertError();
             }
 
             [Fact]
@@ -513,8 +511,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                 });
 
                 invoked.Should().Be(true);
-                result.IsOk().Should().BeTrue();
-                result.GetOk().Should().Be(DefaultOkInt + 1);
+                result.AssertOk().Should().Be(DefaultOkInt + 1);
             }
         }
 
@@ -527,7 +524,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     from r in OkIntResult
                     select r;
 
-                result.GetOk().Should().Be(DefaultOkInt);
+                result.AssertOk().Should().Be(DefaultOkInt);
             }
         }
 
@@ -541,7 +538,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
                     from rr in new Result<int, CombinableString>(r + 1)
                     select rr;
 
-                result.GetOk().Should().Be(DefaultOkInt + 1);
+                result.AssertOk().Should().Be(DefaultOkInt + 1);
             }
         }
     }

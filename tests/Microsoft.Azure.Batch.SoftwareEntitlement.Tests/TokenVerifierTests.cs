@@ -102,8 +102,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
                 var verifier = new TokenVerifier(parser);
                 var result = verifier.Verify(_validVerificationRequest, _testToken);
-                var errors = result.AssertError();
-                errors.Should().Contain(e => e.Contains(_validVerificationRequest.ApplicationId));
+                result.AssertError().Should().Contain(e => e.Contains(_validVerificationRequest.ApplicationId));
             }
 
             [Fact]
@@ -123,8 +122,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
                 var verifier = new TokenVerifier(parser);
                 var result = verifier.Verify(_validVerificationRequest, _testToken);
-                var errors = result.AssertError();
-                errors.Should().Contain(e => e.Contains(_validVerificationRequest.ApplicationId));
+                result.AssertError().Should().Contain(e => e.Contains(_validVerificationRequest.ApplicationId));
             }
 
             [Fact]
@@ -134,8 +132,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
                 var verifier = new TokenVerifier(parser);
                 var result = verifier.Verify(_validVerificationRequest, _testToken);
-                var errors = result.AssertError();
-                errors.Should().Contain(e => e.Contains(_validVerificationRequest.ApplicationId));
+                result.AssertError().Should().Contain(e => e.Contains(_validVerificationRequest.ApplicationId));
             }
 
             [Fact]
@@ -162,8 +159,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
                 var verifier = new TokenVerifier(parser);
                 var result = verifier.Verify(_validVerificationRequest, _testToken);
-                var errors = result.AssertError();
-                errors.Should().Contain(e => e.Contains(_validVerificationRequest.IpAddress.ToString()));
+                result.AssertError().Should().Contain(e => e.Contains(_validVerificationRequest.IpAddress.ToString()));
             }
 
             [Fact]
@@ -183,8 +179,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
                 var verifier = new TokenVerifier(parser);
                 var result = verifier.Verify(_validVerificationRequest, _testToken);
-                var errors = result.AssertError();
-                errors.Should().Contain(e => e.Contains(_validVerificationRequest.IpAddress.ToString()));
+                result.AssertError().Should().Contain(e => e.Contains(_validVerificationRequest.IpAddress.ToString()));
             }
 
             [Fact]
@@ -194,8 +189,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var parser = new FakeTokenPropertyParser(_testToken, tokenProperties);
                 var verifier = new TokenVerifier(parser);
                 var result = verifier.Verify(_validVerificationRequest, _testToken);
-                var errors = result.AssertError();
-                errors.Should().Contain(e => e.Contains(_validVerificationRequest.IpAddress.ToString()));
+                result.AssertError().Should().Contain(e => e.Contains(_validVerificationRequest.IpAddress.ToString()));
             }
 
             [Fact]

@@ -32,14 +32,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             public void GivenEmptyValue_ReturnsError()
             {
                 var result = _parser.TryParse(string.Empty, "name");
-                result.IsOk().Should().BeFalse();
+                result.AssertError();
             }
 
             [Fact]
             public void GivenEmptyName_ReturnsError()
             {
                 var result = _parser.TryParse("value", string.Empty);
-                result.IsOk().Should().BeFalse();
+                result.AssertError();
             }
 
             [Fact]
@@ -47,8 +47,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             {
                 var valueToParse = _timestamp.ToString(TimestampParser.ExpectedFormat, CultureInfo.InvariantCulture);
                 var result = _parser.TryParse(valueToParse, _name);
-                result.IsOk().Should().BeTrue();
-                result.GetOk().Should().Be(_timestamp);
+                result.AssertOk().Should().Be(_timestamp);
             }
 
             [Fact]
@@ -56,22 +55,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             {
                 var valueToParse = _timestamp.ToString("G", CultureInfo.InvariantCulture);
                 var result = _parser.TryParse(valueToParse, _name);
-                result.IsOk().Should().BeTrue();
-                result.GetOk().Should().Be(_timestamp);
+                result.AssertOk().Should().Be(_timestamp);
             }
 
             [Fact]
             public void GivenInvalidTimestamp_ReturnsError()
             {
                 var result = _parser.TryParse(_invalidTimestamp, _name);
-                result.IsOk().Should().BeFalse();
+                result.AssertError();
             }
 
             [Fact]
             public void GivenInvalidTimestamp_ReturnsErrorIncludingName()
             {
                 var result = _parser.TryParse(_invalidTimestamp, _name);
-                result.GetError().Should().Contain(e => e.Contains(_name));
+                result.AssertError().Should().Contain(e => e.Contains(_name));
             }
         }
     }

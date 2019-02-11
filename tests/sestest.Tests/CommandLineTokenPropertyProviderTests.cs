@@ -29,26 +29,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             const string virtualMachineId = "virtualMachine";
 
             [Fact]
-            public void WhenMissing_HasNoErrors()
-            {
-                var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.VirtualMachineId().AssertOk();
-            }
-
-            [Fact]
             public void WhenMissing_ValueIsNull()
             {
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                var vmid = provider.VirtualMachineId().AssertOk();
-                vmid.Should().BeNull();
-            }
-
-            [Fact]
-            public void WithId_HasNoErrors()
-            {
-                _commandLine.VirtualMachineId = virtualMachineId;
-                var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                provider.VirtualMachineId().AssertOk();
+                provider.VirtualMachineId().AssertOk().Should().BeNull();
             }
 
             [Fact]
@@ -250,8 +234,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 _commandLine.Addresses.Add("Not.An.IP.Address");
                 var provider = new CommandLineEntitlementPropertyProvider(_commandLine);
-                var errors = provider.IpAddresses().AssertError();
-                errors.Should().Contain(e => e.Contains("address"));
+                provider.IpAddresses().AssertError().Should().Contain(e => e.Contains("address"));
             }
         }
 

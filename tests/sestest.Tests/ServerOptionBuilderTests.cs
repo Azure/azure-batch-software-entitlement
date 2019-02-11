@@ -57,14 +57,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         public class ConnectionThumbprint : ServerOptionBuilderTests
         {
             [Fact]
-            public void Build_WithNoConnectionThumbprint_DoesNotReturnValue()
-            {
-                _commandLine.ConnectionCertificateThumbprint = string.Empty;
-                var options = new ServerOptionBuilder(_commandLine, _certificateStore).Build();
-                options.AssertError();
-            }
-
-            [Fact]
             public void Build_WithNoConnectionThumbprint_HasErrorForConnection()
             {
                 _commandLine.ConnectionCertificateThumbprint = string.Empty;

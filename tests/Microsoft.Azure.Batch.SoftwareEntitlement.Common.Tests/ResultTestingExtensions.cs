@@ -4,20 +4,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
 {
     public static class ResultTestingExtensions
     {
-        public static TError GetError<TOk, TError>(this Result<TOk, TError> result) =>
-            result.Match(
-                ok => throw new AssertionFailedException("Expected an error value"),
-                error => error);
+        public static TOk AssertOk<TOk, TError>(
+            this Result<TOk, TError> result,
+            string messageIfError = "Result expected to be in OK state") =>
+            result.OnError(_ => Throw<TOk>(messageIfError)).Merge();
 
-        public static TOk GetOk<TOk, TError>(this Result<TOk, TError> result) =>
-            result.Match(
-                ok => ok,
-                error => throw new AssertionFailedException("Expected an OK value"));
+        public static TError AssertError<TOk, TError>(
+            this Result<TOk, TError> result,
+            string messageIfOk = "Result expected to be in error state") =>
+            result.OnOk(_ => Throw<TError>(messageIfOk)).Merge();
 
-        public static bool IsError<TOk, TError>(this Result<TOk, TError> result) =>
-            result.Match(ok => false, error => true);
-
-        public static bool IsOk<TOk, TError>(this Result<TOk, TError> result) =>
-            result.Match(ok => true, error => false);
+        private static T Throw<T>(string message) => throw new AssertionFailedException(message);
     }
 }
