@@ -328,10 +328,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var thumbprint = new CertificateThumbprint("<thumbprint-goes-here>");
                 var store = new CertificateStore();
 
-                X509Certificate2 ThrowIfNotFound(ErrorSet errors) =>
+                X509Certificate2 ThrowException(ErrorSet errors) =>
                     throw new InvalidOperationException(errors.First());
 
-                var cert = store.FindByThumbprint("test", thumbprint).OnError(ThrowIfNotFound).AssertOk();
+                var cert = store.FindByThumbprint("test", thumbprint).OnError(ThrowException).AssertOk();
 
                 var parameters = cert.GetRSAPrivateKey().ExportParameters(includePrivateParameters: true);
                 var key = new RsaSecurityKey(parameters);
