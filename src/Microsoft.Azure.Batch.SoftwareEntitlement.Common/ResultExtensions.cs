@@ -16,10 +16,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// if either input is an error, the output is an error.
         /// </remarks>
         /// <returns></returns>
-        public static Result<TResultOk, TError> With<TLocalOk, TOtherOk, TResultOk, TError>(
-            this Result<TLocalOk, TError> result,
-            Result<TOtherOk, TError> otherResult,
-            Func<TLocalOk, TOtherOk, TResultOk> okCombiner)
+        public static Result<TResultOk, TError> With<TFirstOk, TSecondOk, TResultOk, TError>(
+            this Result<TFirstOk, TError> result,
+            Result<TSecondOk, TError> otherResult,
+            Func<TFirstOk, TSecondOk, TResultOk> okCombiner)
             where TError : ICombinable<TError>
         {
             if (result == null)
@@ -38,13 +38,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             }
 
             return result.Match(
-                fromOk: localOk => otherResult.Match(
-                    fromOk: otherOk => new Result<TResultOk, TError>(okCombiner(localOk, otherOk)),
-                    fromError: otherError => new Result<TResultOk, TError>(otherError)
+                fromOk: firstOk => otherResult.Match(
+                    fromOk: secondOk => new Result<TResultOk, TError>(okCombiner(firstOk, secondOk)),
+                    fromError: secondError => new Result<TResultOk, TError>(secondError)
                     ),
-                fromError: localError => otherResult.Match(
-                    fromOk: otherOk => new Result<TResultOk, TError>(localError),
-                    fromError: otherError => new Result<TResultOk, TError>(localError.Combine(otherError))
+                fromError: firstError => otherResult.Match(
+                    fromOk: _ => new Result<TResultOk, TError>(firstError),
+                    fromError: secondError => new Result<TResultOk, TError>(firstError.Combine(secondError))
                     )
                 );
         }
