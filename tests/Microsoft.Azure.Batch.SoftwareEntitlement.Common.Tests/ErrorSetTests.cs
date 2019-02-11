@@ -25,14 +25,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void GivenNullString_ThrowsException()
             {
-                var exception = Assert.Throws<ArgumentNullException>(() => ErrorSet.Create(NullString));
+                var exception = Assert.Throws<ArgumentNullException>(
+                    () => ErrorSet.Create(NullString));
                 exception.ParamName.Should().Be("error");
             }
 
             [Fact]
             public void GivenNullEnumerable_ThrowsException()
             {
-                var exception = Assert.Throws<ArgumentNullException>(() => ErrorSet.Create(NullCollection));
+                var exception = Assert.Throws<ArgumentNullException>(
+                    () => ErrorSet.Create(NullCollection));
                 exception.ParamName.Should().Be("errors");
             }
 
@@ -82,7 +84,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common.Tests
             [Fact]
             public void WithNull_ThrowsException()
             {
-                var exception = Assert.Throws<ArgumentNullException>(() => Empty.Combine(Null));
+                var exception = Assert.Throws<ArgumentNullException>(
+                    () => Empty.Combine(Null));
                 exception.ParamName.Should().Be("combinable");
             }
 
