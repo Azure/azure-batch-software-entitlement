@@ -36,7 +36,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 .Merge(errors =>
                 {
                     Logger.LogErrors(errors);
-                    return -1;
+                    return ResultCodes.Failed;
                 });
 
             return Task.FromResult(exitCode);
