@@ -35,26 +35,29 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <returns>Either a usable (and completely valid) <see cref="ServerOptions"/> or a set 
         /// of errors.</returns>
-        public Errorable<ServerOptions> Build()
-        {
-            var result = Errorable.Success(new ServerOptions())
-                .With(ServerUrl()).Map((opt, url) => opt.WithServerUrl(url))
-                .With(ConnectionCertificate()).Map((opt, cert) => opt.WithConnectionCertificate(cert))
-                .With(SigningCertificate()).Map((opt, cert) => opt.WithSigningCertificate(cert))
-                .With(EncryptingCertificate()).Map((opt, cert) => opt.WithEncryptionCertificate(cert))
-                .With(Audience()).Map((opt, audience) => opt.WithAudience(audience))
-                .With(Issuer()).Map((opt, issuer) => opt.WithIssuer(issuer))
-                .With(ExitAfterRequest()).Map((opt, exit) => opt.WithAutomaticExitAfterOneRequest(exit));
-
-            return result;
-        }
+        public Result<ServerOptions, ErrorSet> Build() =>
+            from url in ServerUrl()
+            join connCert in ConnectionCertificate() on true equals true
+            join signCert in SigningCertificate() on true equals true
+            join encryptCert in EncryptingCertificate() on true equals true
+            join audience in Audience() on true equals true
+            join issuer in Issuer() on true equals true
+            join exit in ExitAfterRequest() on true equals true
+            select new ServerOptions()
+                .WithServerUrl(url)
+                .WithConnectionCertificate(connCert)
+                .WithSigningCertificate(signCert)
+                .WithEncryptionCertificate(encryptCert)
+                .WithAudience(audience)
+                .WithIssuer(issuer)
+                .WithAutomaticExitAfterOneRequest(exit);
 
         /// <summary>
         /// Find the server URL for our hosting
         /// </summary>
-        /// <returns>An <see cref="Errorable{Uri}"/> containing either the URL to use or any 
+        /// <returns>An <see cref="Result{Uri,ErrorSet}"/> containing either the URL to use or any 
         /// relevant errors.</returns>
-        private Errorable<Uri> ServerUrl()
+        private Result<Uri, ErrorSet> ServerUrl()
         {
             // If the server URL is not specified, default it.
             var serverUrl = string.IsNullOrWhiteSpace(_commandLine.ServerUrl)
@@ -66,14 +69,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 var result = new Uri(serverUrl);
                 if (!result.HasScheme("https"))
                 {
-                    return Errorable.Failure<Uri>("Server endpoint URL must specify https://");
+                    return ErrorSet.Create("Server endpoint URL must specify https://");
                 }
 
-                return Errorable.Success(result);
+                return result;
             }
             catch (Exception e)
             {
-                return Errorable.Failure<Uri>($"Invalid server endpoint URL specified ({e.Message})");
+                return ErrorSet.Create($"Invalid server endpoint URL specified ({e.Message})");
             }
         }
 
@@ -81,11 +84,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Find the certificate to use for HTTPS connections
         /// </summary>
         /// <returns>Certificate, if found; error details otherwise.</returns>
-        private Errorable<X509Certificate2> ConnectionCertificate()
+        private Result<X509Certificate2, ErrorSet> ConnectionCertificate()
         {
             if (string.IsNullOrEmpty(_commandLine.ConnectionCertificateThumbprint))
             {
-                return Errorable.Failure<X509Certificate2>("A connection thumbprint is required.");
+                return ErrorSet.Create("A connection thumbprint is required.");
             }
 
             return FindCertificate("connection", _commandLine.ConnectionCertificateThumbprint);
@@ -95,12 +98,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Find the certificate to use for signing tokens
         /// </summary>
         /// <returns>Certificate, if found; error details otherwise.</returns>
-        private Errorable<X509Certificate2> SigningCertificate()
+        private Result<X509Certificate2, ErrorSet> SigningCertificate()
         {
             if (string.IsNullOrEmpty(_commandLine.SigningCertificateThumbprint))
             {
                 // No certificate requested, no need to look for one
-                return Errorable.Success<X509Certificate2>(null);
+                return null as X509Certificate2;
             }
 
             return FindCertificate("signing", _commandLine.SigningCertificateThumbprint);
@@ -110,12 +113,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Find the certificate to use for encrypting tokens
         /// </summary>
         /// <returns>Certificate, if found; error details otherwise.</returns>
-        private Errorable<X509Certificate2> EncryptingCertificate()
+        private Result<X509Certificate2, ErrorSet> EncryptingCertificate()
         {
             if (string.IsNullOrEmpty(_commandLine.EncryptionCertificateThumbprint))
             {
                 // No certificate requested, no need to look for one
-                return Errorable.Success<X509Certificate2>(null);
+                return null as X509Certificate2;
             }
 
             return FindCertificate("encrypting", _commandLine.EncryptionCertificateThumbprint);
@@ -125,37 +128,37 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// Return the audience required 
         /// </summary>
         /// <returns>Audience from the commandline, if provided; default value otherwise.</returns>
-        private Errorable<string> Audience()
+        private Result<string, ErrorSet> Audience()
         {
             if (string.IsNullOrEmpty(_commandLine.Audience))
             {
-                return Errorable.Success(Claims.DefaultAudience);
+                return Claims.DefaultAudience;
             }
 
-            return Errorable.Success(_commandLine.Audience);
+            return _commandLine.Audience;
         }
 
         /// <summary>
         /// Return the issuer required 
         /// </summary>
         /// <returns>Issuer from the commandline, if provided; default value otherwise.</returns>
-        private Errorable<string> Issuer()
+        private Result<string, ErrorSet> Issuer()
         {
             if (string.IsNullOrEmpty(_commandLine.Issuer))
             {
-                return Errorable.Success(Claims.DefaultIssuer);
+                return Claims.DefaultIssuer;
             }
 
-            return Errorable.Success(_commandLine.Issuer);
+            return _commandLine.Issuer;
         }
 
         /// <summary>
         /// Return whether the server should shut down after processing one request
         /// </summary>
         /// <returns></returns>
-        private Errorable<bool> ExitAfterRequest()
+        private Result<bool, ErrorSet> ExitAfterRequest()
         {
-            return Errorable.Success(_commandLine.ExitAfterRequest);
+            return _commandLine.ExitAfterRequest;
         }
 
         /// <summary>
@@ -164,11 +167,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <param name="purpose">A use for which the certificate is needed (for human consumption).</param>
         /// <param name="thumbprint">Thumbprint of the required certificate.</param>
         /// <returns>The certificate, if found; an error message otherwise.</returns>
-        private Errorable<X509Certificate2> FindCertificate(string purpose, string thumbprint)
+        private Result<X509Certificate2, ErrorSet> FindCertificate(string purpose, string thumbprint)
         {
             if (string.IsNullOrWhiteSpace(thumbprint))
             {
-                return Errorable.Failure<X509Certificate2>($"No thumbprint supplied; unable to find a {purpose} certificate.");
+                return ErrorSet.Create($"No thumbprint supplied; unable to find a {purpose} certificate.");
             }
 
             var certificateThumbprint = new CertificateThumbprint(thumbprint);

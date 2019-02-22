@@ -25,10 +25,10 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="request">The entitlement request</param>
         /// <param name="token">The token string containing the entitlements</param>
-        /// <returns>An <see cref="Errorable{NodeEntitlements}"/> containing the validated
+        /// <returns>An <see cref="Result{NodeEntitlements,ErrorSet}"/> containing the validated
         /// <see cref="EntitlementTokenProperties"/> if validation was successful, or one or more
         /// validation errors otherwise.</returns>
-        public Errorable<EntitlementTokenProperties> Verify(
+        public Result<EntitlementTokenProperties,ErrorSet> Verify(
             TokenVerificationRequest request,
             string token)
         {
@@ -37,26 +37,27 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 throw new ArgumentNullException(nameof(token));
             }
 
-            return _tokenPropertyParser
-                .Parse(token)
-                .Bind(e => Verify(request, e));
+            return
+                from parsedProps in _tokenPropertyParser.Parse(token)
+                from verifiedProps in Verify(request, parsedProps)
+                select verifiedProps;
         }
 
-        private static Errorable<EntitlementTokenProperties> Verify(
+        private static Result<EntitlementTokenProperties, ErrorSet> Verify(
             TokenVerificationRequest request,
             EntitlementTokenProperties tokenProperties)
         {
             if (!tokenProperties.Applications.Any(a => string.Equals(a, request.ApplicationId, StringComparison.OrdinalIgnoreCase)))
             {
-                return Errorable.Failure<EntitlementTokenProperties>($"Token does not grant entitlement for {request.ApplicationId}");
+                return ErrorSet.Create($"Token does not grant entitlement for {request.ApplicationId}");
             }
 
             if (!tokenProperties.IpAddresses.Any(addr => addr.Equals(request.IpAddress)))
             {
-                return Errorable.Failure<EntitlementTokenProperties>($"Token does not grant entitlement for {request.IpAddress}");
+                return ErrorSet.Create($"Token does not grant entitlement for {request.IpAddress}");
             }
 
-            return Errorable.Success(tokenProperties);
+            return tokenProperties;
         }
     }
 }

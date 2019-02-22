@@ -1,6 +1,5 @@
 using System;
 using System.IdentityModel.Tokens.Jwt;
-using System.Linq;
 using System.Net;
 using System.Security.Claims;
 using FluentAssertions;
@@ -20,7 +19,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
         public JwtPropertyProviderTests()
         {
-            _sourceTokenProperties = EntitlementTokenProperties.Build(FakeTokenPropertyProvider.CreateValid()).Value;
+            _sourceTokenProperties = EntitlementTokenProperties.Build(FakeTokenPropertyProvider.CreateDefault()).AssertOk();
         }
 
         private static JwtPropertyProvider CreatePropertyProvider(EntitlementTokenProperties sourceTokenProperties)
@@ -65,8 +64,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var validTo = _now.AddDays(1);
                 var tokenProperties = _sourceTokenProperties.FromInstant(validFrom).UntilInstant(validTo);
                 var provider = CreatePropertyProvider(tokenProperties);
-                provider.NotBefore().HasValue.Should().BeTrue();
-                provider.NotBefore().Value.Should().BeCloseTo(validFrom, precision: 1000);
+                provider.NotBefore().AssertOk().Should().BeCloseTo(validFrom, precision: 1000);
             }
 
             [Fact]
@@ -80,8 +78,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 // The property provider is not responsible for validating not-before/not-after.
                 // It is expected to simply return what is provided in the JWT, which is assumed
                 // to have been validated when it was parsed.
-                provider.NotBefore().HasValue.Should().BeTrue();
-                provider.NotBefore().Value.Should().BeCloseTo(validFrom, precision: 1000);
+                provider.NotBefore().AssertOk().Should().BeCloseTo(validFrom, precision: 1000);
             }
         }
 
@@ -94,8 +91,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var validTo = _now.AddDays(1);
                 var tokenProperties = _sourceTokenProperties.FromInstant(validFrom).UntilInstant(validTo);
                 var provider = CreatePropertyProvider(tokenProperties);
-                provider.NotAfter().HasValue.Should().BeTrue();
-                provider.NotAfter().Value.Should().BeCloseTo(validTo, precision: 1000);
+                provider.NotAfter().AssertOk().Should().BeCloseTo(validTo, precision: 1000);
             }
 
             [Fact]
@@ -109,8 +105,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 // The property provider is not responsible for validating not-before/not-after.
                 // It is expected to simply return what is provided in the JWT, which is assumed
                 // to have been validated when it was parsed.
-                provider.NotAfter().HasValue.Should().BeTrue();
-                provider.NotAfter().Value.Should().BeCloseTo(validTo, precision: 1000);
+                provider.NotAfter().AssertOk().Should().BeCloseTo(validTo, precision: 1000);
             }
         }
 
@@ -126,8 +121,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
                 // The property provider is not responsible for validating that the audience
                 // matches an expected value (which is not known at this point).
-                provider.Audience().HasValue.Should().BeTrue();
-                provider.Audience().Value.Should().Be(_audience);
+                provider.Audience().AssertOk().Should().Be(_audience);
             }
         }
 
@@ -143,8 +137,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
 
                 // The property provider is not responsible for validating that the issuer
                 // matches an expected value (which is not known at this point).
-                provider.Issuer().HasValue.Should().BeTrue();
-                provider.Issuer().Value.Should().Be(_issuer);
+                provider.Issuer().AssertOk().Should().Be(_issuer);
             }
         }
 
@@ -157,8 +150,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var tokenProperties = _sourceTokenProperties.WithIssuedAt(_inPast);
                 var provider = CreatePropertyProvider(tokenProperties);
-                provider.IssuedAt().HasValue.Should().BeTrue();
-                provider.IssuedAt().Value.Should().Be(_inPast);
+                provider.IssuedAt().AssertOk().Should().Be(_inPast);
             }
         }
 
@@ -168,8 +160,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void WhenIdentifierIncluded_ReturnsSpecifiedValue()
             {
                 var provider = CreatePropertyProvider(_sourceTokenProperties);
-                provider.VirtualMachineId().HasValue.Should().BeTrue();
-                provider.VirtualMachineId().Value.Should().Be(_sourceTokenProperties.VirtualMachineId);
+                provider.VirtualMachineId().AssertOk().Should().Be(_sourceTokenProperties.VirtualMachineId);
             }
 
             [Fact]
@@ -177,8 +168,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var tokenProperties = _sourceTokenProperties.WithVirtualMachineId(null);
                 var provider = CreatePropertyProvider(tokenProperties);
-                provider.VirtualMachineId().HasValue.Should().BeTrue();
-                provider.VirtualMachineId().Value.Should().BeNull();
+                provider.VirtualMachineId().AssertOk().Should().BeNull();
             }
         }
 
@@ -193,8 +183,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var tokenProperties = _sourceTokenProperties.WithApplications(_app1);
                 var provider = CreatePropertyProvider(tokenProperties);
-                provider.ApplicationIds().HasValue.Should().BeTrue();
-                provider.ApplicationIds().Value.Single().Should().Be(_app1);
+                provider.ApplicationIds().AssertOk().Should().Equal(_app1);
             }
 
             [Fact]
@@ -202,8 +191,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var tokenProperties = _sourceTokenProperties.WithApplications(_app1, _app2, _app3);
                 var provider = CreatePropertyProvider(tokenProperties);
-                provider.ApplicationIds().HasValue.Should().BeTrue();
-                provider.ApplicationIds().Value.Should().BeEquivalentTo(_app1, _app2, _app3);
+                provider.ApplicationIds().AssertOk().Should().BeEquivalentTo(_app1, _app2, _app3);
             }
 
             [Fact]
@@ -211,8 +199,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var tokenProperties = _sourceTokenProperties.WithApplications();
                 var provider = CreatePropertyProvider(tokenProperties);
-                provider.ApplicationIds().HasValue.Should().BeFalse();
-                provider.ApplicationIds().Errors.Should().Contain("No application id claims found in token.");
+                provider.ApplicationIds().AssertError().Should().Contain("No application id claims found in token.");
             }
         }
 
@@ -227,8 +214,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var tokenProperties = _sourceTokenProperties.WithIpAddresses(_addr1);
                 var provider = CreatePropertyProvider(tokenProperties);
-                provider.IpAddresses().HasValue.Should().BeTrue();
-                provider.IpAddresses().Value.Single().Should().Be(_addr1);
+                provider.IpAddresses().AssertOk().Should().Equal(_addr1);
             }
 
             [Fact]
@@ -236,8 +222,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var tokenProperties = _sourceTokenProperties.WithIpAddresses(_addr1, _addr2, _addr3);
                 var provider = CreatePropertyProvider(tokenProperties);
-                provider.IpAddresses().HasValue.Should().BeTrue();
-                provider.IpAddresses().Value.Should().BeEquivalentTo(_addr1, _addr2, _addr3);
+                provider.IpAddresses().AssertOk().Should().BeEquivalentTo(_addr1, _addr2, _addr3);
             }
 
             [Fact]
@@ -245,8 +230,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var tokenProperties = _sourceTokenProperties.WithIpAddresses();
                 var provider = CreatePropertyProvider(tokenProperties);
-                provider.IpAddresses().HasValue.Should().BeTrue();
-                provider.IpAddresses().Value.Should().BeEmpty();
+                provider.IpAddresses().AssertOk().Should().BeEmpty();
             }
         }
 
@@ -256,8 +240,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             public void WhenIdentifierSpecified_ReturnsSpecifiedValue()
             {
                 var provider = CreatePropertyProvider(_sourceTokenProperties);
-                provider.TokenId().HasValue.Should().BeTrue();
-                provider.TokenId().Value.Should().Be(_sourceTokenProperties.Identifier);
+                provider.TokenId().AssertOk().Should().Be(_sourceTokenProperties.Identifier);
             }
 
             [Fact]
@@ -265,8 +248,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             {
                 var tokenProperties = _sourceTokenProperties.WithIdentifier(null);
                 var provider = CreatePropertyProvider(tokenProperties);
-                provider.TokenId().HasValue.Should().BeFalse();
-                provider.TokenId().Errors.Should().Contain(e => e.Contains("identifier"));
+                provider.TokenId().AssertError().Should().Contain(e => e.Contains("identifier"));
             }
         }
     }

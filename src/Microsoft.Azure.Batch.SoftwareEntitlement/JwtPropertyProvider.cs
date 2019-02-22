@@ -32,102 +32,105 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <summary>
         /// Gets the moment at which the token is issued from the 'iat' claim on the JWT.
         /// </summary>
-        public Errorable<DateTimeOffset> IssuedAt()
+        public Result<DateTimeOffset, ErrorSet> IssuedAt()
         {
             var iat = _jwt.Payload.Iat;
             if (!iat.HasValue)
             {
-                return Errorable.Failure<DateTimeOffset>("Missing issued-at claim on token.");
+                return ErrorSet.Create("Missing issued-at claim on token.");
             }
 
-            return Errorable.Success<DateTimeOffset>(EpochTime.DateTime(iat.Value));
+            return (DateTimeOffset)EpochTime.DateTime(iat.Value);
         }
 
         /// <summary>
         /// Gets the earliest moment at which the token is active from the 'nbf' claim on the JWT.
         /// </summary>
-        public Errorable<DateTimeOffset> NotBefore()
-            => Errorable.Success(new DateTimeOffset(_jwt.ValidFrom));
+        public Result<DateTimeOffset, ErrorSet> NotBefore()
+            => new DateTimeOffset(_jwt.ValidFrom);
 
         /// <summary>
         /// Gets the latest moment at which the token is active from the 'exp' claim on the JWT.
         /// </summary>
-        public Errorable<DateTimeOffset> NotAfter()
-            => Errorable.Success(new DateTimeOffset(_jwt.ValidTo));
+        public Result<DateTimeOffset, ErrorSet> NotAfter()
+            => new DateTimeOffset(_jwt.ValidTo);
 
         /// <summary>
         /// Gets the audience for whom the token is intended from the 'aud' claim on the JWT, or
         /// an error if there are zero or many such claims.
         /// </summary>
-        public Errorable<string> Audience()
+        public Result<string, ErrorSet> Audience()
         {
             // We don't expect multiple audiences to appear in the token
             var audiences = _jwt.Audiences?.ToList();
             if (audiences == null || !audiences.Any())
             {
-                return Errorable.Failure<string>("No audience claim found in token.");
+                return ErrorSet.Create("No audience claim found in token.");
             }
 
             if (audiences.Count > 1)
             {
-                return Errorable.Failure<string>("Multiple audience claims found in token.");
+                return ErrorSet.Create("Multiple audience claims found in token.");
             }
 
-            return Errorable.Success(audiences.Single());
+            return audiences.Single();
         }
 
         /// <summary>
         /// Gets the issuer who hands out token tokens from the 'iss' claim on the JWT.
         /// </summary>
-        public Errorable<string> Issuer()
-            => Errorable.Success(_jwt.Issuer);
+        public Result<string, ErrorSet> Issuer()
+            => _jwt.Issuer;
 
         /// <summary>
         /// Gets the set of applications that are entitled to run from the claims in the principal.
         /// </summary>
-        public Errorable<IEnumerable<string>> ApplicationIds()
+        public Result<IEnumerable<string>, ErrorSet> ApplicationIds()
         {
             var applicationIds = ReadAll(Claims.Application);
             if (!applicationIds.Any())
             {
-                return Errorable.Failure<IEnumerable<string>>("No application id claims found in token.");
+                return ErrorSet.Create("No application id claims found in token.");
             }
 
-            return Errorable.Success(applicationIds);
+            return applicationIds.AsOk();
         }
 
         /// <summary>
         /// Gets the IP addresses of the machine authorized to use this token from the claims in the principal.
         /// </summary>
-        public Errorable<IEnumerable<IPAddress>> IpAddresses()
+        public Result<IEnumerable<IPAddress>, ErrorSet> IpAddresses()
             => ReadAll(Claims.IpAddress).Select(ParseIpAddress).Reduce();
 
         /// <summary>
         /// Gets the virtual machine identifier for the machine entitled to use the specified packages from a claim
         /// in the principal.
         /// </summary>
-        public Errorable<string> VirtualMachineId()
-            => Errorable.Success(Read(Claims.VirtualMachineId));
+        public Result<string, ErrorSet> VirtualMachineId()
+            => Read(Claims.VirtualMachineId);
 
         /// <summary>
         /// Gets the unique identifier for the token from a claim in the principal.
         /// </summary>
-        public Errorable<string> TokenId()
+        public Result<string, ErrorSet> TokenId()
         {
             var entitlementId = Read(Claims.TokenId);
             if (string.IsNullOrEmpty(entitlementId))
             {
-                return Errorable.Failure<string>("Missing token identifier in token.");
+                return ErrorSet.Create("Missing token identifier in token.");
             }
 
-            return Errorable.Success(entitlementId);
+            return entitlementId;
         }
 
-        private static Errorable<IPAddress> ParseIpAddress(string value)
+        private static Result<IPAddress, ErrorSet> ParseIpAddress(string value)
         {
-            return IPAddress.TryParse(value, out var parsedAddress)
-                ? Errorable.Success(parsedAddress)
-                : Errorable.Failure<IPAddress>($"Invalid IP claim: {value}");
+            if (!IPAddress.TryParse(value, out var parsedAddress))
+            {
+                return ErrorSet.Create($"Invalid IP claim: {value}");
+            }
+
+            return parsedAddress;
         }
 
         private string Read(string claimId)

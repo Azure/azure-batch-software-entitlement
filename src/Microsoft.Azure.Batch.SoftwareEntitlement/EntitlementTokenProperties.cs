@@ -66,19 +66,26 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             IpAddresses = ImmutableHashSet<IPAddress>.Empty;
         }
 
-        public static Errorable<EntitlementTokenProperties> Build(ITokenPropertyProvider provider)
-        {
-            return Errorable.Success(new EntitlementTokenProperties())
-                .With(provider.NotBefore()).Map((e, val) => e.FromInstant(val))
-                .With(provider.NotAfter()).Map((e, val) => e.UntilInstant(val))
-                .With(provider.IssuedAt()).Map((e, val) => e.WithIssuedAt(val))
-                .With(provider.Issuer()).Map((e, val) => e.WithIssuer(val))
-                .With(provider.Audience()).Map((e, val) => e.WithAudience(val))
-                .With(provider.ApplicationIds()).Map((e, vals) => e.WithApplications(vals))
-                .With(provider.IpAddresses()).Map((e, vals) => e.WithIpAddresses(vals))
-                .With(provider.VirtualMachineId()).Map((e, val) => e.WithVirtualMachineId(val))
-                .With(provider.TokenId()).Map((e, val) => e.WithIdentifier(val));
-        }
+        public static Result<EntitlementTokenProperties, ErrorSet> Build(ITokenPropertyProvider provider) =>
+            from notBefore in provider.NotBefore()
+            join notAfter in provider.NotAfter() on true equals true
+            join issuedAt in provider.IssuedAt() on true equals true
+            join issuer in provider.Issuer() on true equals true
+            join audience in provider.Audience() on true equals true
+            join applicationIds in provider.ApplicationIds() on true equals true
+            join ipAddresses in provider.IpAddresses() on true equals true
+            join vmid in provider.VirtualMachineId() on true equals true
+            join tokenId in provider.TokenId() on true equals true
+            select new EntitlementTokenProperties()
+                .FromInstant(notBefore)
+                .UntilInstant(notAfter)
+                .WithIssuedAt(issuedAt)
+                .WithIssuer(issuer)
+                .WithAudience(audience)
+                .WithApplications(applicationIds)
+                .WithIpAddresses(ipAddresses)
+                .WithVirtualMachineId(vmid)
+                .WithIdentifier(tokenId);
 
         /// <summary>
         /// Specify the virtual machine Id of the machine

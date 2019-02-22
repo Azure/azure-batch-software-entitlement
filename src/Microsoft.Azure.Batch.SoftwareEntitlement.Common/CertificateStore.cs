@@ -22,9 +22,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// </summary>
         /// <param name="purpose">A use for which the certificate is needed (for human consumption).</param>
         /// <param name="thumbprint">Thumbprint of the certificate we need.</param>
-        /// <returns>An <see cref="Errorable{X509Certificate2}"/> containing a certificate if found, or an
+        /// <returns>An <see cref="Result{X509Certificate2,ErrorSet}"/> containing a certificate if found, or an
         /// error otherwise.</returns>
-        Errorable<X509Certificate2> FindByThumbprint(string purpose, CertificateThumbprint thumbprint);
+        Result<X509Certificate2, ErrorSet> FindByThumbprint(string purpose, CertificateThumbprint thumbprint);
     }
 
     /// <summary>
@@ -106,9 +106,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// </summary>
         /// <param name="purpose">A use for which the certificate is needed (for human consumption).</param>
         /// <param name="thumbprint">Thumbprint of the certificate we need.</param>
-        /// <returns>An <see cref="Errorable{X509Certificate2}"/> containing a certificate if found, or an
+        /// <returns>An <see cref="Result{X509Certificate2,ErrorSet}"/> containing a certificate if found, or an
         /// error otherwise.</returns>
-        public Errorable<X509Certificate2> FindByThumbprint(string purpose, CertificateThumbprint thumbprint)
+        public Result<X509Certificate2, ErrorSet> FindByThumbprint(string purpose, CertificateThumbprint thumbprint)
         {
             var query =
                 from name in _storeNames
@@ -124,16 +124,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 // If so, prefer any copies that have their private key over those that do not
                 // Certificates with private keys can be used to both encrypt/decrypt and to 
                 // sign/verify - copies without can only be used to encrypt and verify.
-                return Errorable.Success(certWithPrivateKey);
+                return certWithPrivateKey;
             }
 
             var certificate = candidates.FirstOrDefault();
             if (certificate != null)
             {
-                return Errorable.Success(certificate);
+                return certificate;
             }
 
-            return Errorable.Failure<X509Certificate2>($"Did not find {purpose} certificate {thumbprint}");
+            return ErrorSet.Create($"Did not find {purpose} certificate {thumbprint}");
         }
 
         /// <summary>
@@ -142,8 +142,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <param name="thumbprint">Thumbprint of the certificate we need.</param>
         /// <param name="storeName">Name of the store to search within.</param>
         /// <param name="storeLocation">Location within the store to check.</param>
-        /// <returns>An <see cref="Errorable{X509Certificate2}"/> containing a certificate if found, or an
-        /// error otherwise.</returns>
+        /// <returns>An <see cref="X509Certificate2"/> containing a certificate if found, or null otherwise.</returns>
         private static X509Certificate2 FindByThumbprint(CertificateThumbprint thumbprint, StoreName storeName, StoreLocation storeLocation)
         {
             try

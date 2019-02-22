@@ -33,56 +33,56 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             _commandLine = commandLine ?? throw new ArgumentNullException(nameof(commandLine));
         }
 
-        public Errorable<DateTimeOffset> IssuedAt()
-            => Errorable.Success(_now);
+        public Result<DateTimeOffset, ErrorSet> IssuedAt()
+            => _now;
 
-        public Errorable<DateTimeOffset> NotBefore()
+        public Result<DateTimeOffset, ErrorSet> NotBefore()
         {
             if (string.IsNullOrEmpty(_commandLine.NotBefore))
             {
                 // If the user does not specify a start instant for the token, we default to 'now'
-                return Errorable.Success(_now);
+                return _now;
             }
 
             return _timestampParser.TryParse(_commandLine.NotBefore, "NotBefore");
         }
 
-        public Errorable<DateTimeOffset> NotAfter()
+        public Result<DateTimeOffset, ErrorSet> NotAfter()
         {
             if (string.IsNullOrEmpty(_commandLine.NotAfter))
             {
                 // If the user does not specify an expiry for the token, we default to 7days from 'now'
-                return Errorable.Success(_now + TimeSpan.FromDays(7));
+                return _now + TimeSpan.FromDays(7);
             }
 
             return _timestampParser.TryParse(_commandLine.NotAfter, "NotAfter");
         }
 
-        public Errorable<string> Audience()
+        public Result<string, ErrorSet> Audience()
         {
             if (string.IsNullOrEmpty(_commandLine.Audience))
             {
                 // if the user does not specify an audience, we use a default value to "self-sign"
-                return Errorable.Success(Claims.DefaultAudience);
+                return Claims.DefaultAudience;
             }
 
-            return Errorable.Success(_commandLine.Audience);
+            return _commandLine.Audience;
         }
 
-        public Errorable<string> Issuer()
+        public Result<string, ErrorSet> Issuer()
         {
             if (string.IsNullOrEmpty(_commandLine.Issuer))
             {
                 // if the user does not specify an issuer, we use a default value to "self-sign"
-                return Errorable.Success(Claims.DefaultIssuer);
+                return Claims.DefaultIssuer;
             }
 
-            return Errorable.Success(_commandLine.Issuer);
+            return _commandLine.Issuer;
         }
 
-        public Errorable<IEnumerable<IPAddress>> IpAddresses()
+        public Result<IEnumerable<IPAddress>, ErrorSet> IpAddresses()
         {
-            var result = new List<Errorable<IPAddress>>();
+            var result = new List<Result<IPAddress, ErrorSet>>();
             if (_commandLine.Addresses != null)
             {
                 foreach (var address in _commandLine.Addresses)
@@ -99,7 +99,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return result.Reduce();
         }
 
-        private static IEnumerable<Errorable<IPAddress>> ListMachineIpAddresses()
+        private static IEnumerable<Result<IPAddress, ErrorSet>> ListMachineIpAddresses()
         {
             // No IP addresses specified by the user, default to using all from the current machine
             foreach (var i in NetworkInterface.GetAllNetworkInterfaces())
@@ -113,39 +113,37 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                         // Strip out the ScopeId for any local IPv6 addresses
                         // (Can't just assign 0 to ScopeId, that doesn't work)
                         var bytes = info.Address.GetAddressBytes();
-                        var ip = new IPAddress(bytes);
-
-                        yield return Errorable.Success(ip);
+                        yield return new IPAddress(bytes);
                     }
                 }
             }
         }
 
-        private static Errorable<IPAddress> TryParseIPAddress(string address)
+        private static Result<IPAddress, ErrorSet> TryParseIPAddress(string address)
         {
             if (IPAddress.TryParse(address, out var ip))
             {
-                return Errorable.Success(ip);
+                return ip;
             }
 
-            return Errorable.Failure<IPAddress>($"IP address '{address}' is not in an expected format (IPv4 and IPv6 supported).");
+            return ErrorSet.Create($"IP address '{address}' is not in an expected format (IPv4 and IPv6 supported).");
         }
 
-        public Errorable<IEnumerable<string>> ApplicationIds()
+        public Result<IEnumerable<string>, ErrorSet> ApplicationIds()
         {
             if (_commandLine.ApplicationIds == null || !_commandLine.ApplicationIds.Any())
             {
-                return Errorable.Failure<IEnumerable<string>>("No applications specified.");
+                return ErrorSet.Create("No applications specified.");
             }
 
             var apps = _commandLine.ApplicationIds.Select(app => app.Trim());
-            return Errorable.Success(apps);
+            return apps.AsOk();
         }
 
-        public Errorable<string> VirtualMachineId()
-            => Errorable.Success(_commandLine.VirtualMachineId);
+        public Result<string, ErrorSet> VirtualMachineId()
+            => _commandLine.VirtualMachineId;
 
-        public Errorable<string> TokenId()
-            => Errorable.Success(_tokenId);
+        public Result<string, ErrorSet> TokenId()
+            => _tokenId;
     }
 }

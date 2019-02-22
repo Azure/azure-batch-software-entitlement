@@ -15,8 +15,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
         // Credentials used for signing
         private readonly SigningCredentials _signingCredentials;
 
-        // The entitlements used to generate the token
+        // The properties used to generate the token
         private readonly EntitlementTokenProperties _sourceTokenProperties;
+
+        private static readonly TimeSpan TokenLifetime = TimeSpan.FromDays(1);
+        private static readonly DateTimeOffset TokenNotBefore = DateTimeOffset.Now.ToUniversalTime();
+        private static readonly DateTimeOffset TokenNotAfter = TokenNotBefore.Add(TokenLifetime);
 
         public JwtPropertyParserTests()
         {
@@ -30,7 +34,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             var encryptingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(plainTextEncryptionKey));
             _encryptingCredentials = new EncryptingCredentials(encryptingKey, "dir", SecurityAlgorithms.Aes256CbcHmacSha512);
 
-            _sourceTokenProperties = EntitlementTokenProperties.Build(FakeTokenPropertyProvider.CreateValid()).Value;
+            _sourceTokenProperties = EntitlementTokenProperties.Build(FakeTokenPropertyProvider.CreateDefault())
+                .AssertOk()
+                .FromInstant(TokenNotBefore).UntilInstant(TokenNotAfter);
         }
 
         private string GenerateToken(EntitlementTokenProperties tokenProperties)
@@ -56,8 +62,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var tokenProperties = _sourceTokenProperties;
                 var parser = CreateParser(tokenProperties.Audience, tokenProperties.Issuer);
                 var result = parser.Parse("nodots");
-                result.HasValue.Should().BeFalse();
-                result.Errors.Should().Contain(e => e.Contains("not well formed"));
+                result.AssertError().Should().Contain(e => e.Contains("not well formed"));
             }
 
             [Fact]
@@ -66,8 +71,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var tokenProperties = _sourceTokenProperties;
                 var parser = CreateParser(tokenProperties.Audience, tokenProperties.Issuer);
                 var result = parser.Parse("e30=.e30=.e30=.e30=");
-                result.HasValue.Should().BeFalse();
-                result.Errors.Should().Contain(e => e.Contains("not well formed"));
+                result.AssertError().Should().Contain(e => e.Contains("not well formed"));
             }
 
             [Fact]
@@ -76,8 +80,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var tokenProperties = _sourceTokenProperties;
                 var parser = CreateParser(tokenProperties.Audience, tokenProperties.Issuer);
                 var result = parser.Parse("🤘.🤙.🤚");
-                result.HasValue.Should().BeFalse();
-                result.Errors.Should().Contain(e => e.Contains("not well formed"));
+                result.AssertError().Should().Contain(e => e.Contains("not well formed"));
             }
 
             [Fact]
@@ -86,8 +89,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var tokenProperties = _sourceTokenProperties;
                 var parser = CreateParser(tokenProperties.Audience, tokenProperties.Issuer);
                 var result = parser.Parse("a.a.a");
-                result.HasValue.Should().BeFalse();
-                result.Errors.Should().Contain(e => e.Contains("not well formed"));
+                result.AssertError().Should().Contain(e => e.Contains("not well formed"));
             }
 
             [Fact]
@@ -96,8 +98,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var tokenProperties = _sourceTokenProperties;
                 var parser = CreateParser(tokenProperties.Audience, tokenProperties.Issuer);
                 var result = parser.Parse("bm90.Z29vZA==.YmFzZTY0");
-                result.HasValue.Should().BeFalse();
-                result.Errors.Should().Contain(e => e.Contains("not well formed"));
+                result.AssertError().Should().Contain(e => e.Contains("not well formed"));
             }
 
             [Fact]
@@ -106,8 +107,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var tokenProperties = _sourceTokenProperties;
                 var parser = CreateParser(tokenProperties.Audience, tokenProperties.Issuer);
                 var result = parser.Parse(".e30=.e30=");
-                result.HasValue.Should().BeFalse();
-                result.Errors.Should().Contain(e => e.Contains("not well formed"));
+                result.AssertError().Should().Contain(e => e.Contains("not well formed"));
             }
 
             [Fact]
@@ -116,8 +116,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var tokenProperties = _sourceTokenProperties;
                 var parser = CreateParser(tokenProperties.Audience, tokenProperties.Issuer);
                 var result = parser.Parse("e30=..e30=");
-                result.HasValue.Should().BeFalse();
-                result.Errors.Should().Contain(e => e.Contains("not well formed"));
+                result.AssertError().Should().Contain(e => e.Contains("not well formed"));
             }
         }
 
@@ -139,8 +138,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var token = GenerateToken(tokenProperties);
                 var parser = CreateParser(tokenProperties.Audience, tokenProperties.Issuer);
                 var result = parser.Parse(token);
-                result.HasValue.Should().BeFalse();
-                result.Errors.Should().Contain(e => e.Contains("expired"));
+                result.AssertError().Should().Contain(e => e.Contains("expired"));
             }
 
             [Fact]
@@ -152,8 +150,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var token = GenerateToken(tokenProperties);
                 var parser = CreateParser(tokenProperties.Audience, tokenProperties.Issuer);
                 var result = parser.Parse(token);
-                result.HasValue.Should().BeFalse();
-                result.Errors.Should().Contain(e => e.Contains("will not be valid"));
+                result.AssertError().Should().Contain(e => e.Contains("will not be valid"));
             }
         }
 
@@ -169,8 +166,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var token = GenerateToken(tokenProperties);
                 var parser = CreateParser(tokenProperties.Audience, _expectedIssuer);
                 var result = parser.Parse(token);
-                result.HasValue.Should().BeFalse();
-                result.Errors.Should().Contain(e => e.Contains("Invalid issuer"));
+                result.AssertError().Should().Contain(e => e.Contains("Invalid issuer"));
             }
         }
 
@@ -186,8 +182,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
                 var token = GenerateToken(tokenProperties);
                 var parser = CreateParser(_expectedAudience, tokenProperties.Issuer);
                 var result = parser.Parse(token);
-                result.HasValue.Should().BeFalse();
-                result.Errors.Should().Contain(e => e.Contains("Invalid audience"));
+                result.AssertError().Should().Contain(e => e.Contains("Invalid audience"));
             }
         }
     }

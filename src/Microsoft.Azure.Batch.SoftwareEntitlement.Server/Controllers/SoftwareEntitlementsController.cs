@@ -1,9 +1,11 @@
 using System;
-using System.Collections.Generic;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
+using Microsoft.Azure.Batch.SoftwareEntitlement.Server.Model;
+using Microsoft.Azure.Batch.SoftwareEntitlement.Server.RequestHandlers;
+using Microsoft.Azure.Batch.SoftwareEntitlement.Server.RouteConstraints;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 
@@ -19,11 +21,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         private readonly ILogger _logger;
         private readonly IApplicationLifetime _lifetime;
 
-        // Verifier used to check token
-        private readonly TokenVerifier _verifier;
-
-        private const string ApiVersion201705 = "2017-05-01.5.0";
-        private const string ApiVersion201709 = "2017-09-01.6.0";
+        private readonly ApproveV1RequestHandler _approveV1RequestHandler;
+        private readonly ApproveV2RequestHandler _approveV2RequestHandler;
+        private readonly AcquireRequestHandler _acquireRequestHandler;
+        private readonly RenewRequestHandler _renewRequestHandler;
+        private readonly ReleaseRequestHandler _releaseRequestHandler;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SoftwareEntitlementsController"/> class
@@ -33,16 +35,23 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         /// <param name="lifetime">Lifetime instance to allow us to automatically shut down if requested.</param>
         /// <param name="verifier">A component responsible for checking data in the request against the claims
         /// in the token</param>
+        /// <param name="entitlementStore">A component responsible for tracking existing entitlements</param>
         public SoftwareEntitlementsController(
             ServerOptions serverOptions,
             ILogger logger,
             IApplicationLifetime lifetime,
-            TokenVerifier verifier)
+            TokenVerifier verifier,
+            EntitlementStore entitlementStore)
         {
             _serverOptions = serverOptions;
             _logger = logger;
             _lifetime = lifetime;
-            _verifier = verifier;
+
+            _approveV1RequestHandler = new ApproveV1RequestHandler(_logger, verifier);
+            _approveV2RequestHandler = new ApproveV2RequestHandler(_logger, verifier);
+            _acquireRequestHandler = new AcquireRequestHandler(_logger, verifier, entitlementStore);
+            _renewRequestHandler = new RenewRequestHandler(_logger, entitlementStore);
+            _releaseRequestHandler = new ReleaseRequestHandler(_logger, entitlementStore);
 
             if (_serverOptions.SigningKey != null)
             {
@@ -60,26 +69,113 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
         }
 
         [HttpPost]
+        [MissingVersionConstraint]
         [Produces("application/json")]
-        public IActionResult RequestEntitlement(
-            [FromBody] SoftwareEntitlementRequestBody entitlementRequestBody,
-            [FromQuery(Name = "api-version")] string apiVersion)
+        public IActionResult MissingApiVersion()
+        {
+            _logger.LogDebug("No api-version specified");
+            return HandleApiVersionError("Missing api-version query parameter; denying entitlement request.");
+        }
+
+        [HttpPost]
+        [InvalidVersionConstraint]
+        [Produces("application/json")]
+        public IActionResult InvalidApiVersion(
+            [FromQuery(Name = ApiVersions.ParameterName)] string apiVersion)
+        {
+            _logger.LogDebug("Invalid api-version specified");
+            return HandleApiVersionError(
+                $"Specified api-version of {apiVersion} is not supported; denying entitlement request.");
+        }
+
+        [HttpPost]
+        [VersionRangeConstraint(maxVersion: ApiVersions.June012017)]
+        [Produces("application/json")]
+        public IActionResult ApproveV1(
+            [FromBody] ApproveRequestBody requestBody,
+            [FromQuery(Name = ApiVersions.ParameterName)] string apiVersion)
+        {
+            _logger.LogInformation(
+                "[Approve] Specified api-version is {ApiVersion}",
+                apiVersion);
+
+            return HandleRequest(_approveV1RequestHandler, requestBody);
+        }
+
+        [HttpPost]
+        [VersionRangeConstraint(minVersion: ApiVersions.Sept012017, maxVersion: ApiVersions.August012018)]
+        [Produces("application/json")]
+        public IActionResult ApproveV2(
+            [FromBody] ApproveRequestBody requestBody,
+            [FromQuery(Name = ApiVersions.ParameterName)] string apiVersion)
+        {
+            _logger.LogInformation(
+                "[Approve] Specified api-version is {ApiVersion}",
+                apiVersion);
+
+            return HandleRequest(_approveV2RequestHandler, requestBody);
+        }
+
+        [HttpPost]
+        [VersionRangeConstraint(minVersion: ApiVersions.ApiVersionLatest)]
+        [Produces("application/json")]
+        public IActionResult Acquire(
+            [FromBody] AcquireRequestBody requestBody,
+            [FromQuery(Name = ApiVersions.ParameterName)] string apiVersion)
+        {
+            _logger.LogInformation(
+                "[Acquire] Specified api-version is {ApiVersion}",
+                apiVersion);
+
+            return HandleRequest(_acquireRequestHandler, requestBody);
+        }
+
+        [Route("{entitlementId}")]
+        [HttpPost]
+        [VersionRangeConstraint(minVersion: ApiVersions.ApiVersionLatest)]
+        [Produces("application/json")]
+        public IActionResult Renew(
+            string entitlementId,
+            [FromBody] RenewRequestBody requestBody,
+            [FromQuery(Name = ApiVersions.ParameterName)] string apiVersion)
+        {
+            _logger.LogInformation(
+                "[Renew] Specified api-version is {ApiVersion}",
+                apiVersion);
+
+            return HandleRequest(_renewRequestHandler, (requestBody, entitlementId));
+        }
+
+        [Route("{entitlementId}")]
+        [HttpDelete]
+        [VersionRangeConstraint(minVersion: ApiVersions.ApiVersionLatest)]
+        [Produces("application/json")]
+        public IActionResult Release(
+            string entitlementId,
+            [FromQuery(Name = ApiVersions.ParameterName)] string apiVersion)
+        {
+            _logger.LogInformation(
+                "[Release] Specified api-version is {ApiVersion}",
+                apiVersion);
+
+            return HandleRequest(_releaseRequestHandler, entitlementId);
+        }
+
+        private IActionResult HandleApiVersionError(string errorMessage)
+        {
+            var responseValue = new FailureResponse("EntitlementDenied", new ErrorMessage(errorMessage));
+            var response = new Response(StatusCodes.Status400BadRequest, responseValue);
+            return this.CreateActionResult(response);
+        }
+
+        private IActionResult HandleRequest<TRequestContext>(
+            IRequestHandler<TRequestContext> requestHandler,
+            TRequestContext requestContext)
         {
             try
             {
-                if (!IsValidApiVersion(apiVersion))
-                {
-                    return CreateBadRequestResponse(
-                        $"Selected api-version of {apiVersion} is not supported; denying entitlement request.");
-                }
-
-                _logger.LogInformation(
-                    "Selected api-version is {ApiVersion}",
-                    apiVersion);
-
-                return ExtractApprovalRequestParameters(HttpContext, entitlementRequestBody).Match(
-                    whenSuccessful: r => CreateApprovalResponse(r.Request, r.Token, apiVersion),
-                    whenFailure: errors => CreateBadRequestResponse(errors));
+                var response = requestHandler.Handle(HttpContext, requestContext);
+                return this.CreateActionResult(response);
             }
             finally
             {
@@ -88,143 +184,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Server.Controllers
                     _lifetime.StopApplication();
                 }
             }
-        }
-
-        private IActionResult CreateApprovalResponse(TokenVerificationRequest request, string token, string apiVersion)
-        {
-            var verificationResult = _verifier.Verify(request, token);
-
-            return verificationResult.Match(
-                whenSuccessful: tokenProperties => CreateApprovalSuccessResponse(apiVersion, tokenProperties),
-                whenFailure: errors => CreateEntitlementDeniedResponse(request.ApplicationId, errors));
-        }
-
-        /// <summary>
-        /// Attempts to extracts all the parameters required for validating an entitlement approval request.
-        /// Any error here reflects a badly formed request.
-        /// </summary>
-        /// <param name="httpContext">The HTTP context of the request</param>
-        /// <param name="requestBody">The information in the request body</param>
-        /// <returns>
-        /// A tuple in which either the <see cref="TokenVerificationRequest"/> and token values
-        /// are present if the request was well formed, or an informative error otherwise.
-        /// </returns>
-        private Errorable<(TokenVerificationRequest Request, string Token)> ExtractApprovalRequestParameters(
-            HttpContext httpContext,
-            SoftwareEntitlementRequestBody requestBody)
-        {
-            if (requestBody == null)
-            {
-                return Errorable.Failure<(TokenVerificationRequest, string)>(
-                    "Missing request body from software entitlement request.");
-            }
-
-            if (string.IsNullOrEmpty(requestBody.Token))
-            {
-                return Errorable.Failure<(TokenVerificationRequest, string)>(
-                    "Missing token from software entitlement request.");
-            }
-
-            if (string.IsNullOrEmpty(requestBody.ApplicationId))
-            {
-                return Errorable.Failure<(TokenVerificationRequest, string)>(
-                    "Missing applicationId value from software entitlement request.");
-            }
-
-            var remoteAddress = httpContext.Connection.RemoteIpAddress;
-            _logger.LogDebug("Remote Address: {Address}", remoteAddress);
-
-            var request = new TokenVerificationRequest(requestBody.ApplicationId, remoteAddress);
-
-            return Errorable.Success((Request: request, Token: requestBody.Token));
-        }
-
-        private ObjectResult CreateApprovalSuccessResponse(string apiVersion, EntitlementTokenProperties tokenProperties)
-        {
-            var response = new SoftwareEntitlementSuccessfulResponse
-            {
-                // Return a value unique to this entitlement request, not the token identifier
-                // (retaining the original format of having an 'entitlement-' prefix).
-                EntitlementId = $"entitlement-{Guid.NewGuid()}"
-            };
-
-            if (ApiSupportsVirtualMachineId(apiVersion))
-            {
-                response.VirtualMachineId = tokenProperties.VirtualMachineId;
-            }
-
-            if (ApiSupportsExpiryTimestamp(apiVersion))
-            {
-                response.Expiry = tokenProperties.NotAfter;
-            }
-
-            return Ok(response);
-        }
-
-        private ObjectResult CreateEntitlementDeniedResponse(string applicationId, IEnumerable<string> errors)
-        {
-            foreach (var e in errors)
-            {
-                _logger.LogError(e);
-            }
-
-            var error = new SoftwareEntitlementFailureResponse
-            {
-                Code = "EntitlementDenied",
-                Message = new ErrorMessage($"Entitlement for {applicationId} was denied.")
-            };
-
-            return StatusCode(403, error);
-        }
-
-        private ObjectResult CreateBadRequestResponse(params string[] errors)
-            => CreateBadRequestResponse((IEnumerable<string>)errors);
-
-        private ObjectResult CreateBadRequestResponse(IEnumerable<string> errors)
-        {
-            foreach (var e in errors)
-            {
-                _logger.LogError(e);
-            }
-
-            var message = string.Join("; ", errors);
-            var error = new SoftwareEntitlementFailureResponse
-            {
-                Code = "EntitlementDenied",
-                Message = new ErrorMessage(message)
-            };
-
-            return StatusCode(400, error);
-        }
-
-        /// <summary>
-        /// Check to see whether the specified <c>api-version</c> is valid for software entitlements
-        /// </summary>
-        /// <param name="apiVersion">Api version from the query parameter</param>
-        /// <returns>True if it is valid, false otherwise.</returns>
-        private bool IsValidApiVersion(string apiVersion)
-        {
-            if (string.IsNullOrEmpty(apiVersion))
-            {
-                _logger.LogDebug("No api-version specified");
-                return false;
-            }
-
-            // Check all the valid apiVersions
-            // TODO: Once this list passes three or four items, use a HashSet<string> to do the check more efficiently
-
-            return apiVersion.Equals(ApiVersion201705, StringComparison.Ordinal)
-                   || apiVersion.Equals(ApiVersion201709, StringComparison.Ordinal);
-        }
-
-        private static bool ApiSupportsVirtualMachineId(string apiVersion)
-        {
-            return string.Equals(apiVersion, ApiVersion201705, StringComparison.Ordinal);
-        }
-
-        private static bool ApiSupportsExpiryTimestamp(string apiVersion)
-        {
-            return string.Equals(apiVersion, ApiVersion201709, StringComparison.Ordinal);
         }
 
         public class ServerOptions

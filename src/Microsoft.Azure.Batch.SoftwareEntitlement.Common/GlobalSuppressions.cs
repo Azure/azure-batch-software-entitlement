@@ -10,3 +10,8 @@ using System.Diagnostics.CodeAnalysis;
     "Naming",
     "CA1715:Type parameter names should be prefixed with 'T'",
     Justification = "This project prefers using single character capital letters for type parameters.")]
+
+[assembly: SuppressMessage(
+    "Usage",
+    "CA2225:Operator overloads have named alternates",
+    Justification = "<Pending>")]

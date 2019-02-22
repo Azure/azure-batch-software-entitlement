@@ -23,11 +23,14 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Tests
             return _certLookup.Values;
         }
 
-        public Errorable<X509Certificate2> FindByThumbprint(string purpose, CertificateThumbprint thumbprint)
+        public Result<X509Certificate2, ErrorSet> FindByThumbprint(string purpose, CertificateThumbprint thumbprint)
         {
-            return _certLookup.TryGetValue(thumbprint, out var certificate)
-                ? Errorable.Success(certificate)
-                : Errorable.Failure<X509Certificate2>(_notFoundError);
+            if (!_certLookup.TryGetValue(thumbprint, out var certificate))
+            {
+                return ErrorSet.Create(_notFoundError);
+            }
+
+            return certificate;
         }
     }
 }

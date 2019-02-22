@@ -27,15 +27,13 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         {
             var thumbprint = new CertificateThumbprint(commandLine.Thumbprint);
             var certificateStore = new CertificateStore();
-            var certificate = certificateStore.FindByThumbprint("required", thumbprint);
-            var result = certificate.Match(
-                ShowCertificate,
-                errors =>
-                {
-                    Logger.LogErrors(errors);
-                    return ResultCodes.Failed;
-                });
-            return Task.FromResult(result);
+
+            var resultCode = certificateStore
+                .FindByThumbprint("required", thumbprint)
+                .Select(ShowCertificate)
+                .LogIfFailed(Logger, ResultCodes.Failed);
+
+            return Task.FromResult(resultCode);
         }
 
         private int ShowCertificate(X509Certificate2 certificate)

@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using Microsoft.Azure.Batch.SoftwareEntitlement.Common;
-using Microsoft.Azure.Batch.SoftwareEntitlement.Server;
+using Microsoft.Azure.Batch.SoftwareEntitlement.Server.Model;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
@@ -38,24 +38,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>Results of execution (0 = success).</returns>
         public async Task<int> Execute(VerifyCommandLine commandLine)
         {
-            Errorable<Uri> server = FindServer(commandLine);
-            Errorable<string> token = FindToken(commandLine);
-            Errorable<string> app = FindApplication(commandLine);
-            Errorable<string> api = FindApiVersion(commandLine);
+            var exitCodeResult = await
+                (
+                from server in FindServer(commandLine)
+                join token in FindToken(commandLine) on true equals true
+                join app in FindApplication(commandLine) on true equals true
+                join api in FindApiVersion(commandLine) on true equals true
+                select SubmitToken(server, token, app, api)
+                ).AsTask().ConfigureAwait(false);
 
-            Errorable<int> result = await server.With(token)
-                .With(app)
-                .With(api)
-                .MapAsync(SubmitToken)
-                .ConfigureAwait(false);
-
-            return result.Match(
-                exitCode => exitCode,
-                errors =>
-                {
-                    Logger.LogErrors(errors);
-                    return ResultCodes.Failed;
-                });
+            return exitCodeResult.LogIfFailed(Logger, ResultCodes.Failed);
         }
 
         private async Task<int> SubmitToken(Uri server, string token, string app, string api)
@@ -76,7 +68,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             {
                 using (var client = new HttpClient(handler))
                 {
-                    var requestBody = new SoftwareEntitlementRequestBody
+                    var requestBody = new ApproveRequestBody
                     {
                         Token = token,
                         ApplicationId = app
@@ -121,7 +113,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             return handler;
         }
 
-        private Errorable<string> FindToken(VerifyCommandLine commandLine)
+        private Result<string, ErrorSet> FindToken(VerifyCommandLine commandLine)
         {
             var token = commandLine.Token;
             if (string.IsNullOrEmpty(token))
@@ -131,25 +123,25 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             if (string.IsNullOrEmpty(token))
             {
-                return Errorable.Failure<string>(
+                return ErrorSet.Create(
                     "No token supplied on command line and AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN not set.");
             }
 
-            return Errorable.Success(token);
+            return token;
         }
 
-        private static Errorable<string> FindApplication(VerifyCommandLine commandLine)
+        private static Result<string, ErrorSet> FindApplication(VerifyCommandLine commandLine)
         {
             var application = commandLine.Application;
             if (string.IsNullOrEmpty(application))
             {
-                return Errorable.Failure<string>("No application specified.");
+                return ErrorSet.Create("No application specified.");
             }
 
-            return Errorable.Success(application);
+            return application;
         }
 
-        private Errorable<Uri> FindServer(VerifyCommandLine commandLine)
+        private Result<Uri, ErrorSet> FindServer(VerifyCommandLine commandLine)
         {
             var server = commandLine.Server;
             if (string.IsNullOrEmpty(server))
@@ -159,21 +151,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             if (string.IsNullOrEmpty(server))
             {
-                return Errorable.Failure<Uri>("No server supplied on command line and AZ_BATCH_ACCOUNT_URL not set.");
+                return ErrorSet.Create("No server supplied on command line and AZ_BATCH_ACCOUNT_URL not set.");
             }
 
             try
             {
-                return Errorable.Success(new Uri(server));
+                return new Uri(server);
             }
             catch (UriFormatException ex)
             {
-                return Errorable.Failure<Uri>(
+                return ErrorSet.Create(
                     $"Failed to parse server url ({ex.Message})");
             }
         }
 
-        private static Errorable<string> FindApiVersion(VerifyCommandLine commandLine)
+        private static Result<string, ErrorSet> FindApiVersion(VerifyCommandLine commandLine)
         {
             var version = commandLine.ApiVersion;
             if (string.IsNullOrEmpty(version))
@@ -181,7 +173,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 version = "2017-05-01.5.0";
             }
 
-            return Errorable.Success(version);
+            return version;
         }
 
         private string ReadEnvironmentVariable(string name)

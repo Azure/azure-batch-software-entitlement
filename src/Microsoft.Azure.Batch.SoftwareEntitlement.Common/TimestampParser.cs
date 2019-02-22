@@ -24,29 +24,29 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
             "Performance",
             "CA1822:Mark members as static",
             Justification = "This method should not be static.")]
-        public Errorable<DateTimeOffset> TryParse(string value, string name)
+        public Result<DateTimeOffset, ErrorSet> TryParse(string value, string name)
         {
             if (DateTimeOffset.TryParseExact(
                 value, ExpectedFormat, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var result))
             {
                 // Correctly parsed in the expected format
-                return Errorable.Success(result);
+                return result;
             }
 
             if (DateTimeOffset.TryParse(
                 value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out result))
             {
                 // Correctly parsed with detected format
-                return Errorable.Success(result);
+                return result;
             }
 
             if (DateTimeOffset.TryParse(value, out result))
             {
                 // Correctly parsed with detected format
-                return Errorable.Success(result);
+                return result;
             }
 
-            return Errorable.Failure<DateTimeOffset>(
+            return ErrorSet.Create(
                 $"Unable to parse {name} timestamp '{value}' (expected format is '{ExpectedFormat}')");
         }
     }

@@ -42,20 +42,16 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// </summary>
         /// <param name="token">The JWT token string</param>
         /// <returns>
-        /// An <see cref="Errorable{NodeEntitlements}"/> containing the result, or an
+        /// An <see cref="Result{NodeEntitlements,ErrorSet}"/> containing the result, or an
         /// error if it failed to validate correctly.
         /// </returns>
-        public Errorable<EntitlementTokenProperties> Parse(string token)
-        {
-            return ExtractJwt(token).Map(CreateEntitlementPropertyProvider).Bind(EntitlementTokenProperties.Build);
-        }
+        public Result<EntitlementTokenProperties, ErrorSet> Parse(string token) =>
+            from pair in ExtractJwt(token)
+            let provider = new JwtPropertyProvider(pair.Principal, pair.Token)
+            from entitlements in EntitlementTokenProperties.Build(provider)
+            select entitlements;
 
-        private static ITokenPropertyProvider CreateEntitlementPropertyProvider(ClaimsPrincipal principal, JwtSecurityToken jwt)
-        {
-            return new JwtPropertyProvider(principal, jwt);
-        }
-
-        private Errorable<(ClaimsPrincipal Principal, JwtSecurityToken Token)> ExtractJwt(string tokenString)
+        private Result<(ClaimsPrincipal Principal, JwtSecurityToken Token), ErrorSet> ExtractJwt(string tokenString)
         {
             var validationParameters = new TokenValidationParameters
             {
@@ -72,9 +68,6 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 TokenDecryptionKey = _encryptionKey
             };
 
-            Errorable<(ClaimsPrincipal Principal, JwtSecurityToken Token)> Failure(string error)
-                => Errorable.Failure<(ClaimsPrincipal Principal, JwtSecurityToken Token)>(error);
-
             try
             {
                 var handler = new JwtSecurityTokenHandler();
@@ -82,30 +75,30 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
                 if (!(token is JwtSecurityToken jwt))
                 {
-                    return Failure("Validated security token is expected to be a JWT");
+                    return ErrorSet.Create("Validated security token is expected to be a JWT");
                 }
 
-                return Errorable.Success((principal, jwt));
+                return (principal, jwt);
             }
             catch (SecurityTokenNotYetValidException exception)
             {
-                return Failure(TokenNotYetValidError(exception.NotBefore));
+                return ErrorSet.Create(TokenNotYetValidError(exception.NotBefore));
             }
             catch (SecurityTokenExpiredException exception)
             {
-                return Failure(TokenExpiredError(exception.Expires));
+                return ErrorSet.Create(TokenExpiredError(exception.Expires));
             }
             catch (SecurityTokenNoExpirationException)
             {
-                return Failure(MissingExpirationError());
+                return ErrorSet.Create(MissingExpirationError());
             }
             catch (SecurityTokenInvalidIssuerException exception)
             {
-                return Failure(UnexpectedIssuerError(exception.InvalidIssuer));
+                return ErrorSet.Create(UnexpectedIssuerError(exception.InvalidIssuer));
             }
             catch (SecurityTokenInvalidAudienceException exception)
             {
-                return Failure(UnexpectedAudienceError(exception.InvalidAudience));
+                return ErrorSet.Create(UnexpectedAudienceError(exception.InvalidAudience));
             }
             catch (ArgumentException exception)
                 when (exception.Message.StartsWith("IDX", StringComparison.Ordinal))
@@ -115,11 +108,11 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 //  - Invalid characters (not base-64)
                 //  - Invalid base-64 strings (not decodable)
                 //  - base-64 strings that decode to invalid JWT parts
-                return Failure("Token is not well formed");
+                return ErrorSet.Create("Token is not well formed");
             }
             catch (Exception exception)
             {
-                return Failure(InvalidTokenError(exception.Message));
+                return ErrorSet.Create(InvalidTokenError(exception.Message));
             }
         }
 

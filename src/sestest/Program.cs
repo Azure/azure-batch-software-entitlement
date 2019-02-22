@@ -70,15 +70,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         public static async Task<int> Serve(ServerCommandLine commandLine)
         {
             var builder = new ServerOptionBuilder(commandLine, _certificateStore);
-            var options = builder.Build();
-            return await options.Match(
-                RunServer,
-                errors =>
-                {
-                    _logger.LogErrors(errors);
-                    return Task.FromResult(ResultCodes.Failed);
-                })
-                .ConfigureAwait(false);
+
+            var resultCodeOrFailure = await builder.Build()
+                .Select(RunServer)
+                .AsTask().ConfigureAwait(false);
+
+            return resultCodeOrFailure.LogIfFailed(_logger, ResultCodes.Failed);
         }
 
         private static Task<int> RunServer(ServerOptions options)
@@ -125,33 +122,31 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             var logSetup = new LoggerSetup();
 
             var consoleLevel = TryParseLogLevel(commandLine.LogLevel, "console", LogLevel.Information);
-            var actualLevel = consoleLevel.HasValue ? consoleLevel.Value : LogLevel.Information;
+            var actualLevel = consoleLevel.Merge(errors => LogLevel.Information);
 
             logSetup.SendToConsole(actualLevel);
 
             var fileLevel = TryParseLogLevel(commandLine.LogFileLevel, "file", actualLevel);
             if (!string.IsNullOrEmpty(commandLine.LogFile))
             {
-                if (fileLevel.HasValue)
+                fileLevel.OnOk(level =>
                 {
                     var file = new FileInfo(commandLine.LogFile);
-                    logSetup.SendToFile(file, fileLevel.Value);
-                }
+                    logSetup.SendToFile(file, level);
+                });
             }
 
             var logger = logSetup.Logger;
             logger.LogHeader("Software Entitlement Service Test Utility");
-            logger.LogErrors(consoleLevel.Errors);
-            logger.LogErrors(fileLevel.Errors);
+            consoleLevel.OnError(logger.LogErrors);
+            fileLevel.OnError(logger.LogErrors);
 
-            if (!consoleLevel.HasValue || !fileLevel.HasValue)
+            // Only share our config if there were no problems during setup.
+            consoleLevel.With(fileLevel).OnOk(_ =>
             {
-                // A problem during setup, don't share our config
-                return;
-            }
-
-            _logger = logger;
-            _provider = logSetup.Provider;
+                _logger = logger;
+                _provider = logSetup.Provider;
+            });
         }
 
         /// <summary>
@@ -188,20 +183,20 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
         }
 
-        private static Errorable<LogLevel> TryParseLogLevel(string level, string purpose, LogLevel defaultLevel)
+        private static Result<LogLevel, ErrorSet> TryParseLogLevel(string level, string purpose, LogLevel defaultLevel)
         {
             if (string.IsNullOrEmpty(level))
             {
-                return Errorable.Success(defaultLevel);
+                return defaultLevel;
             }
 
             if (Enum.TryParse<LogLevel>(level, true, out var result))
             {
                 // Successfully parsed the string
-                return Errorable.Success(result);
+                return result;
             }
 
-            return Errorable.Failure<LogLevel>(
+            return ErrorSet.Create(
                 $"Failed to recognize {purpose} log level '{level}'; valid choices are: error, warning, information, and debug.");
         }
     }
