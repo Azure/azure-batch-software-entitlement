@@ -114,7 +114,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     serverAuthCerts.Where(c => c.IsVerified).Select(c => c.Cert));
 
                 LogCertificates(
-                    "Found {0} non-expired certificates with private keys that allow server authentication and are not verified",
+                    "Found {0} non-expired certificates with private keys that allow server authentication and are NOT verified",
                     serverAuthCerts.Where(c => !c.IsVerified).Select(c => c.Cert));
             }
 
