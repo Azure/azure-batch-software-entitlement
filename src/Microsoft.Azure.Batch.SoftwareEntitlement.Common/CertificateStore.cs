@@ -66,16 +66,18 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// Find all available certificates
         /// </summary>
         /// <returns>Sequence of certificates (possibly empty).</returns>
-        public IEnumerable<X509Certificate2> FindAll()
-        {
-            var query =
-                from name in _storeNames
-                from location in _storeLocations
-                from cert in FindAll(name, location)
-                select cert;
-            var result = query.ToList();
-            return result;
-        }
+        /// <remarks>
+        /// This does not return *distinct* certificates. If the same certificate appears in different stores/locations
+        /// it can be returned multiple times.
+        /// We intentionally avoid filtering out duplicates at this stage because the same certificate might appear
+        /// *with* a private key in one location, and *without* one in another location. Performing a 'Distinct()' here
+        /// might arbitrarily exclude the one with a private key, making it appear as if there is no private key for it.
+        /// </remarks>
+        public IEnumerable<X509Certificate2> FindAll() =>
+            from name in _storeNames
+            from location in _storeLocations
+            from cert in FindAll(name, location)
+            select cert;
 
         /// <summary>
         /// Find all certificates by looking in the specified location
@@ -90,8 +92,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
                 using (var store = new X509Store(storeName, storeLocation))
                 {
                     store.Open(OpenFlags.ReadOnly);
-                    var found = store.Certificates.Cast<X509Certificate2>().ToList();
-                    return found;
+                    return store.Certificates.Cast<X509Certificate2>().ToList();
                 }
             }
             catch (Exception ex) when (IsExpectedOnLinux(ex))

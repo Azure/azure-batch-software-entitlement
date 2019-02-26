@@ -48,8 +48,12 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
             var certificateStore = new CertificateStore();
             var candidates = certificateStore.FindAll()
+                // Need to filter on private key existence before calling Distinct() because
+                // default equality checking does not take private keys into account.
                 .Where(c => c.HasPrivateKey && c.RawData != null)
+                .Distinct()
                 .ToList();
+
             Logger.LogInformation("Found {Count} certificates with private keys", candidates.Count);
 
             if (showCerts == ShowCertificates.All
