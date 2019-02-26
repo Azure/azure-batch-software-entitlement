@@ -96,6 +96,28 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                                      && !c.SupportsUse(X509KeyUsageFlags.DataEncipherment)));
             }
 
+            if (showCerts == ShowCertificates.All
+                || showCerts == ShowCertificates.ForServerAuth
+                || showCerts == ShowCertificates.NonExpired)
+            {
+                var serverAuthCerts = candidates
+                    .Where(cert => now < cert.NotAfter && cert.SupportsServerAuthentication())
+                    .Select(cert => new
+                    {
+                        IsVerified = cert.Verify(),
+                        Cert = cert
+                    })
+                    .ToList();
+
+                LogCertificates(
+                    "Found {0} non-expired certificates with private keys that allow server authentication and are verified",
+                    serverAuthCerts.Where(c => c.IsVerified).Select(c => c.Cert));
+
+                LogCertificates(
+                    "Found {0} non-expired certificates with private keys that allow server authentication and are NOT verified",
+                    serverAuthCerts.Where(c => !c.IsVerified).Select(c => c.Cert));
+            }
+
             if (showCerts == ShowCertificates.All)
             {
                 LogCertificates(
@@ -171,7 +193,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             }
 
             return ErrorSet.Create(
-                $"Failed to recognize '{show}'; valid choices are: `nonexpired` (default), 'forsigning', 'forencrypting', 'expired', and 'all'.");
+                $"Failed to recognize '{show}'; valid choices are: `nonexpired` (default), 'forsigning', 'forencrypting', 'expired', 'forserverauth', and 'all'.");
         }
 
         [Flags]
@@ -180,8 +202,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             NonExpired = 1,
             ForSigning = 2,
             ForEncrypting = 4,
-            Expired = 8,
-            All = NonExpired | Expired | ForSigning | ForEncrypting
+            ForServerAuth = 8,
+            Expired = 16,
+            All = NonExpired | Expired | ForSigning | ForEncrypting | ForServerAuth
         }
     }
 }
