@@ -34,7 +34,7 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement.Common
         /// <returns>
         /// A <see cref="Result{TOk,TError}"/> containing the enum value, or a string describing the parse error.
         /// </returns>
-        public static Result<TEnum, string> ParseEnum<TEnum>(this string value) where TEnum : struct
+        public static Result<TEnum, string> ParseEnum<TEnum>(this string value) where TEnum : struct, Enum
         {
             if (Enum.TryParse<TEnum>(value, true, out var result))
             {
