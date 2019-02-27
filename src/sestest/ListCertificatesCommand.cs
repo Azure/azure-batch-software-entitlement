@@ -29,20 +29,21 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         /// <returns>Results of execution (0 = success).</returns>
         public Task<int> Execute(ListCertificatesCommandLine commandLine)
         {
-            var showCertsResult = TryParseShow(commandLine.Show);
+            var executeResult =
+                from showCerts in TryParseShow(commandLine.Show)
+                join extraColumns in TryParseExtraColumns(commandLine.ExtraColumns) on true equals true
+                select Execute(showCerts, extraColumns.ToList());
 
-            var exitCode = showCertsResult
-                .OnOk(Execute)
-                .Merge(errors =>
-                {
-                    Logger.LogErrors(errors);
-                    return ResultCodes.Failed;
-                });
+            var exitCode = executeResult.Merge(errors =>
+            {
+                Logger.LogErrors(errors);
+                return ResultCodes.Failed;
+            });
 
             return Task.FromResult(exitCode);
         }
 
-        private int Execute(ShowCertificates showCerts)
+        private int Execute(ShowCertificates showCerts, IList<ExtraColumn> extraColumns)
         {
             var now = DateTime.Now;
 
@@ -65,7 +66,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     "Found {0} non-expired certificates with private keys that allow both encryption and signing",
                     candidates.Where(c => now < c.NotAfter
                                      && c.SupportsUse(X509KeyUsageFlags.DigitalSignature)
-                                     && c.SupportsUse(X509KeyUsageFlags.DataEncipherment)));
+                                     && c.SupportsUse(X509KeyUsageFlags.DataEncipherment)),
+                    extraColumns);
             }
 
             if (showCerts == ShowCertificates.All
@@ -76,7 +78,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     "Found {0} non-expired certificates with private keys that allow signing but not encryption",
                     candidates.Where(c => now < c.NotAfter
                                      && c.SupportsUse(X509KeyUsageFlags.DigitalSignature)
-                                     && !c.SupportsUse(X509KeyUsageFlags.DataEncipherment)));
+                                     && !c.SupportsUse(X509KeyUsageFlags.DataEncipherment)),
+                    extraColumns);
             }
 
             if (showCerts == ShowCertificates.All
@@ -87,7 +90,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     "Found {0} non-expired certificates with private keys that allow encryption but not signing",
                     candidates.Where(c => now < c.NotAfter
                                      && !c.SupportsUse(X509KeyUsageFlags.DigitalSignature)
-                                     && c.SupportsUse(X509KeyUsageFlags.DataEncipherment)));
+                                     && c.SupportsUse(X509KeyUsageFlags.DataEncipherment)),
+                    extraColumns);
             }
 
             if (showCerts == ShowCertificates.All
@@ -97,7 +101,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                     "Found {0} non-expired certificates with private keys that allow neither encryption nor signing",
                     candidates.Where(c => now < c.NotAfter
                                      && !c.SupportsUse(X509KeyUsageFlags.DigitalSignature)
-                                     && !c.SupportsUse(X509KeyUsageFlags.DataEncipherment)));
+                                     && !c.SupportsUse(X509KeyUsageFlags.DataEncipherment)),
+                    extraColumns);
             }
 
             if (showCerts == ShowCertificates.All
@@ -115,26 +120,32 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
 
                 LogCertificates(
                     "Found {0} non-expired certificates with private keys that allow server authentication and are verified",
-                    serverAuthCerts.Where(c => c.IsVerified).Select(c => c.Cert));
+                    serverAuthCerts.Where(c => c.IsVerified).Select(c => c.Cert),
+                    extraColumns);
 
                 LogCertificates(
                     "Found {0} non-expired certificates with private keys that allow server authentication and are NOT verified",
-                    serverAuthCerts.Where(c => !c.IsVerified).Select(c => c.Cert));
+                    serverAuthCerts.Where(c => !c.IsVerified).Select(c => c.Cert),
+                    extraColumns);
             }
 
             if (showCerts == ShowCertificates.All)
             {
                 LogCertificates(
                     "Found {0} expired certificates",
-                    candidates.Where(c => now >= c.NotAfter));
+                    candidates.Where(c => now >= c.NotAfter),
+                    extraColumns);
             }
 
             return 0;
         }
 
-        private void LogCertificates(string title, IEnumerable<X509Certificate2> certificates)
+        private void LogCertificates(
+            string title,
+            IEnumerable<X509Certificate2> certificates,
+            IList<ExtraColumn> extraColumns)
         {
-            var rows = certificates.Select(DescribeCertificate).ToList();
+            var rows = certificates.Select(c => DescribeCertificate(c, extraColumns)).ToList();
 
             if (rows.Count == 0)
             {
@@ -142,14 +153,30 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 return;
             }
 
-            rows.Insert(0, new List<string>
+            var headers = new List<string>
             {
-                "Name",
-                "Friendly Name",
+                "DNS Name",
                 "Thumbprint",
                 "Not Before",
                 "Not After"
-            });
+            };
+
+            foreach (var extraColumn in extraColumns)
+            {
+                switch (extraColumn)
+                {
+                    case ExtraColumn.SubjectName:
+                        headers.Add("Subject Name");
+                        break;
+                    case ExtraColumn.FriendlyName:
+                        headers.Add("Friendly Name");
+                        break;
+                    default:
+                        throw new InvalidOperationException($"Unexpected {typeof(ExtraColumn).Name} value: {extraColumn}");
+                }
+            }
+
+            rows.Insert(0, headers);
 
             Logger.LogInformation("");
             Logger.LogInformation(title, rows.Count - 1);
@@ -158,8 +185,35 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
         }
 
 
-        private static IList<string> DescribeCertificate(X509Certificate2 cert)
+        private static IList<string> DescribeCertificate(
+            X509Certificate2 cert,
+            IList<ExtraColumn> extraColumns)
         {
+            const string dateFormat = "s";
+
+            var result = new List<string>
+            {
+                cert.GetNameInfo(X509NameType.DnsName, forIssuer: false),
+                cert.Thumbprint,
+                cert.NotBefore.ToString(dateFormat, CultureInfo.InvariantCulture),
+                cert.NotAfter.ToString(dateFormat, CultureInfo.InvariantCulture)
+            };
+
+            foreach (var extraColumn in extraColumns)
+            {
+                switch (extraColumn)
+                {
+                    case ExtraColumn.SubjectName:
+                        result.Add(cert.SubjectName.Name);
+                        break;
+                    case ExtraColumn.FriendlyName:
+                        result.Add(cert.FriendlyName);
+                        break;
+                    default:
+                        throw new InvalidOperationException($"Unexpected {typeof(ExtraColumn).Name} value: {extraColumn}");
+                }
+            }
+
             var status = string.Empty;
             if (cert.NotAfter < DateTime.Now)
             {
@@ -170,17 +224,9 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 status = "(not yet active)";
             }
 
-            const string dateFormat = "s";
+            result.Add(status);
 
-            return new List<string>
-            {
-                cert.SubjectName.Name,
-                cert.FriendlyName,
-                cert.Thumbprint,
-                cert.NotBefore.ToString(dateFormat, CultureInfo.InvariantCulture),
-                cert.NotAfter.ToString(dateFormat, CultureInfo.InvariantCulture),
-                status
-            };
+            return result;
         }
 
         private static Result<ShowCertificates, ErrorSet> TryParseShow(string show)
@@ -190,14 +236,8 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
                 return ShowCertificates.NonExpired;
             }
 
-            if (Enum.TryParse<ShowCertificates>(show, true, out var result))
-            {
-                // Successfully parsed the string
-                return result;
-            }
-
-            return ErrorSet.Create(
-                $"Failed to recognize '{show}'; valid choices are: `nonexpired` (default), 'forsigning', 'forencrypting', 'expired', 'forserverauth', and 'all'.");
+            return show.ParseEnum<ShowCertificates>().OnError(_ => ErrorSet.Create(
+                $"Failed to recognize '{show}'; valid choices are: `nonexpired` (default), 'forsigning', 'forencrypting', 'forserverauth', 'expired', and 'all'."));
         }
 
         [Flags]
@@ -209,6 +249,23 @@ namespace Microsoft.Azure.Batch.SoftwareEntitlement
             ForServerAuth = 8,
             Expired = 16,
             All = NonExpired | Expired | ForSigning | ForEncrypting | ForServerAuth
+        }
+
+        private static Result<IEnumerable<ExtraColumn>, ErrorSet> TryParseExtraColumns(
+            IEnumerable<string> extraColumnNames)
+        {
+            var results =
+                from colName in extraColumnNames
+                select colName.ParseEnum<ExtraColumn>().OnError(_ => ErrorSet.Create(
+                    $"Failed to recognize '{colName}'; valid choices are: 'subjectname' and 'friendlyname'."));
+
+            return results.Reduce();
+        }
+
+        private enum ExtraColumn
+        {
+            SubjectName,
+            FriendlyName
         }
     }
 }
