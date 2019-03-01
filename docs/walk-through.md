@@ -44,6 +44,86 @@ If you already have suitable certificates on your machine (e.g. if you use HTTPS
 
 If you don't already have suitable certificates (or if you're not sure), creating your own certificates is straightforward. The blog entry [Creating self signed certificates with makecert.exe for development](https://blog.jayway.com/2014/09/03/creating-self-signed-certificates-with-makecert-exe-for-development/) is one useful guide for this on Windows. Alternatively, the .NET Core SDK [can be used](https://docs.microsoft.com/en-us/aspnet/core/security/enforcing-ssl#trust-the-aspnet-core-https-development-certificate-on-windows-and-macos) to create and trust a certificate for server authentication (again, Windows only: the `--trust` option is unavailable on Linux).
 
+## Starting the test server
+
+In production, your application will read a token from the `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN` environment variable (populated by Azure Batch). Your application will provide that to the software entitlement server, which will verify the token grants an entitlement to use your application, _and_ validate that the compute node requesting verification of the token is the virtual machine to which the token was issued.
+
+The production software entitlement server only accepts connections from Azure Batch compute nodes. To enable your local development/test environment, the `server` mode of `sestest` provides an HTTPS endpoint that acts as a fully functioning server.
+
+Open a new shell window to run the test server. It will continue running in the foreground displaying a log of the requests it receives.
+
+Set the variable `connectionThumbprint` to specify the certificate that should be used for HTTPS. This must be a certificate that is valid for server authentication. Depending on the client tool which will be used for making requests to the test server, the certificate may also need to be trusted/verified (see [finding certificates with the SDK](finding-certificates.md#finding-certificates-with-the-sdk)).
+
+``` PowerShell
+# PowerShell
+PS> $connectionThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+```
+``` bash
+# bash
+$ connectionThumbprint="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+```
+
+Depending on whether [your token was encrypted and/or secured](#generating-signed-and-encrypted-tokens) the server needs to be run with different arguments.
+
+To run the test server such that it accepts tokens which are _not_ signed or encrypted, only specify the `--connection` option. The `--connection` option is mandatory because the server only works with an HTTPS connection.
+
+``` PowerShell
+# PowerShell
+PS> .\sestest.ps1 server --connection $connectionThumbprint
+```
+``` bash
+# bash
+$ ./sestest.sh server --connection $connectionThumbprint
+```
+
+If your token was encrypted and/or secured, set the variables `signingThumbprint` and/or `encryptingThumbprint` to the same thumbprints used for generating the token.
+
+``` PowerShell
+# PowerShell
+PS> $signingThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+PS> $encryptingThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+```
+``` bash
+# bash
+$ signingThumbprint="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+$ encryptingThumbprint="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+```
+
+And specify these when running the server:
+
+``` PowerShell
+# PowerShell
+PS> .\sestest.ps1 server --connection $connectionThumbprint --sign $signingThumbprint --encrypt $encryptingThumbprint
+```
+``` bash
+# bash
+$ ./sestest.sh server --connection $connectionThumbprint --sign $signingThumbprint --encrypt $encryptingThumbprint
+```
+
+For a full reference of all the available parameters for this mode, see [../src/sestest/readme.md](../src/sestest/readme.md).
+
+The server will start up and wait for connections.
+
+```
+17:20:02.676 [Information] ---------------------------------------------
+17:20:02.695 [Information]   Software Entitlement Service Test Utility
+17:20:02.696 [Information] ---------------------------------------------
+17:20:02.977 [Debug] Hosting starting
+17:20:03.043 [Debug] Hosting started
+Hosting environment: Production
+Content root path: ... elided ...
+Now listening on: https://localhost:4443
+Application started. Press Ctrl+C to shut down.
+```
+
+Test the server with a web browser, connecting to the server by entering the URL shown on the console.
+
+![Browser](../img/browser.png)
+
+Only an HTTPS connection will work. The server does not listen for HTTP connections. If you specified any kind of locally signed certificate, you will likely need to override security features of your browser to connect.
+
+Leave the server running in this shell window and return to the first. You may want to arrange the two shell windows so you can observe the one running the test server while you work in the original window.
+
 ## Generating a token
 
 In production, Azure Batch will generate a software entitlement token and make it available in the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN`. For local development and testing, we can use `generate` mode of `sestest` to generate a token and then manually define the required variable.
@@ -130,86 +210,6 @@ $ AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN=`cat tmp/token.txt`
 ```
 
 Testing with an encrypted token is useful because these are significantly longer, in part due to information about the required key that's included within. (This may reveal issues, such as buffer sizes that are too small, that an unencrypted token would not.) Note that your application doesn't need to do anything different with encrypted vs unencrypted tokens. 
-
-## Starting the test server
-
-In production, your application will read a token from the `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN` environment variable (populated by Azure Batch). Your application will provide that to the software entitlement server, which will verify the token grants an entitlement to use your application, _and_ validate that the compute node requesting verification of the token is the virtual machine to which the token was issued.
-
-The production software entitlement server only accepts connections from Azure Batch compute nodes. To enable your local development/test environment, the `server` mode of `sestest` provides an HTTPS endpoint that acts as a fully functioning server.
-
-Open a new shell window to run the test server. It will continue running in the foreground displaying a log of the requests it receives.
-
-Set the variable `connectionThumbprint` to specify the certificate that should be used for HTTPS. This must be a certificate that is valid for server authentication. Depending on the client tool which will be used for making requests to the test server, the certificate may also need to be trusted/verified (see [finding certificates with the SDK](finding-certificates.md#finding-certificates-with-the-sdk)).
-
-``` PowerShell
-# PowerShell
-PS> $connectionThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-```
-``` bash
-# bash
-$ connectionThumbprint="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-```
-
-Depending on whether [your token was encrypted and/or secured](#generating-signed-and-encrypted-tokens) the server needs to be run with different arguments.
-
-To run the test server such that it accepts tokens which are _not_ signed or encrypted, only specify the `--connection` option. The `--connection` option is mandatory because the server only works with an HTTPS connection.
-
-``` PowerShell
-# PowerShell
-PS> .\sestest.ps1 server --connection $connectionThumbprint
-```
-``` bash
-# bash
-$ ./sestest.sh server --connection $connectionThumbprint
-```
-
-If your token was encrypted and/or secured, set the variables `signingThumbprint` and/or `encryptingThumbprint` to the same thumbprints used for generating the token.
-
-``` PowerShell
-# PowerShell
-PS> $signingThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-PS> $encryptingThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-```
-``` bash
-# bash
-$ signingThumbprint="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-$ encryptingThumbprint="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-```
-
-And specify these when running the server:
-
-``` PowerShell
-# PowerShell
-PS> .\sestest.ps1 server --connection $connectionThumbprint --sign $signingThumbprint --encrypt $encryptingThumbprint
-```
-``` bash
-# bash
-$ ./sestest.sh server --connection $connectionThumbprint --sign $signingThumbprint --encrypt $encryptingThumbprint
-```
-
-For a full reference of all the available parameters for this mode, see [../src/sestest/readme.md](../src/sestest/readme.md).
-
-The server will start up and wait for connections.
-
-```
-17:20:02.676 [Information] ---------------------------------------------
-17:20:02.695 [Information]   Software Entitlement Service Test Utility
-17:20:02.696 [Information] ---------------------------------------------
-17:20:02.977 [Debug] Hosting starting
-17:20:03.043 [Debug] Hosting started
-Hosting environment: Production
-Content root path: ... elided ...
-Now listening on: https://localhost:4443
-Application started. Press Ctrl+C to shut down.
-```
-
-Test the server with a web browser, connecting to the server by entering the URL shown on the console.
-
-![Browser](../img/browser.png)
-
-Only an HTTPS connection will work. The server does not listen for HTTP connections. If you specified any kind of locally signed certificate, you will likely need to override security features of your browser to connect.
-
-Leave the server running in this shell window and return to the first. You may want to arrange the two shell windows so you can observe the one running the test server while you work in the original window.
 
 ## Verifying a token
 
