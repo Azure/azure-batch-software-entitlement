@@ -10,7 +10,7 @@ In production, Azure Batch will generate a software entitlements token for each 
 
 ![Component integration in the cloud](../img/walk-through-in-cloud.png)
 
-During development, it is important to be able to test locally. The Software Entitlement Service SDK enabless this by providing substitutes for the components normally available only in the cloud:
+During development, it is important to be able to test locally. The Software Entitlement Service SDK enables this by providing substitutes for the components normally available only in the cloud:
 
 ![Component integration for dev test](../img/walk-through-dev-test.png)
 
@@ -20,9 +20,11 @@ Before working through this guide, you will need to have built the tooling and h
 
 ## A note on shells
 
-The SDK has been written to be cross-platform, working on Windows, Linux and macOS. For brevity, this walk-through uses **PowerShell** only (usable on both Windows and [Linux](https://azure.microsoft.com/blog/powershell-is-open-sourced-and-is-available-on-linux/)); the commands shown should be trivially convertible to your shell of choice, such as `CMD` and `bash` (including `bash` on Windows 10).
+The SDK has been written to be cross-platform, working on Windows, Linux and macOS. This walk-through uses **PowerShell** (usable on both Windows and [Linux](https://azure.microsoft.com/blog/powershell-is-open-sourced-and-is-available-on-linux/)) and **bash**; the commands shown should be trivially convertible to your shell of choice, such as `CMD`.
 
-**Note:** By default, execution of PowerShell scripts is disabled on many Windows systems. If you get an error "*script.ps1* cannot be loaded because running scripts is disabled on this system", you will need to unblock scripts by running `set-executionpolicy remotesigned` from an elevated PowerShell window. 
+**Note:** By default, execution of PowerShell scripts is disabled on many Windows systems. If you get an error "*script.ps1* cannot be loaded because running scripts is disabled on this system", you will need to unblock scripts by running `set-executionpolicy remotesigned` from an elevated PowerShell window.
+
+There are `PowerShell` and `bash` wrappers in the repository root to launch `sestest`. These find and run the latest `sestest.dll` assembly that has been built.
 
 ## Selecting Certificates
 
@@ -40,49 +42,45 @@ For each required certificate you will need to know its *thumbprint*. Both conde
 
 If you already have suitable certificates on your machine (e.g. if you use HTTPS locally for development and testing), you can use those. See [*Finding Certificates*](finding-certificates.md) for information on finding a certificate on your machine.
 
-If you don't already have suitable certificates (or if you're not sure), creating your own certificates is straightforward. The blog entry [Creating self signed certificates with makecert.exe for development](https://blog.jayway.com/2014/09/03/creating-self-signed-certificates-with-makecert-exe-for-development/) is one useful guide for this.
+If you don't already have suitable certificates (or if you're not sure), creating your own certificates is straightforward. The blog entry [Creating self signed certificates with makecert.exe for development](https://blog.jayway.com/2014/09/03/creating-self-signed-certificates-with-makecert-exe-for-development/) is one useful guide for this on Windows. Alternatively, the .NET Core SDK [can be used](https://docs.microsoft.com/en-us/aspnet/core/security/enforcing-ssl#trust-the-aspnet-core-https-development-certificate-on-windows-and-macos) to create and trust a certificate for server authentication (again, Windows only: the `--trust` option is unavailable on Linux).
 
 ## Generating a token
 
 In production, Azure Batch will generate a software entitlement token and make it available in the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN`. For local development and testing, we can use `generate` mode of `sestest` to generate a token and then manually define the required variable.
 
-Run the following command to generate a minimal token and store it in `token.txt`:
+Set the variable `applicationId` to store the application ID for which the token will grant entitlement (this same variable can be used later for verifying the token):
 
 ``` PowerShell
-PS> .\sestest generate --application-id contosoapp --token-file token.txt
-10:18:27.531 [Information] ---------------------------------------------
-10:18:27.548 [Information]   Software Entitlement Service Test Utility
-10:18:27.548 [Information] ---------------------------------------------
-10:18:27.745 [Information] Token file: "token.txt"
+# PowerShell
+PS> $applicationId = "contosoapp"
+```
+``` bash
+# bash
+$ applicationId="contosoapp"
 ```
 
-The `token.txt` file will contain the software entitlement token, stored as a single line of encoded text. 
+Defining variables makes it easier to type the commands and reduces the opportunity for error. (Both `PowerShell` and `bash` do auto completion of variable names.)
+
+### Generating a plaintext token
+
+Run the `sestest generate` command to generate a minimal (unsigned and unencrypted) token and store it in `token.txt` within the `tmp` directory, where it won't be tracked by source control:
+
+``` PowerShell
+# PowerShell
+PS> .\sestest.ps1 generate --application-id $applicationId --token-file tmp\token.txt
+```
+``` bash
+# bash
+$ ./sestest.sh generate --application-id $applicationId --token-file tmp/token.txt
+```
+
+The `token.txt` file will contain the software entitlement token, stored as a single line of encoded text.
 
 To see more details about what's included in the token, optionally include the option `--log-level debug`. For a full reference of all the available parameters for this mode, see [../src/sestest/readme.md](../src/sestest/readme.md).
 
-Set the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN` to the content of the `token.txt` file:
-
-``` PowerShell
-PS> $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN = (get-content token.txt)
-```
-
-Or, if you're using CMD:
-
-``` cmd
-C:> set /p AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN= < token.txt
-```
-
-The `/p` option is required to read the value for the variable from stdin.
-
-Or Bash:
-
-``` bash
-$ AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN=`cat token.txt`
-```
-
 ### Generating signed and encrypted tokens
 
-In production, Azure Batch generates software entitlement tokens that are both signed and encrypted. The digital signature  allows the production software entitlement server to verify tokens were generated by Azure Batch, and the encryption prevents the signature from being stripped from the token and replaced.
+In production, Azure Batch generates software entitlement tokens that are both signed and encrypted. The digital signature allows the production software entitlement server to verify tokens were generated by Azure Batch, and the encryption prevents the signature from being stripped from the token and replaced.
 
 When working in a local development/test environment, signing and encryption of tokens are both optional. We do recommend that you do at least some testing with fully secured tokens as they are significantly longer.
 
@@ -92,63 +90,104 @@ Encryption works in the same way - the same thumbprint needs to be provided both
 
 You may use the same certificate for both signing and encryption if you prefer.
 
-Define `$signingThumbprint` and `$encryptingThumbprint` with the appropriate thumbprint values to make it easier to reference the thumbprints:
+Define `signingThumbprint` and `encryptingThumbprint` with the appropriate thumbprint values to make it easier to reference the thumbprints:
 
 ``` PowerShell
+# PowerShell
 PS> $signingThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 PS> $encryptingThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 ```
-
-Defining these variables makes it easier to type the commands and reducing the opportunity for error. (Both `PowerShell` and `bash` do auto completion of variable names.)
+``` bash
+# bash
+$ signingThumbprint="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+$ encryptingThumbprint="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+```
 
 Add the options `--sign` and `--encrypt` to the command line used above to generate a fully secured token:
 
 ``` PowerShell
-PS> .\sestest generate --application-id contosoapp --sign $signingThumbprint --encrypt $encryptingThumbprint --token-file token.txt
-14:06:43.861 [Information] ---------------------------------------------
-14:06:43.861 [Information]   Software Entitlement Service Test Utility
-14:06:43.861 [Information] ---------------------------------------------
-14:06:44.172 [Information] Token file: "token.txt"
+# PowerShell
+PS> .\sestest.ps1 generate --application-id $applicationId --sign $signingThumbprint --encrypt $encryptingThumbprint --token-file tmp/token.txt
+```
+``` bash
+# bash
+$ ./sestest.sh generate --application-id $applicationId --sign $signingThumbprint --encrypt $encryptingThumbprint --token-file tmp/token.txt
 ```
 
 Open `token.txt` in your favorite text editor; you'll see that the secured token is substantially longer than an unsecured one.
 
-As we did above, set the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN` to the generated token value:
+### Storing the token in a variable
+
+Set the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN` to the content of the `token.txt` file:
 
 ``` PowerShell
-PS> $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN = (get-content token.txt)
+# PowerShell
+PS> $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN = (get-content tmp\token.txt)
+```
+``` bash
+# bash
+$ AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN=`cat tmp/token.txt`
 ```
 
 Testing with an encrypted token is useful because these are significantly longer, in part due to information about the required key that's included within. (This may reveal issues, such as buffer sizes that are too small, that an unencrypted token would not.) Note that your application doesn't need to do anything different with encrypted vs unencrypted tokens. 
 
 ## Starting the test server
 
-In production, Azure Batch provides a software entitlement server that will verify a software entitlement token is valid. It also validates that the compute node requesting verification of the token is the virtual machine to which the token was issued.
-
-Once your application has read the token from the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN`, it will call the software entitlement service to verify the token grants permission to use your application.
+In production, your application will read a token from the `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN` environment variable (populated by Azure Batch). Your application will provide that to the software entitlement server, which will verify the token grants an entitlement to use your application, _and_ validate that the compute node requesting verification of the token is the virtual machine to which the token was issued.
 
 The production software entitlement server only accepts connections from Azure Batch compute nodes. To enable your local development/test environment, the `server` mode of `sestest` provides an HTTPS endpoint that acts as a fully functioning server.
 
-Open a new shell window and set the variable `$connectionThumbprint` to specify the certificate that should be used for HTTPS.
+Open a new shell window to run the test server. It will continue running in the foreground displaying a log of the requests it receives.
+
+Set the variable `connectionThumbprint` to specify the certificate that should be used for HTTPS. This must be a certificate that is valid for server authentication. Depending on the client tool which will be used for making requests to the test server, the certificate may also need to be trusted/verified (see [finding certificates with the SDK](finding-certificates.md#finding-certificates-with-the-sdk)).
 
 ``` PowerShell
+# PowerShell
 PS> $connectionThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 ```
+``` bash
+# bash
+$ connectionThumbprint="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+```
 
-If your token was encrypted and/or secured, set the variables `$signingThumbprint` and `$encryptingThumbprint` to the same thumbprint values used earlier when the token was generated.
+Depending on whether [your token was encrypted and/or secured](#generating-signed-and-encrypted-tokens) the server needs to be run with different arguments.
+
+To run the test server such that it accepts tokens which are _not_ signed or encrypted, only specify the `--connection` option. The `--connection` option is mandatory because the server only works with an HTTPS connection.
 
 ``` PowerShell
+# PowerShell
+PS> .\sestest.ps1 server --connection $connectionThumbprint
+```
+``` bash
+# bash
+$ ./sestest.sh server --connection $connectionThumbprint
+```
+
+If your token was encrypted and/or secured, set the variables `signingThumbprint` and/or `encryptingThumbprint` to the same thumbprints used for generating the token.
+
+``` PowerShell
+# PowerShell
 PS> $signingThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 PS> $encryptingThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 ```
-
-Run the server:
-
-``` PowerShell
-PS> .\sestest server --connection $connectionThumbprint --sign $signingThumbprint --encrypt $encryptingThumbprint
+``` bash
+# bash
+$ signingThumbprint="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+$ encryptingThumbprint="XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
 ```
 
-The `--connection` option is mandatory because the server only works with an HTTPS connection. Omit the `--sign` and `--encrypt` options if you're not using secured tokens. For a full reference of all the available parameters for this mode, see [../src/sestest/readme.md](../src/sestest/readme.md).
+And specify these when running the server:
+
+``` PowerShell
+# PowerShell
+PS> .\sestest.ps1 server --connection $connectionThumbprint --sign $signingThumbprint --encrypt $encryptingThumbprint
+```
+``` bash
+# bash
+$ ./sestest.sh server --connection $connectionThumbprint --sign $signingThumbprint --encrypt $encryptingThumbprint
+```
+
+For a full reference of all the available parameters for this mode, see [../src/sestest/readme.md](../src/sestest/readme.md).
 
 The server will start up and wait for connections.
 
@@ -174,81 +213,62 @@ Leave the server running in this shell window and return to the first. You may w
 
 ## Verifying a token
 
+There are a few options for independently checking the software entitlement token. This allows you to check the consistency of the system without involving your application, helping you to identify the source of any issues.
+
 In your original shell window, define an environment variable with the URL shown by the server:
 
 ``` PowerShell
-$env:AZ_BATCH_ACCOUNT_URL = "https://localhost:4443"
+# PowerShell
+PS> $env:AZ_BATCH_ACCOUNT_URL = "https://localhost:4443"
+```
+``` bash
+# bash
+$ AZ_BATCH_ACCOUNT_URL="https://localhost:4443"
 ```
 
-To independently check a software entitlement token, use the `sesclient` console application. This allows you to check the consistency of the system without involving your application, helping you to identify the source of any issues. 
+You should now have the following variables defined:
+- `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN`
+- `AZ_BATCH_ACCOUNT_URL`
+- `applicationId`
 
-With the environment variables previously defined (`AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN` and `AZ_BATCH_ACCOUNT_URL`), plus the certificate variable `$connectionThumbprint`, verify your token with this command:
+### Verifying using `sesclient`
+
+On Windows, you can use the `sesclient` console application. This requires specifying a `--thumbprint` value that matches the `connection` certificate used by the test server.
 
 ``` PowerShell
-PS> .\sesclient --url $env:AZ_BATCH_ACCOUNT_URL --thumbprint $connectionThumbprint --common-name localhost --token $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN --application contosoapp
+# PowerShell
+PS> $connectionThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+PS> .\sesclient.ps1 --url $env:AZ_BATCH_ACCOUNT_URL --thumbprint $connectionThumbprint --common-name localhost --token $env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN --application $applicationId
 ```
+
+### Verifying using shell commands
 
 If you are having difficulty running `sesclient` (for example the server is using a self-signed certificate), you can do a partial verification using your shell.
 
 These will verify your token (from the environment variable `AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN`) against the server, but won't do any of the required local checks that ensure you're talking to a genuine service.
 
-### Using PowerShell:
+Examples here use PowerShell (`Invoke-RestMethod`) or Bash (`curl` with `jq` for JSON parsing).
+
+**Notes:**
+- In PowerShell v6 (the cross-platform one), `Invoke-RestMethod` deems the `Content-Type: application/json; odata=minimalmetadata` header invalid. If you're using this version you'll need to specify the `-SkipHeaderValidation` option.
+- `Invoke-RestMethod` in PowerShell v5 and earlier refuses to connect to endpoints bearing an untrusted TLS certificate. This can be overridden in v6 with the `-SkipCertificateCheck` option.
+
+The details of the requests depend on the API version you're testing against. An API version of `9999-09-09.99.99` indicates the newer "leasing" API, while versions below that correspond to the one-time approval API.
+
+#### One-time token approval API
+
+Send a `POST` request to the API, specifying an `api-version` parameter between `2017-05-01.5.0` and `2018-08-01.7.0`:
 
 ``` PowerShell
-PS> $applicationId = "contosoapp"
-
-# For one-time token approval:
-# ----------------------------
-PS> $apiVersion = "2017-09-01.6.0"
+# PowerShell
 PS> Invoke-RestMethod `
-    -Uri "$env:AZ_BATCH_ACCOUNT_URL/softwareEntitlements?api-version=$apiVersion" `
+    -Uri "$env:AZ_BATCH_ACCOUNT_URL/softwareEntitlements?api-version=2017-09-01.6.0" `
     -Method "POST" `
     -Body "{'applicationId':'$applicationId', 'token':'$env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN'}" `
-    -ContentType "application/json; odata=minimalmetadata"
-
-# Expected output similar to:
-# id                                               expiry
-# --                                               ------
-# entitlement-695c822b-470c-4fd1-b34d-9b21435f57b2 2019-01-16T01:06:07+00:00
-
-# For entitlement leasing:
-# ------------------------
-PS> $apiVersion = "9999-09-09.99.99"
-
-# Acquisition
-PS> $entitlementId = (Invoke-RestMethod `
-    -Uri "$env:AZ_BATCH_ACCOUNT_URL/softwareEntitlements?api-version=$apiVersion" `
-    -Method "POST" `
-    -Body "{'applicationId':'$applicationId', 'token':'$env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN','duration':'PT5M'}" `
-    -ContentType "application/json; odata=minimalmetadata" `
-    ).entitlementId
-
-# Renewal
-PS> Invoke-RestMethod `
-    -Uri "$env:AZ_BATCH_ACCOUNT_URL/softwareEntitlements/${entitlementId}?api-version=$apiVersion" `
-    -Method "POST" `
-    -Body "{'duration':'PT5M'}" `
-    -ContentType "application/json; odata=minimalmetadata"
-
-# Release
-PS> Invoke-RestMethod `
-    -Uri "$env:AZ_BATCH_ACCOUNT_URL/softwareEntitlements/${entitlementId}?api-version=$apiVersion" `
-    -Method "DELETE" `
-    -ContentType "application/json; odata=minimalmetadata"
+    -ContentType "application/json; odata=minimalmetadata" | ConvertTo-Json
 ```
-
-### Using Bash
-
-If you're working with a Linux shell, you can achieve the same result with `curl` (and `jq` for JSON parsing):
-
 ``` bash
-$ applicationId = "contosoapp"
-
-# For one-time token approval:
-# ----------------------------
-$ apiVersion="2017-09-01.6.0"
-
-# Write formatted JSON response to stdout, or HTTP errors to stderr.
+# bash
 $ curl \
     --request POST \
     --insecure      `# Skip certificate check` \
@@ -257,15 +277,39 @@ $ curl \
     --silent        `# Don't write progress bar to stderr` \
     --header "Content-Type: application/json; odata=minimalmetadata" \
     --data "{'applicationId':'$applicationId', 'token':'$AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN'}" \
-    $AZ_BATCH_ACCOUNT_URL/softwareEntitlements?api-version=$apiVersion \
+    $AZ_BATCH_ACCOUNT_URL/softwareEntitlements?api-version=2017-09-01.6.0 \
     | jq
+```
 
-# For entitlement leasing:
-# ------------------------
-$ apiVersion="9999-09-09.99.99"
+The output should be similar to:
+```json
+{
+  "id": "entitlement-695c822b-470c-4fd1-b34d-9b21435f57b2",
+  "expiry": "2019-01-16T01:06:07+00:00"
+}
+```
 
-# Acquisition
-# Write leased entitlement ID to the $entitlementId variable, or HTTP errors to stderr.
+#### Leasing API
+
+Interacting with leased entitlements involves three kinds of requests: acquisition, renewal and release.
+
+For these we require an `api-version` parameter of `9999-09-09.99.99`.
+
+##### Acquisition
+
+Send a `POST` request to the API to acquire an entitlement and write leased entitlement ID to the `entitlementId` variable:
+
+``` PowerShell
+# PowerShell
+PS> $entitlementId = (Invoke-RestMethod `
+    -Uri "$env:AZ_BATCH_ACCOUNT_URL/softwareEntitlements?api-version=9999-09-09.99.99" `
+    -Method "POST" `
+    -Body "{'applicationId':'$applicationId', 'token':'$env:AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN','duration':'PT5M'}" `
+    -ContentType "application/json; odata=minimalmetadata" `
+    ).entitlementId
+```
+``` bash
+# bash
 $ entitlementId=$(curl \
     --request POST \
     --insecure \
@@ -274,11 +318,24 @@ $ entitlementId=$(curl \
     --silent \
     --header "Content-Type: application/json; odata=minimalmetadata" \
     --data "{'applicationId':'$applicationId', 'token':'$AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN','duration':'PT5M'}" \
-    $AZ_BATCH_ACCOUNT_URL/softwareEntitlements?api-version=$apiVersion \
+    $AZ_BATCH_ACCOUNT_URL/softwareEntitlements?api-version=9999-09-09.99.99 \
     | jq -re '.entitlementId' || (echo "FAILED: entitlementId not found in JSON response" 1>&2))
+```
 
-# Renewal
-# Write formatted JSON response to stdout, or HTTP errors to stderr.
+##### Renewal
+
+Send a `POST` request to the endpoint for `entitlementId` to renew the entitlement and write formatted JSON response to stdout:
+
+``` PowerShell
+# PowerShell
+PS> Invoke-RestMethod `
+    -Uri "$env:AZ_BATCH_ACCOUNT_URL/softwareEntitlements/${entitlementId}?api-version=9999-09-09.99.99" `
+    -Method "POST" `
+    -Body "{'duration':'PT5M'}" `
+    -ContentType "application/json; odata=minimalmetadata" | ConvertTo-Json
+```
+``` bash
+# bash
 $ curl \
     --request POST \
     --insecure \
@@ -287,11 +344,30 @@ $ curl \
     --silent \
     --header "Content-Type: application/json; odata=minimalmetadata" \
     --data "{'duration':'PT5M'}" \
-    $AZ_BATCH_ACCOUNT_URL/softwareEntitlements/$entitlementId?api-version=$apiVersion \
+    $AZ_BATCH_ACCOUNT_URL/softwareEntitlements/$entitlementId?api-version=9999-09-09.99.99 \
     | jq
+```
 
-# Release
-# Write any HTTP errors to stderr.
+The output should be similar to:
+```json
+{
+  "expiryTime": "2019-01-16T01:10:07+00:00"
+}
+```
+
+##### Release
+
+Send a `DELETE` request to the API at the endpoint for `entitlementId` to release the entitlement:
+
+``` PowerShell
+# PowerShell
+PS> Invoke-RestMethod `
+    -Uri "$env:AZ_BATCH_ACCOUNT_URL/softwareEntitlements/${entitlementId}?api-version=9999-09-09.99.99" `
+    -Method "DELETE" `
+    -ContentType "application/json; odata=minimalmetadata"
+```
+``` bash
+# bash
 $ curl \
     --request DELETE \
     --insecure \
@@ -299,67 +375,7 @@ $ curl \
     --show-error \
     --silent \
     --header "Content-Type: application/json; odata=minimalmetadata" \
-    $AZ_BATCH_ACCOUNT_URL/softwareEntitlements/$entitlementId?api-version=$apiVersion
-```
-
-Or `wget` (and `jq`)
-
-``` bash
-$ applicationId = "contosoapp"
-
-# For one-time token approval:
-# ----------------------------
-$ apiVersion="2017-09-01.6.0"
-
-# Write formatted JSON response to stdout, and response headers (including HTTP status) to stderr.
-$ wget \
-    --quiet                 `# Suppress logging messages` \
-    --output-document -     `# Write document to stdout` \
-    --no-check-certificate  `# Skip certificate check` \
-    --server-response       `# Write HTTP headers to stdout` \
-    --header "Content-Type: application/json; odata=minimalmetadata" \
-    --post-data "{'applicationId':'$applicationId', 'token':'$AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN'}" \
-    $AZ_BATCH_ACCOUNT_URL/softwareEntitlements?api-version=$apiVersion \
-    | jq
-
-# For entitlement leasing:
-# ------------------------
-$ apiVersion="9999-09-09.99.99"
-
-# Acquisition
-# Write leased entitlement ID to the $entitlementId variable, and response headers (including HTTP status) to stderr.
-$ entitlementId=$(wget \
-    --quiet \
-    --output-document - \
-    --no-check-certificate \
-    --server-response \
-    --header "Content-Type: application/json; odata=minimalmetadata" \
-    --post-data "{'applicationId':'$applicationId', 'token':'$AZ_BATCH_SOFTWARE_ENTITLEMENT_TOKEN','duration':'PT5M'}" \
-    $AZ_BATCH_ACCOUNT_URL/softwareEntitlements?api-version=$apiVersion \
-    | jq -re '.entitlementId' || (echo "FAILED: entitlementId not found in JSON response" 1>&2))
-
-# Renewal
-# Write formatted JSON response to stdout, and response headers (including HTTP status) to stderr.
-$ wget \
-    --quiet \
-    --output-document - \
-    --no-check-certificate \
-    --server-response \
-    --header "Content-Type: application/json; odata=minimalmetadata" \
-    --post-data "{'duration':'PT5M'}" \
-    $AZ_BATCH_ACCOUNT_URL/softwareEntitlements/$entitlementId?api-version=$apiVersion \
-    | jq
-
-# Release
-# Write response headers to stderr.
-$ wget \
-    --method DELETE \
-    --quiet \
-    --output-document - \
-    --server-response \
-    --no-check-certificate \
-    --header "Content-Type: application/json; odata=minimalmetadata" \
-    $AZ_BATCH_ACCOUNT_URL/softwareEntitlements/$entitlementId?api-version=$apiVersion
+    $AZ_BATCH_ACCOUNT_URL/softwareEntitlements/$entitlementId?api-version=9999-09-09.99.99
 ```
 
 ## Troubleshooting

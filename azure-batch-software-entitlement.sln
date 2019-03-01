@@ -18,6 +18,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		sesclient.ps1 = sesclient.ps1
 		sestest.cmd = sestest.cmd
 		sestest.ps1 = sestest.ps1
+		sestest.sh = sestest.sh
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "sestest", "src\sestest\sestest.csproj", "{8CAE3A3B-DEB1-4042-8444-80369FAB20E8}"

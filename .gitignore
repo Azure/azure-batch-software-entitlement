@@ -252,3 +252,6 @@ paket-files/
 *.sln.iml
 
 out/
+
+tmp/**/*
+!tmp/README.md
