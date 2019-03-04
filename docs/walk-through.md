@@ -279,11 +279,11 @@ $ curl \
     | jq
 ```
 
-The output should be similar to:
+The response body should be similar to:
 ```json
 {
-  "id": "entitlement-695c822b-470c-4fd1-b34d-9b21435f57b2",
-  "expiry": "2019-01-16T01:06:07+00:00"
+  "id": "entitlement-695c822b-470c-4fd1-b34d-9b21435f57b2", // every entitlement has a unique identifier
+  "expiry": "2019-01-16T01:06:07+00:00"                     // reflects the expiry of the token, so all requests passing the same token will have the same expiry
 }
 ```
 
@@ -324,8 +324,8 @@ The response body (the result of the `Invoke-RestMethod` or `curl` command piped
 
 ```json
 {
-    "entitlementId":  "4a8cdb6a3c354246b13dc48b04c433e8",
-    "initialExpiryTime":  "2019-01-16T01:06:07+00:00"
+    "entitlementId":  "4a8cdb6a3c354246b13dc48b04c433e8", // every entitlement has a unique identifier
+    "initialExpiryTime":  "2019-01-16T01:06:07+00:00"     // should be 5 minutes (from duration:'PT5M') after the current time
 }
 ```
 
@@ -355,10 +355,10 @@ $ curl \
     | jq
 ```
 
-The output should be similar to:
+The response body should be similar to:
 ```json
 {
-  "expiryTime": "2019-01-16T01:10:07+00:00"
+  "expiryTime": "2019-01-16T01:10:07+00:00" // should be 5 minutes (from duration:'PT5M') after the current time
 }
 ```
 
