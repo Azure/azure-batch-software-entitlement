@@ -320,6 +320,15 @@ $ entitlementId=$(curl \
     | jq -re '.entitlementId' || (echo "FAILED: entitlementId not found in JSON response" 1>&2))
 ```
 
+The response body (the result of the `Invoke-RestMethod` or `curl` command piped to `ConvertTo-Json` or `jq`) should be similar to:
+
+```json
+{
+    "entitlementId":  "4a8cdb6a3c354246b13dc48b04c433e8",
+    "initialExpiryTime":  "2019-01-16T01:06:07+00:00"
+}
+```
+
 ##### Renewal
 
 Send a `POST` request to the endpoint for `entitlementId` to renew the entitlement and write formatted JSON response to stdout:
@@ -375,6 +384,8 @@ $ curl \
     --header "Content-Type: application/json; odata=minimalmetadata" \
     $AZ_BATCH_ACCOUNT_URL/softwareEntitlements/$entitlementId?api-version=9999-09-09.99.99
 ```
+
+A successful release request is expected to receive a `204` response with no content.
 
 ## Troubleshooting
 
