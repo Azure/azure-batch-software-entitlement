@@ -30,7 +30,10 @@ At minimum, you must use a certificate that has a private key.
 To assist with finding a suitable certificate, the `sestest` utility has a `list-certificates` mode that will list certificates that *may* work (the tool lists certificates with a private key but doesn't check for other characteristics):
 
 ``` PowerShell
-.\sestest list-certificates
+PS> .\sestest.ps1 list-certificates
+```
+``` bash
+$ ./sestest.sh list-certificates
 ```
 
 The output from this command is tabular, so we recommend using a console window that is as wide as possible.
@@ -39,18 +42,45 @@ The output from this command is tabular, so we recommend using a console window 
 
 (Yes, this output is obfuscated.)
 
-### Checking a thumbprint
-
-Once you've selected a thumbprint for use, you can verify it using `sestest` (Substitute your own thumbprint for `XXX`):
+These results can be narrowed down further according to the _type_ of certificate required (signing, encryption or server authentication):
 
 ``` PowerShell
-.\sestest find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+# PowerShell
+PS> .\sestest.ps1 list-certificates --show forsigning
+PS> .\sestest.ps1 list-certificates --show forencryption
+PS> .\sestest.ps1 list-certificates --show forserverauth
+```
+``` bash
+# bash
+$ ./sestest.sh list-certificates --show forsigning
+$ ./sestest.sh list-certificates --show forencryption
+$ ./sestest.sh list-certificates --show forserverauth
+```
+
+Certificates for server authentication are further categorised according to whether they are "verified", that is, whether the certificate chain is valid and trusted.
+
+### Checking a thumbprint
+
+Once you've selected a thumbprint for use, you can view its details using `sestest` (substitute your own thumbprint for `XXX`):
+
+``` PowerShell
+# PowerShell
+PS> .\sestest.ps1 find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+```
+``` bash
+# bash
+$ ./sestest.sh find-certificate --thumbprint XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ```
 
 For a thumbprint containing whitespace (as it will if copied from the Windows certificate properties dialog), wrap the thumbprint in quotes:
 
 ``` PowerShell
-.\sestest find-certificate --thumbprint "XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX"
+# PowerShell
+PS> .\sestest.ps1 find-certificate --thumbprint "XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX"
+```
+``` bash
+# bash
+$ ./sestest.sh find-certificate --thumbprint "XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX XX"
 ```
 
 If `sestest` finds the certificate, some information will be shown:
