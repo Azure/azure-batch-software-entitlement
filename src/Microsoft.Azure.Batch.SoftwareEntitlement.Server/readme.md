@@ -14,10 +14,10 @@ To verify the supplied token is genuine and permits ("entitles") the current app
 |--------|-------------------------------------------------------|
 | POST   | {endpoint}/softwareEntitlements?api-version={version} |
 
-| Placeholder | Type   | Description                                                                                                                                                                                                                                                                                           |
-|-------------|--------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Placeholder | Type   | Description                                                                                                                                                                                                                                                                                               |
+|-------------|--------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | endpoint    | string | The Batch account URL endpoint supplied by Azure Batch via the environment variable AZ_BATCH_ACCOUNT_URL. <br/>This may have a trailing `/` ("https://demo.westus.batch.azure.com/") or it might not ("https://demo.westus.batch.azure.com"); clients should be prepared to handle either case correctly. |
-| version     | string | The API version of the request.                                                                                                                                                                                                                                                                       |
+| version     | string | The API version of the request.                                                                                                                                                                                                                                                                           |
 
 The payload for the request is a JSON document:
 
@@ -39,16 +39,16 @@ The payload for the request is a JSON document:
 | token              | Mandatory | string         | The software entitlement token supplied to the application via environment variable from Azure Batch.                                                                                                                                                                                                                                                 |
 | applicationId      | Mandatory | string         | A unique identifier for the application requesting an entitlement to run. <br/> Samples: contosoapp, application <br/> Application identifiers are lowercase alphanumeric (though comparisons will be case-insensitive), with no punctuation, whitespace or non-alphanumeric characters. <br/> Must be an application entitled by the token provided. |
 | applicationVersion | Optional  | string         | The version of the application making the request. <br/> Sample: 2018.4<br/> Maximum length: 64                                                                                                                                                                                                                                                       |
-| duration           | Mandatory | string         | The duration requested for the initial entitlement. <br/> Specified as an ISO8601 string.<br/> Minimum 5 minutes (PT5M), maximum TBC.                                                                                                                                                                                                                 |
-| metering           | Optional  | array of Meter | An array of meters, defining how use of this application should be billed.<br/> If omitted, application billing will be based on total execution time.                                                                                                                                                                                                     |
+| duration           | Mandatory | string         | The duration requested for the initial entitlement. <br/> Specified as ISO8601 duration.<br/> Minimum 5 minutes (PT5M), maximum 1 hour (PT1H).                                                                                                                                                                                                       |
+| metering           | Optional  | array of Meter | An array of meters, defining how use of this application should be billed.<br/> If omitted, application billing will be based on total execution time.                                                                                                                                                                                                |
 
 #### Meter
 
-| Element | Required  | Type    | Description                                                                                                                                                                                                               |
-|---------|-----------|---------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| type    | Mandatory | string  | The kind of meter that should be used for billing of the application. <br/> Must be either “cpu” or “gpu” (but other values may be added in the future).                                                                  |
+| Element | Required  | Type    | Description                                                                                                                                                                                                                               |
+|---------|-----------|---------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| type    | Mandatory | string  | The kind of meter that should be used for billing of the application. <br/> Must be either “cpu” or “gpu” (but other values may be added in the future).                                                                                  |
 | subType | Optional  | string  | Used to identify a meter variation within the specified type. Exact values will be agreed in advance on a per application basis with the vendor. <br/> E.g. for type “gpu”, this might specify the GPU family (“P40”, “K80”, “V100” etc). |
-| count   | Mandatory | integer | The number of the specified items that should be billed.                                                                                                                                                                  |
+| count   | Mandatory | integer | The number of the specified items that should be billed.                                                                                                                                                                                  |
 
 ### Response 200 – OK
 
@@ -152,11 +152,11 @@ Once successfully obtained, a lease should be renewed on a regular cadence, prio
 |--------|-----------------------------------------------------------------------------|
 | POST   | {endpoint}/softwareEntitlements/{entitlementId}/renew?api-version={version} |
 
-| Placeholder   | Type   | Description                                                                                                                                                                                                                                                                                       |
-|---------------|--------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Placeholder   | Type   | Description                                                                                                                                                                                                                                                                                           |
+|---------------|--------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | endpoint      | string | The Batch account URL endpoint supplied by Azure Batch via the environment variable AZ_BATCH_ACCOUNT_URL. <br/> May have a trailing “/” ("https://demo.westus.batch.azure.com/") or it might not ("https://demo.westus.batch.azure.com"); clients should be prepared to handle either case correctly. |
-| entitlementId | string | The unique identifier of the entitlement that was returned from the entitlement request.                                                                                                                                                                                                          |
-| version       | string | The API version of the request.                                                                                                                                                                                                                                                                   |
+| entitlementId | string | The unique identifier of the entitlement that was returned from the entitlement request.                                                                                                                                                                                                              |
+| version       | string | The API version of the request.                                                                                                                                                                                                                                                                       |
 
 The payload for the request is a JSON document:
 
@@ -166,9 +166,9 @@ The payload for the request is a JSON document:
 }
 ```
 
-| Element  | Required  | Type   | Description                                                                                                                                     |
-|----------|-----------|--------|-------------------------------------------------------------------------------------------------------------------------------------------------|
-| duration | Mandatory | string | The duration for which to renew the entitlement. <br/> Specified as an ISO8601 string. <br/> Minimum value 5 minutes (PT5M), maximum value TBC.<br/>If the application is unexpectedly terminated, customers will be billed until the end of this lease; we therefore recommend low values. |
+| Element  | Required  | Type   | Description                                                                                                                                                                                                                                                                                           |
+|----------|-----------|--------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| duration | Mandatory | string | The duration for which to renew the entitlement. <br/> Specified as ISO8601 duration. <br/> Minimum value 5 minutes (PT5M), maximum value 1 hour (PT1H).<br/>If the application is unexpectedly terminated, customers will be billed until the end of this lease; we therefore recommend low values. |
 
 ### Response 200 – OK
 
@@ -283,11 +283,11 @@ Release of a leased entitlement when the application has finished execution.
 |--------|-----------------------------------------------------------------------|
 | DELETE | {endpoint}/softwareEntitlements/{entitlementId}?api-version={version} |
 
-| Placeholder | Type | Description |
-| --- | --- | --- |
-| endpoint | string | The Batch account URL endpoint supplied by Azure Batch via the environment variable AZ_BATCH_ACCOUNT_URL. <br/> May have a trailing “/” ("https://demo.westus.batch.azure.com/") or it might not ("https://demo.westus.batch.azure.com"); clients should be prepared to handle either case correctly. |
-| entitlementId | string | The unique identifier of the entitlement that was returned from the original acquisition request. |
-| version | string | The API version of the request. |
+| Placeholder   | Type   | Description                                                                                                                                                                                                                                                                                           |
+|---------------|--------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| endpoint      | string | The Batch account URL endpoint supplied by Azure Batch via the environment variable AZ_BATCH_ACCOUNT_URL. <br/> May have a trailing “/” ("https://demo.westus.batch.azure.com/") or it might not ("https://demo.westus.batch.azure.com"); clients should be prepared to handle either case correctly. |
+| entitlementId | string | The unique identifier of the entitlement that was returned from the original acquisition request.                                                                                                                                                                                                     |
+| version       | string | The API version of the request.                                                                                                                                                                                                                                                                       |
 
 ### Response 204 – No Content
 
