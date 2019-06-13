@@ -472,6 +472,9 @@ public:
         //
         ThrowIfCurlError(curl_easy_setopt(_curl.get(), CURLOPT_CERTINFO, 1));
 
+        // Force a fresh network connection to be used
+        ThrowIfCurlError(curl_easy_setopt(_curl.get(), CURLOPT_FRESH_CONNECT, 1));
+
         //
         // Set context for write callback.
         //
