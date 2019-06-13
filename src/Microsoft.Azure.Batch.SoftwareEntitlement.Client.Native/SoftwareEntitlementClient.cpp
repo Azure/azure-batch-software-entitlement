@@ -805,6 +805,10 @@ std::unique_ptr<Entitlement> GetEntitlement(
             {
                 std::this_thread::sleep_for(std::chrono::seconds(retry));
             }
+            else if (e.GetCode() == CURLE_SSL_CONNECT_ERROR)
+            {
+                std::this_thread::sleep_for(std::chrono::seconds(retry));
+            }
 #ifdef _WIN32
             else if (e.GetCode() == CURLE_SSL_CACERT)
             {
