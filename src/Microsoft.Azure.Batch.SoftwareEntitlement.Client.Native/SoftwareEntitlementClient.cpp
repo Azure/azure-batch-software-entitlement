@@ -139,16 +139,28 @@ CertInfo s_Microsoft_Azure_ECC_TLS_Issuing_CA_06 = {
     "Microsoft Azure ECC TLS Issuing CA 06"
 };
 
-CertInfo s_Batch_USGov_CloudAPI_CA = {
+CertInfo s_Batch_USGov_CloudAPI_CA_1 = {
     {{ 0x1f,0xb8,0x6b,0x11,0x68,0xec,0x74,0x31,0x54,0x06,0x2e,0x8c,0x9c,0xc5,0xb1,0x71,0xa4,0xb7,0xcc,0xb4 }},
     "DigiCert SHA2 Secure Server CA",
     ".batch.usgovcloudapi.net"
 };
 
-CertInfo s_Batch_China_CloudAPI_CA = {
-	{ { 0x1f,0xb8,0x6b,0x11,0x68,0xec,0x74,0x31,0x54,0x06,0x2e,0x8c,0x9c,0xc5,0xb1,0x71,0xa4,0xb7,0xcc,0xb4 } },
-	"DigiCert SHA2 Secure Server CA",
-	".batch.chinacloudapi.cn"
+CertInfo s_Batch_USGov_CloudAPI_CA_2 = {
+    {{ 0x62,0x6d,0x44,0xe7,0x04,0xd1,0xce,0xab,0xe3,0xbf,0x0d,0x53,0x39,0x74,0x64,0xac,0x80,0x80,0x14,0x2c }},
+    "DigiCert SHA2 Secure Server CA",
+    ".batch.usgovcloudapi.net"
+};
+
+CertInfo s_Batch_China_CloudAPI_CA_1 = {
+    { { 0x1f,0xb8,0x6b,0x11,0x68,0xec,0x74,0x31,0x54,0x06,0x2e,0x8c,0x9c,0xc5,0xb1,0x71,0xa4,0xb7,0xcc,0xb4 } },
+    "DigiCert SHA2 Secure Server CA",
+    ".batch.chinacloudapi.cn"
+};
+
+CertInfo s_Batch_China_CloudAPI_CA_2 = {
+    { { 0x4d,0x1f,0xa5,0xd1,0xfb,0x1a,0xc3,0x91,0x7c,0x08,0xe4,0x3f,0x65,0x01,0x5e,0x6a,0xea,0x57,0x11,0x79 } },
+    "DigiCert Basic RSA CN CA G2",
+    ".batch.chinacloudapi.cn"
 };
 
 CertInfo s_Batch_Germany_CloudAPI_CA = {
@@ -157,7 +169,7 @@ CertInfo s_Batch_Germany_CloudAPI_CA = {
      ".batch.microsoftazure.de"
 };
 
-std::array<CertInfo, 17> s_microsoftIntermediateCerts = {{
+std::array<CertInfo, 19> s_microsoftIntermediateCerts = {{
     s_Microsoft_IT_SSL_SHA2,
     s_Microsoft_IT_SSL_SHA2_2,
     s_Microsoft_IT_TLS_CA_1,
@@ -172,8 +184,10 @@ std::array<CertInfo, 17> s_microsoftIntermediateCerts = {{
     s_Microsoft_Azure_ECC_TLS_Issuing_CA_02,
     s_Microsoft_Azure_ECC_TLS_Issuing_CA_05,
     s_Microsoft_Azure_ECC_TLS_Issuing_CA_06,
-    s_Batch_USGov_CloudAPI_CA,
-    s_Batch_China_CloudAPI_CA,
+    s_Batch_USGov_CloudAPI_CA_1,
+    s_Batch_USGov_CloudAPI_CA_2,
+    s_Batch_China_CloudAPI_CA_1,
+    s_Batch_China_CloudAPI_CA_2,
     s_Batch_Germany_CloudAPI_CA
 }};
 
